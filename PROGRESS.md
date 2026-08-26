@@ -171,12 +171,12 @@
 
 ---
 
-## Open Items (Confirm Before Implementation)
+## Open Items & Design Decisions
 
-| # | Item | Status |
-|---|------|--------|
-| 1 | Repository/service layer pattern — full 5-layer vs simplified direct SQLAlchemy in routes? | ❓ Pending |
-| 2 | Payment Mode enum — finalize list (Cash, Card, UPI, Net Banking, Other proposed) | ❓ Pending |
-| 3 | Near-limit budget threshold — confirm 80% default or different value? | ❓ Pending |
-| 4 | FR-22 report views — filtered dashboard or separate screen? | ❓ Pending |
-| 5 | React Three Fiber placement — which screen/moment gets the 3D treatment? | ❓ Pending |
+| # | Item | Status | Resolution |
+|---|------|--------|------------|
+| 1 | Repository/service layer pattern — full 5-layer vs simplified direct SQLAlchemy in routes? | ✅ Resolved | Full 5-layer architecture implemented (Routers → Services → Repositories → Models → DB) |
+| 2 | Payment Mode enum — finalize list | ✅ Resolved | Finalized as `Cash`, `Card`, `UPI`, `Net Banking`, `Other` |
+| 3 | Near-limit budget threshold — confirm default value | ✅ Resolved | 80% (`0.80`) configured via environment variable with fallback |
+| 4 | FR-22 report views — filtered dashboard or separate screen? | ✅ Resolved | Multi-view analytics on Dashboard + paginated filtering table on Expenses page |
+| 5 | React Three Fiber placement — 3D visual moment | ✅ Resolved | Placed as an interactive floating financial token hero banner on the Dashboard |
