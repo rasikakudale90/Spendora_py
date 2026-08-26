@@ -18,8 +18,8 @@ export default function EmptyState({
   onAction,
 }: EmptyStateProps) {
   return (
-    <div className="flex flex-col items-center justify-center p-8 sm:p-12 text-center rounded-2xl glass-card border border-white/5 my-4">
-      <div className="w-14 h-14 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center mb-4 text-emerald-400">
+    <div className="flex flex-col items-center justify-center p-8 sm:p-12 text-center rounded-2xl glass-card my-4">
+      <div className="w-14 h-14 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center mb-4 text-emerald-600 dark:text-emerald-400">
         <Icon className="w-7 h-7" />
       </div>
       <h4 className="text-base sm:text-lg font-semibold text-foreground mb-1">

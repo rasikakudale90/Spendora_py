@@ -33,18 +33,18 @@ export function DeleteConfirmModal({ open, onOpenChange, expenseId, onSuccess }:
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px] bg-slate-900 border-red-500/20 text-white">
+      <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle className="text-red-400">Delete Expense</DialogTitle>
-          <DialogDescription className="text-slate-400">
+          <DialogTitle className="text-destructive">Delete Expense</DialogTitle>
+          <DialogDescription>
             Are you sure you want to delete this expense? This action cannot be undone.
           </DialogDescription>
         </DialogHeader>
-        <DialogFooter className="pt-4">
-          <Button variant="outline" onClick={() => onOpenChange(false)} className="border-white/10 bg-transparent hover:bg-white/5">
+        <DialogFooter className="pt-2">
+          <Button variant="outline" onClick={() => onOpenChange(false)}>
             Cancel
           </Button>
-          <Button variant="destructive" onClick={handleDelete} disabled={loading} className="bg-red-500 hover:bg-red-600 text-white">
+          <Button variant="destructive" onClick={handleDelete} disabled={loading}>
             {loading ? "Deleting..." : "Delete"}
           </Button>
         </DialogFooter>

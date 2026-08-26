@@ -7,7 +7,7 @@ export function Skeleton({
   return (
     <div
       className={cn(
-        "animate-pulse rounded-xl bg-slate-800/60 border border-white/5",
+        "animate-pulse rounded-xl bg-muted/80 border border-border/40",
         className
       )}
       {...props}
@@ -35,7 +35,7 @@ export function DashboardSkeleton() {
 export function ExpensesTableSkeleton() {
   return (
     <div className="space-y-4 animate-pulse">
-      <div className="h-12 bg-slate-800/40 rounded-xl" />
+      <div className="h-12 bg-muted/60 rounded-xl" />
       <div className="space-y-2">
         {[...Array(6)].map((_, i) => (
           <Skeleton key={i} className="h-16" />

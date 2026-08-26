@@ -10,7 +10,7 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Settings, Folder, Target } from "lucide-react";
+import { Folder, Target } from "lucide-react";
 import { CategoryManagerModal } from "@/components/CategoryManagerModal";
 import { BudgetManagerModal } from "@/components/BudgetManagerModal";
 
@@ -66,7 +66,7 @@ export default function DashboardPage() {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-white via-slate-200 to-slate-400 bg-clip-text text-transparent">
+          <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-slate-900 via-slate-700 to-slate-500 dark:from-white dark:via-slate-200 dark:to-slate-400 bg-clip-text text-transparent">
             Financial Dashboard
           </h1>
           <p className="text-sm text-muted-foreground mt-1">
@@ -74,21 +74,21 @@ export default function DashboardPage() {
           </p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" onClick={() => setIsCatModalOpen(true)} className="border-white/10 bg-slate-900/50 hover:bg-white/5 gap-2">
-            <Folder className="w-4 h-4 text-emerald-400" /> <span className="hidden sm:inline">Categories</span>
+          <Button variant="outline" onClick={() => setIsCatModalOpen(true)} className="gap-2">
+            <Folder className="w-4 h-4 text-emerald-600 dark:text-emerald-400" /> <span className="hidden sm:inline">Categories</span>
           </Button>
-          <Button variant="outline" onClick={() => setIsBudgetModalOpen(true)} className="border-white/10 bg-slate-900/50 hover:bg-white/5 gap-2">
-            <Target className="w-4 h-4 text-blue-400" /> <span className="hidden sm:inline">Budgets</span>
+          <Button variant="outline" onClick={() => setIsBudgetModalOpen(true)} className="gap-2">
+            <Target className="w-4 h-4 text-blue-600 dark:text-blue-400" /> <span className="hidden sm:inline">Budgets</span>
           </Button>
         </div>
       </div>
       
-      {/* 3D Visual Moment - Placed tastefully at the top right of a banner if desired, or kept here */}
-      <div className="w-full h-32 rounded-xl overflow-hidden border border-white/10 relative">
-        <div className="absolute inset-0 z-10 pointer-events-none bg-gradient-to-r from-background to-transparent" />
+      {/* 3D Visual Moment Banner */}
+      <div className="w-full h-32 rounded-2xl overflow-hidden border border-border/70 bg-gradient-to-r from-emerald-500/10 via-teal-500/5 to-cyan-500/10 dark:from-emerald-950/40 dark:via-slate-900/40 dark:to-teal-950/40 relative shadow-sm">
+        <div className="absolute inset-0 z-10 pointer-events-none bg-gradient-to-r from-background/90 via-background/40 to-transparent" />
         <div className="absolute left-6 top-1/2 -translate-y-1/2 z-20">
-          <h2 className="text-xl font-bold text-white">Spendora V1</h2>
-          <p className="text-muted-foreground text-sm">Take control of your finances</p>
+          <h2 className="text-xl font-bold text-foreground">Spendora V1</h2>
+          <p className="text-muted-foreground text-sm">Take control of your personal finances</p>
         </div>
         <Hero3D />
       </div>
@@ -98,20 +98,20 @@ export default function DashboardPage() {
       <DashboardCharts breakdown={breakdown} trend={trend} />
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7 mt-4">
-        <Card className="col-span-4 bg-white/5 border-white/10 backdrop-blur-md">
+        <Card className="col-span-4 glass-card">
           <CardHeader>
-            <CardTitle>Recent Activity</CardTitle>
+            <CardTitle className="text-base font-semibold">Recent Activity</CardTitle>
           </CardHeader>
           <CardContent>
             {recent.length === 0 ? (
               <p className="text-muted-foreground text-sm py-4 text-center">No recent expenses found.</p>
             ) : (
-              <div className="space-y-4">
+              <div className="space-y-3">
                 {recent.map((expense) => (
-                  <div key={expense.id} className="flex items-center justify-between border-b border-white/5 pb-4 last:border-0 last:pb-0">
+                  <div key={expense.id} className="flex items-center justify-between border-b border-border/50 pb-3.5 last:border-0 last:pb-0">
                     <div>
-                      <p className="font-medium">{expense.title}</p>
-                      <p className="text-xs text-muted-foreground">
+                      <p className="font-medium text-sm text-foreground">{expense.title}</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">
                         {new Intl.DateTimeFormat('en-IN', { month: 'short', day: '2-digit', year: 'numeric' }).format(new Date(expense.expense_date))} • {expense.category?.name}
                       </p>
                     </div>
@@ -119,7 +119,7 @@ export default function DashboardPage() {
                       {expense.payment_mode && (
                         <Badge variant="outline" className="text-xs">{expense.payment_mode}</Badge>
                       )}
-                      <span className="font-bold">₹{parseFloat(expense.amount).toLocaleString('en-IN')}</span>
+                      <span className="font-bold text-sm text-foreground">₹{parseFloat(expense.amount).toLocaleString('en-IN')}</span>
                     </div>
                   </div>
                 ))}

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -75,19 +75,19 @@ export function BudgetManagerModal({ open, onOpenChange, onSuccess }: BudgetMana
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[450px] bg-slate-900 border-white/10 text-white">
+      <DialogContent className="sm:max-w-[460px]">
         <DialogHeader>
           <DialogTitle>Manage Budgets</DialogTitle>
         </DialogHeader>
         
-        <div className="space-y-6 pt-4">
-          <div className="space-y-4 bg-slate-800/30 p-4 rounded-lg border border-white/5">
-            <h3 className="font-medium text-sm text-slate-300">Set New Budget</h3>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
+        <div className="space-y-6 pt-2">
+          <div className="space-y-4 bg-muted/40 p-4 rounded-xl border border-border/60">
+            <h3 className="font-semibold text-sm text-foreground">Set New Budget</h3>
+            <div className="grid grid-cols-2 gap-3.5">
+              <div className="space-y-1.5">
                 <Label>Type</Label>
                 <Select value={scope} onValueChange={(v: "overall"|"category") => setScope(v)}>
-                  <SelectTrigger className="bg-slate-800 border-white/10">
+                  <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -98,10 +98,10 @@ export function BudgetManagerModal({ open, onOpenChange, onSuccess }: BudgetMana
               </div>
 
               {scope === "category" && (
-                <div className="space-y-2">
+                <div className="space-y-1.5">
                   <Label>Category</Label>
                   <Select value={categoryId} onValueChange={setCategoryId}>
-                    <SelectTrigger className="bg-slate-800 border-white/10">
+                    <SelectTrigger>
                       <SelectValue placeholder="Select..." />
                     </SelectTrigger>
                     <SelectContent>
@@ -115,7 +115,7 @@ export function BudgetManagerModal({ open, onOpenChange, onSuccess }: BudgetMana
               )}
             </div>
 
-            <div className="space-y-2">
+            <div className="space-y-1.5">
               <Label>Amount (₹)</Label>
               <div className="flex gap-2">
                 <Input 
@@ -123,9 +123,8 @@ export function BudgetManagerModal({ open, onOpenChange, onSuccess }: BudgetMana
                   placeholder="e.g. 50000"
                   value={amount}
                   onChange={(e) => setAmount(e.target.value)}
-                  className="bg-slate-800 border-white/10"
                 />
-                <Button onClick={handleSetBudget} disabled={loading} className="bg-blue-600 hover:bg-blue-700">
+                <Button onClick={handleSetBudget} disabled={loading} className="shrink-0">
                   Save
                 </Button>
               </div>
@@ -133,18 +132,20 @@ export function BudgetManagerModal({ open, onOpenChange, onSuccess }: BudgetMana
           </div>
 
           <div className="space-y-3">
-            <h3 className="font-medium text-sm text-slate-300">Current Budgets ({currentMonth})</h3>
+            <h3 className="font-semibold text-sm text-foreground">Current Budgets ({currentMonth})</h3>
             
             {budgets?.overall_budget && (
-              <div className="flex justify-between items-center p-3 bg-slate-800/50 rounded border border-white/5">
+              <div className="flex justify-between items-center p-3.5 bg-muted/40 rounded-xl border border-border/50">
                 <div>
-                  <span className="font-bold">Overall Budget</span>
+                  <span className="font-bold text-foreground">Overall Budget</span>
                   <div className="text-xs text-muted-foreground mt-1">
                     Spent: ₹{parseFloat(budgets.overall_budget.spent).toLocaleString('en-IN')}
                   </div>
                 </div>
                 <div className="text-right">
-                  <div className="font-bold text-emerald-400">₹{parseFloat(budgets.overall_budget.amount).toLocaleString('en-IN')}</div>
+                  <div className="font-bold text-emerald-600 dark:text-emerald-400">
+                    ₹{parseFloat(budgets.overall_budget.amount).toLocaleString('en-IN')}
+                  </div>
                   <div className="text-xs text-muted-foreground mt-1">
                     {budgets.overall_budget.percentage_used.toFixed(1)}% used
                   </div>
@@ -153,15 +154,17 @@ export function BudgetManagerModal({ open, onOpenChange, onSuccess }: BudgetMana
             )}
 
             {budgets?.category_budgets.map(b => (
-              <div key={b.id} className="flex justify-between items-center p-3 bg-slate-800/50 rounded border border-white/5">
+              <div key={b.id} className="flex justify-between items-center p-3.5 bg-muted/40 rounded-xl border border-border/50">
                 <div>
-                  <span className="font-medium text-sm">{b.category_name}</span>
+                  <span className="font-medium text-sm text-foreground">{b.category_name}</span>
                   <div className="text-xs text-muted-foreground mt-1">
                     Spent: ₹{parseFloat(b.spent).toLocaleString('en-IN')}
                   </div>
                 </div>
                 <div className="text-right">
-                  <div className="font-medium text-sm text-blue-400">₹{parseFloat(b.amount).toLocaleString('en-IN')}</div>
+                  <div className="font-semibold text-sm text-blue-600 dark:text-blue-400">
+                    ₹{parseFloat(b.amount).toLocaleString('en-IN')}
+                  </div>
                   <div className="text-xs text-muted-foreground mt-1">
                     {b.percentage_used.toFixed(1)}% used
                   </div>

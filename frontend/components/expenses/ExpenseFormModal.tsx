@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { expenseFormSchema, ExpenseFormValues } from "@/lib/schemas";
-import { api, Category, PaymentMode, Expense } from "@/lib/api";
+import { api, Category, Expense } from "@/lib/api";
 import { toast } from "sonner";
 
 interface ExpenseFormModalProps {
@@ -81,39 +81,39 @@ export function ExpenseFormModal({ open, onOpenChange, expenseToEdit, onSuccess 
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px] bg-slate-900 border-white/10 text-white">
+      <DialogContent className="sm:max-w-[440px]">
         <DialogHeader>
           <DialogTitle>{expenseToEdit ? "Edit Expense" : "Add Expense"}</DialogTitle>
         </DialogHeader>
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 pt-4">
-          <div className="space-y-2">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 pt-2">
+          <div className="space-y-1.5">
             <Label htmlFor="title">Title</Label>
-            <Input id="title" {...register("title")} className="bg-slate-800 border-white/10" placeholder="Grocery run" />
-            {errors.title && <p className="text-xs text-red-400">{errors.title.message}</p>}
+            <Input id="title" {...register("title")} placeholder="e.g. Grocery run" />
+            {errors.title && <p className="text-xs text-rose-500">{errors.title.message}</p>}
           </div>
           
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="amount">Amount</Label>
-              <Input id="amount" type="number" step="0.01" {...register("amount")} className="bg-slate-800 border-white/10" placeholder="100.00" />
-              {errors.amount && <p className="text-xs text-red-400">{errors.amount.message}</p>}
+          <div className="grid grid-cols-2 gap-3.5">
+            <div className="space-y-1.5">
+              <Label htmlFor="amount">Amount (₹)</Label>
+              <Input id="amount" type="number" step="0.01" {...register("amount")} placeholder="100.00" />
+              {errors.amount && <p className="text-xs text-rose-500">{errors.amount.message}</p>}
             </div>
             
-            <div className="space-y-2">
+            <div className="space-y-1.5">
               <Label htmlFor="expense_date">Date</Label>
-              <Input id="expense_date" type="date" {...register("expense_date")} className="bg-slate-800 border-white/10 [color-scheme:dark]" />
-              {errors.expense_date && <p className="text-xs text-red-400">{errors.expense_date.message}</p>}
+              <Input id="expense_date" type="date" {...register("expense_date")} />
+              {errors.expense_date && <p className="text-xs text-rose-500">{errors.expense_date.message}</p>}
             </div>
           </div>
 
-          <div className="space-y-2">
+          <div className="space-y-1.5">
             <Label>Category</Label>
             <Controller
               control={control}
               name="category_id"
               render={({ field }) => (
                 <Select onValueChange={field.onChange} value={field.value}>
-                  <SelectTrigger className="bg-slate-800 border-white/10">
+                  <SelectTrigger>
                     <SelectValue placeholder="Select a category" />
                   </SelectTrigger>
                   <SelectContent>
@@ -124,17 +124,17 @@ export function ExpenseFormModal({ open, onOpenChange, expenseToEdit, onSuccess 
                 </Select>
               )}
             />
-            {errors.category_id && <p className="text-xs text-red-400">{errors.category_id.message}</p>}
+            {errors.category_id && <p className="text-xs text-rose-500">{errors.category_id.message}</p>}
           </div>
 
-          <div className="space-y-2">
+          <div className="space-y-1.5">
             <Label>Payment Mode</Label>
             <Controller
               control={control}
               name="payment_mode"
               render={({ field }) => (
                 <Select onValueChange={field.onChange} value={field.value}>
-                  <SelectTrigger className="bg-slate-800 border-white/10">
+                  <SelectTrigger>
                     <SelectValue placeholder="Select payment mode" />
                   </SelectTrigger>
                   <SelectContent>
@@ -149,17 +149,17 @@ export function ExpenseFormModal({ open, onOpenChange, expenseToEdit, onSuccess 
             />
           </div>
 
-          <div className="space-y-2">
+          <div className="space-y-1.5">
             <Label htmlFor="notes">Notes (Optional)</Label>
-            <Input id="notes" {...register("notes")} className="bg-slate-800 border-white/10" placeholder="Optional details..." />
-            {errors.notes && <p className="text-xs text-red-400">{errors.notes.message}</p>}
+            <Input id="notes" {...register("notes")} placeholder="Optional details..." />
+            {errors.notes && <p className="text-xs text-rose-500">{errors.notes.message}</p>}
           </div>
 
-          <DialogFooter className="pt-4">
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)} className="border-white/10 bg-transparent hover:bg-white/5">
+          <DialogFooter className="pt-2">
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
-            <Button type="submit" disabled={loading} className="bg-emerald-500 hover:bg-emerald-600 text-white">
+            <Button type="submit" disabled={loading}>
               {loading ? "Saving..." : "Save Expense"}
             </Button>
           </DialogFooter>

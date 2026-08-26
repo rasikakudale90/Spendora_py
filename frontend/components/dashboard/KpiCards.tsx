@@ -13,66 +13,80 @@ export function KpiCards({ summary, stats }: KpiCardsProps) {
 
   return (
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-      <Card className="bg-white/5 border-white/10 backdrop-blur-md">
+      <Card className="glass-card glass-card-hover">
         <CardHeader className="flex flex-row items-center justify-between pb-2">
-          <CardTitle className="text-sm font-medium text-slate-300">Total Spent</CardTitle>
-          <IndianRupee className="h-4 w-4 text-emerald-400" />
+          <CardTitle className="text-sm font-medium text-muted-foreground">Total Spent</CardTitle>
+          <div className="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center">
+            <IndianRupee className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+          </div>
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold">₹{parseFloat(summary.total_spent).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</div>
+          <div className="text-2xl font-bold tracking-tight text-foreground">
+            ₹{parseFloat(summary.total_spent).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+          </div>
           <p className="text-xs text-muted-foreground mt-1">
             {summary.expense_count} transactions this month
           </p>
         </CardContent>
       </Card>
 
-      <Card className="bg-white/5 border-white/10 backdrop-blur-md">
+      <Card className="glass-card glass-card-hover">
         <CardHeader className="flex flex-row items-center justify-between pb-2">
-          <CardTitle className="text-sm font-medium text-slate-300">Budget Remaining</CardTitle>
-          <Target className="h-4 w-4 text-blue-400" />
+          <CardTitle className="text-sm font-medium text-muted-foreground">Budget Remaining</CardTitle>
+          <div className="w-8 h-8 rounded-lg bg-blue-500/10 flex items-center justify-center">
+            <Target className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+          </div>
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold">
+          <div className="text-2xl font-bold tracking-tight text-foreground">
             {summary.remaining_budget ? `₹${parseFloat(summary.remaining_budget).toLocaleString('en-IN', { minimumFractionDigits: 2 })}` : 'N/A'}
           </div>
-          {summary.total_budget && (
-            <div className="w-full bg-slate-800 rounded-full h-1.5 mt-3">
+          {summary.total_budget ? (
+            <div className="w-full bg-slate-200 dark:bg-slate-800 rounded-full h-1.5 mt-3 overflow-hidden">
               <div 
                 className={cn("h-1.5 rounded-full transition-all duration-500", 
-                  summary.status === 'on_track' ? 'bg-emerald-400' : 
-                  summary.status === 'near_limit' ? 'bg-amber-400' : 'bg-red-500'
+                  summary.status === 'on_track' ? 'bg-emerald-500' : 
+                  summary.status === 'near_limit' ? 'bg-amber-500' : 'bg-rose-500'
                 )}
                 style={{ width: `${Math.min(summary.percentage_used, 100)}%` }}
               ></div>
             </div>
+          ) : (
+            <p className="text-xs text-muted-foreground mt-1">No overall budget set</p>
           )}
         </CardContent>
       </Card>
 
-      <Card className="bg-white/5 border-white/10 backdrop-blur-md">
+      <Card className="glass-card glass-card-hover">
         <CardHeader className="flex flex-row items-center justify-between pb-2">
-          <CardTitle className="text-sm font-medium text-slate-300">Avg Daily Spend</CardTitle>
-          <Activity className="h-4 w-4 text-amber-400" />
+          <CardTitle className="text-sm font-medium text-muted-foreground">Avg Daily Spend</CardTitle>
+          <div className="w-8 h-8 rounded-lg bg-amber-500/10 flex items-center justify-center">
+            <Activity className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+          </div>
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold">₹{parseFloat(stats.avg_daily_spend).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</div>
+          <div className="text-2xl font-bold tracking-tight text-foreground">
+            ₹{parseFloat(stats.avg_daily_spend).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+          </div>
           <p className="text-xs text-muted-foreground mt-1">
             Based on {stats.period_month}
           </p>
         </CardContent>
       </Card>
 
-      <Card className="bg-white/5 border-white/10 backdrop-blur-md">
+      <Card className="glass-card glass-card-hover">
         <CardHeader className="flex flex-row items-center justify-between pb-2">
-          <CardTitle className="text-sm font-medium text-slate-300">Highest Expense</CardTitle>
-          <TrendingDown className="h-4 w-4 text-rose-400" />
+          <CardTitle className="text-sm font-medium text-muted-foreground">Highest Expense</CardTitle>
+          <div className="w-8 h-8 rounded-lg bg-rose-500/10 flex items-center justify-center">
+            <TrendingDown className="h-4 w-4 text-rose-600 dark:text-rose-400" />
+          </div>
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold">
+          <div className="text-2xl font-bold tracking-tight text-foreground">
             {stats.highest_expense_amount ? `₹${parseFloat(stats.highest_expense_amount).toLocaleString('en-IN', { minimumFractionDigits: 2 })}` : 'N/A'}
           </div>
           <p className="text-xs text-muted-foreground mt-1 truncate" title={stats.highest_expense_title || ''}>
-            {stats.highest_expense_title || 'No expenses'}
+            {stats.highest_expense_title || 'No expenses recorded'}
           </p>
         </CardContent>
       </Card>
