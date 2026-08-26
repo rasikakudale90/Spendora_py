@@ -59,5 +59,9 @@ class CategoryRepository:
         return result.rowcount
 
     async def delete(self, category: Category) -> None:
+        from app.models.budget import Budget
+        from sqlalchemy import delete as sql_delete
+
+        await self.session.execute(sql_delete(Budget).where(Budget.category_id == category.id))
         await self.session.delete(category)
         await self.session.commit()

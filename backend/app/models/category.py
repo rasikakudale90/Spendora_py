@@ -41,6 +41,8 @@ class Category(Base, TimestampMixin):
     budgets: Mapped[list["Budget"]] = relationship(  # noqa: F821
         "Budget",
         back_populates="category",
+        cascade="all, delete-orphan",
+        passive_deletes=True,
         lazy="select",
     )
 

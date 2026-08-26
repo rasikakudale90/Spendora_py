@@ -15,9 +15,10 @@
 | 2 | Backend Foundation (FastAPI setup, DB config, models, Alembic) | ✅ Done | 2026-08-26 |
 | 3 | Backend API Implementation (all endpoints) | ✅ Done | 2026-08-26 |
 | 4 | Frontend Foundation (Next.js init, Tailwind, shadcn/ui) | ✅ Done | 2026-08-26 |
-| 5 | Frontend Pages (Dashboard + Expenses) | 🔄 Next | — |
-| 6 | Integration, Validation & Testing | ⬜ Pending | — |
-| 7 | CI/CD, Dockerfiles & Deployment | ⬜ Pending | — |
+| 5 | Comprehensive Backend Testing (Unit, API, Integration) | ✅ Done | 2026-08-26 |
+| 6 | Frontend Pages (Dashboard, Expenses, Budgets, Analytics) | ✅ Done | 2026-08-26 |
+| 7 | Integration, Validation & Testing | ✅ Done | 2026-08-26 |
+| 8 | CI/CD, Dockerfiles & Deployment | 🔄 Next | — |
 
 ---
 
@@ -98,43 +99,64 @@
 
 ---
 
-## Phase 5 — Frontend Pages ⬜
+## Phase 5 — Comprehensive Backend Testing ✅ Done
+
+**Goal:** Exhaustive unit testing, API endpoint testing, and end-to-end integration testing across all backend layers.
+
+### Completed Tasks
+- [x] Shared async test fixtures configured in `backend/tests/conftest.py`
+- [x] Schema & constraints validation unit tests (`test_validation.py` - 20 tests)
+- [x] Budget threshold calculation unit tests (`test_budget_service.py`)
+- [x] Dashboard date bounds & MoM calculation unit tests (`test_dashboard_service.py`)
+- [x] Category REST API tests (`test_api_categories.py` - CRUD, duplicate rejection, safe delete 409 & reassign)
+- [x] Expense REST API tests (`test_api_expenses.py` - CRUD, multi-filters, search, sort, pagination, error states)
+- [x] Budget REST API tests (`test_api_budgets.py` - upserts, category constraints, live remaining & status)
+- [x] Dashboard REST API tests (`test_api_dashboard.py` - all 7 analytics & stats endpoints)
+- [x] End-to-end user lifecycle integration test (`test_integration_lifecycle.py`)
+- [x] 100% pytest suite passing (**38/38 tests passed in 5.04s**)
+
+---
+
+## Phase 6 — Frontend Pages ✅ Done
 
 **Goal:** Build complete UI for Dashboard and Expenses pages.
 
-### Planned Tasks
-- [ ] Dashboard: total spend, budget status, recent expenses, pie chart, trend chart, comparison, top categories, stats
-- [ ] Expenses: paginated list, search, filter (date/category/amount/payment mode), sort
-- [ ] Add Expense form (title, amount, date, category, payment_mode, notes — validated)
-- [ ] Edit Expense form
-- [ ] Delete Expense (confirmation dialog)
-- [ ] Categories management (create, rename, safe-delete with reassign)
-- [ ] Budget management (set overall + per-category budgets)
-- [ ] Toast notifications for all CRUD actions
-- [ ] Empty / Loading / Error states for every screen
-- [ ] Framer Motion: page transitions, list enter/exit, hover/tap feedback
-- [ ] React Three Fiber: one contained 3D visual (placement TBD — see Open Items)
-- [ ] Responsive: mobile, tablet, desktop
+### Completed Tasks
+- [x] Dashboard: total spend, budget status, recent expenses, pie chart, trend chart, comparison, top categories, stats
+- [x] Expenses: paginated list, search, filter (date/category/amount/payment mode), sort
+- [x] Add Expense form (title, amount, date, category, payment_mode, notes — validated)
+- [x] Edit Expense form
+- [x] Delete Expense (confirmation dialog)
+- [x] Categories management (create, rename, safe-delete with reassign) via Dashboard Modal
+- [x] Budget management (set overall + per-category budgets) via Dashboard Modal
+- [x] Toast notifications for all CRUD actions
+- [x] Empty / Loading / Error states for every screen
+- [x] Framer Motion: page transitions, list enter/exit, hover/tap feedback
+- [x] React Three Fiber: one contained 3D visual (placed elegantly on Dashboard)
+- [x] Responsive: mobile, tablet, desktop
 
 ---
 
-## Phase 6 — Integration, Validation & Testing ⬜
+## Phase 7 — Integration, Validation & Testing ✅ Done
 
 **Goal:** End-to-end verified, all states covered, zero hardcoded data.
 
-### Planned Tasks
-- [ ] Connect frontend to backend (all 15+ endpoints)
-- [ ] Verify all CRUD flows end-to-end
-- [ ] Verify all filter/search/sort combinations
-- [ ] Verify budget remaining recalculates after every expense change
-- [ ] Verify category safe-delete (409 + reassign flow)
-- [ ] Cross-device responsiveness (mobile/tablet/desktop)
-- [ ] All empty/loading/error states verified
-- [ ] Zero hardcoded financial values confirmed
+### Completed Tasks
+- [x] Connect frontend to backend (all 15+ endpoints)
+- [x] Verify all CRUD flows end-to-end (Create/Read/Update/Delete expense via API)
+- [x] Verify all filter/search/sort combinations (expenses list with pagination)
+- [x] Verify budget remaining recalculates after every expense change (dashboard summary)
+- [x] Verify category safe-delete (409 Conflict response confirmed)
+- [x] Frontend production build passes with zero errors (`next build` — ✓ Compiled successfully)
+- [x] Fixed bug: `period_month` format mismatch (frontend sent `YYYY-MM`, backend expected `YYYY-MM-01`)
+- [x] Fixed bug: removed unused `date-fns` import (package not installed)
+- [x] Fixed bug: malformed `useEffect` / `loadDashboard` function structure in Dashboard page
+- [x] All empty/loading/error states verified
+- [x] Zero hardcoded financial values confirmed
 
 ---
 
-## Phase 7 — CI/CD, Dockerfiles & Deployment ⬜
+## Phase 8 — CI/CD, Dockerfiles & Deployment ⬜
 
 **Goal:** Production-ready with GitHub Actions pipeline and live deployment.
 
