@@ -21,6 +21,7 @@ engine = create_async_engine(
     settings.DATABASE_URL,
     echo=False,
     pool_pre_ping=True,  # reconnect on stale connections
+    connect_args={"statement_cache_size": 0},  # compatible with Supabase connection poolers
 )
 
 # ── Session factory ───────────────────────────────────────────────────────────

@@ -12,6 +12,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import select
 
+from app.core.config import settings
 from app.core.database import AsyncSessionFactory, engine
 from app.models.category import Category
 from app.routers import api_router
@@ -66,9 +67,14 @@ app = FastAPI(
 )
 
 # ── CORS Middleware ───────────────────────────────────────────────────────────
+if settings.CORS_ORIGINS == "*":
+    origins = ["*"]
+else:
+    origins = [orig.strip() for orig in settings.CORS_ORIGINS.split(",") if orig.strip()]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Open for development / configured via env in prod
+    allow_origins=origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

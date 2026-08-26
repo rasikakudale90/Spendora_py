@@ -1,0 +1,101 @@
+name: Spendora CI/CD Pipeline
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  # ── 1. Backend Testing ───────────────────────────────────────────────────────
+  test-backend:
+    name: Test Backend (FastAPI + PostgreSQL)
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: password
+          POSTGRES_DB: spendora_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "pip"
+          cache-dependency-path: backend/requirements.txt
+
+      - name: Install backend dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r backend/requirements.txt
+
+      - name: Run Pytest Suite
+        env:
+          DATABASE_URL: postgresql+asyncpg://postgres:password@localhost:5432/spendora_test
+          BUDGET_NEAR_LIMIT_THRESHOLD: "0.80"
+        run: |
+          cd backend
+          pytest -v
+
+  # ── 2. Frontend Lint & Build ────────────────────────────────────────────────
+  build-frontend:
+    name: Build Frontend (Next.js 14)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install frontend dependencies
+        run: |
+          cd frontend
+          npm ci
+
+      - name: Lint frontend
+        run: |
+          cd frontend
+          npm run lint
+
+      - name: Build Next.js production bundle
+        env:
+          NEXT_PUBLIC_API_URL: "https://spendora-backend.onrender.com"
+        run: |
+          cd frontend
+          npm run build
+
+  # ── 3. Deployment Summary ───────────────────────────────────────────────────
+  deploy-summary:
+    name: Deployment Readiness Check
+    needs: [test-backend, build-frontend]
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    steps:
+      - name: Output deployment status
+        run: |
+          echo "========================================================"
+          echo "All CI quality gates passed successfully!"
+          echo "Ready for production auto-deploy:"
+          echo "  • Render: Backend Web Service auto-deploying from main"
+          echo "  • Vercel: Frontend App auto-deploying from main"
+          echo "========================================================"
