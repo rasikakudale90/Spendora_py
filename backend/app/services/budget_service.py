@@ -1,0 +1,135 @@
+import calendar
+from datetime import date
+from decimal import Decimal
+from typing import Literal, Tuple
+from fastapi import HTTPException, status
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.core.config import settings
+from app.models.budget import Budget
+from app.repositories.budget_repository import BudgetRepository
+from app.repositories.category_repository import CategoryRepository
+from app.schemas.budget import (
+    BudgetCreate,
+    BudgetListResponse,
+    BudgetResponse,
+)
+
+
+class BudgetService:
+    def __init__(self, session: AsyncSession):
+        self.session = session
+        self.repo = BudgetRepository(session)
+        self.category_repo = CategoryRepository(session)
+
+    def _get_month_bounds(self, period_month: date) -> Tuple[date, date]:
+        start_date = date(period_month.year, period_month.month, 1)
+        _, last_day = calendar.monthrange(period_month.year, period_month.month)
+        end_date = date(period_month.year, period_month.month, last_day)
+        return start_date, end_date
+
+    def _calculate_budget_status(
+        self, budget_amount: Decimal, spent: Decimal
+    ) -> Tuple[Decimal, float, Literal["on_track", "near_limit", "over_budget"]]:
+        remaining = budget_amount - spent
+        percentage_used = (
+            float((spent / budget_amount) * 100) if budget_amount > 0 else 0.0
+        )
+
+        threshold = Decimal(str(settings.BUDGET_NEAR_LIMIT_THRESHOLD)) * budget_amount
+
+        if spent > budget_amount:
+            status_val = "over_budget"
+        elif spent >= threshold:
+            status_val = "near_limit"
+        else:
+            status_val = "on_track"
+
+        return remaining, round(percentage_used, 2), status_val
+
+    async def get_budgets(self, period_month: date) -> BudgetListResponse:
+        normalized_period = date(period_month.year, period_month.month, 1)
+        start_date, end_date = self._get_month_bounds(normalized_period)
+
+        budgets = await self.repo.get_by_period(normalized_period)
+
+        overall_resp = None
+        category_resps = []
+
+        for b in budgets:
+            if b.scope == "overall":
+                spent = await self.repo.get_spent_for_period(start_date, end_date)
+                remaining, pct, status_val = self._calculate_budget_status(b.amount, spent)
+                overall_resp = BudgetResponse(
+                    id=b.id,
+                    scope=b.scope,
+                    category_id=None,
+                    category_name=None,
+                    amount=b.amount,
+                    period_month=b.period_month,
+                    spent=spent,
+                    remaining=remaining,
+                    percentage_used=pct,
+                    status=status_val,
+                    created_at=b.created_at,
+                    updated_at=b.updated_at,
+                )
+            else:
+                spent = await self.repo.get_spent_for_period(start_date, end_date, b.category_id)
+                remaining, pct, status_val = self._calculate_budget_status(b.amount, spent)
+                category_resps.append(
+                    BudgetResponse(
+                        id=b.id,
+                        scope=b.scope,
+                        category_id=b.category_id,
+                        category_name=b.category.name if b.category else None,
+                        amount=b.amount,
+                        period_month=b.period_month,
+                        spent=spent,
+                        remaining=remaining,
+                        percentage_used=pct,
+                        status=status_val,
+                        created_at=b.created_at,
+                        updated_at=b.updated_at,
+                    )
+                )
+
+        return BudgetListResponse(
+            overall_budget=overall_resp,
+            category_budgets=category_resps,
+        )
+
+    async def set_budget(self, data: BudgetCreate) -> BudgetResponse:
+        normalized_period = date(data.period_month.year, data.period_month.month, 1)
+        start_date, end_date = self._get_month_bounds(normalized_period)
+
+        if data.scope == "category":
+            category = await self.category_repo.get_by_id(data.category_id)
+            if not category:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=f"Category with id '{data.category_id}' does not exist",
+                )
+            category_name = category.name
+            spent = await self.repo.get_spent_for_period(start_date, end_date, data.category_id)
+        else:
+            category_name = None
+            spent = await self.repo.get_spent_for_period(start_date, end_date)
+
+        budget = await self.repo.upsert(data)
+        remaining, pct, status_val = self._calculate_budget_status(budget.amount, spent)
+
+        return BudgetResponse(
+            id=budget.id,
+            scope=budget.scope,
+            category_id=budget.category_id,
+            category_name=category_name,
+            amount=budget.amount,
+            period_month=budget.period_month,
+            spent=spent,
+            remaining=remaining,
+            percentage_used=pct,
+            status=status_val,
+            created_at=budget.created_at,
+            updated_at=budget.updated_at,
+        )

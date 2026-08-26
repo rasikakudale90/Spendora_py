@@ -1,21 +1,20 @@
 """
 Spendora API — FastAPI application entrypoint.
 
-Lifespan hook (runs on startup):
-  - Checks if the `categories` table is empty.
-  - If empty, seeds 9 starter categories (idempotent — safe to run repeatedly).
-  - Does NOT create tables — schema is managed exclusively by Alembic migrations.
-
-On shutdown:
-  - Disposes the async engine (closes connection pool).
+- Lifespan hook: Idempotently seeds starter categories on startup.
+- CORS Middleware: Allows frontend communication.
+- Versioned API: All resources mounted under /api/v1.
+- Health Check: Liveness probe at /health.
 """
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import select
 
 from app.core.database import AsyncSessionFactory, engine
 from app.models.category import Category
+from app.routers import api_router
 
 # ── Starter categories (SRS Section 5.1) ─────────────────────────────────────
 STARTER_CATEGORIES: list[str] = [
@@ -39,12 +38,16 @@ async def lifespan(app: FastAPI):
     Shutdown: dispose the async engine / connection pool.
     """
     # ── Startup ───────────────────────────────────────────────────────────────
-    async with AsyncSessionFactory() as session:
-        result = await session.execute(select(Category).limit(1))
-        if result.scalars().first() is None:
-            for name in STARTER_CATEGORIES:
-                session.add(Category(name=name))
-            await session.commit()
+    try:
+        async with AsyncSessionFactory() as session:
+            result = await session.execute(select(Category).limit(1))
+            if result.scalars().first() is None:
+                for name in STARTER_CATEGORIES:
+                    session.add(Category(name=name))
+                await session.commit()
+    except Exception as e:
+        # If database is not ready or tables not yet created, log and continue
+        print(f"Lifespan seed notice: {e}")
 
     yield  # application runs here
 
@@ -62,6 +65,18 @@ app = FastAPI(
     redoc_url="/redoc",
 )
 
+# ── CORS Middleware ───────────────────────────────────────────────────────────
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Open for development / configured via env in prod
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# ── Include Routers ───────────────────────────────────────────────────────────
+app.include_router(api_router)
+
 
 # ── Health check (liveness — no DB dependency) ────────────────────────────────
 @app.get("/health", tags=["Health"])
@@ -69,6 +84,5 @@ async def health() -> dict[str, str]:
     """
     Liveness probe.
     Returns 200 OK immediately without touching the database.
-    Use a separate readiness probe that queries the DB if needed.
     """
     return {"status": "ok"}

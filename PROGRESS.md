@@ -13,7 +13,7 @@
 |-------|------|--------|-----------|
 | 1 | Project Scaffolding & Folder Structure | ✅ Done | 2026-08-26 |
 | 2 | Backend Foundation (FastAPI setup, DB config, models, Alembic) | 🔄 In Progress | 2026-08-26 |
-| 3 | Backend API Implementation (all endpoints) | ⬜ Pending | — |
+| 3 | Backend API Implementation (all endpoints) | 🔄 In Progress | 2026-08-26 |
 | 4 | Frontend Foundation (Next.js init, Tailwind, shadcn/ui) | ⬜ Pending | — |
 | 5 | Frontend Pages (Dashboard + Expenses) | ⬜ Pending | — |
 | 6 | Integration, Validation & Testing | ⬜ Pending | — |
@@ -66,18 +66,22 @@
 
 ---
 
-## Phase 3 — Backend API Implementation ⬜
+## Phase 3 — Backend API Implementation 🔄 In Progress
 
 **Goal:** Implement all REST API endpoints per SRS Section 7.
 
-### Planned Tasks
-- [ ] Categories router + schemas + services + repositories (CRUD + safe-delete)
-- [ ] Expenses router + schemas + services + repositories (CRUD + filter/search/sort/paginate)
-- [ ] Budgets router + schemas + services + repositories
-- [ ] Dashboard endpoints (7 endpoints: summary, recent, category-breakdown, trend, comparison, top-categories, stats)
-- [ ] Category safe-delete logic (409 Conflict + reassign flow)
-- [ ] Unit tests: budget calc, category-deletion, filter/sort logic
-- [ ] Integration tests: API endpoints via pytest + httpx AsyncClient
+### Completed Tasks
+- [x] Categories Schemas, Repository, Service, and Router (`/api/v1/categories`)
+- [x] Expenses Schemas, Repository, Service, and Router (`/api/v1/expenses` with search/multi-filter/sort/pagination)
+- [x] Budgets Schemas, Repository, Service, and Router (`/api/v1/budgets` with live spent & status)
+- [x] Dashboard Schemas, Repository, Service, and Router (`/api/v1/dashboard` 7 analytics endpoints)
+- [x] Category safe-delete logic (409 Conflict rejection if expenses exist, or reassign flow)
+- [x] Main FastAPI router integration (`/api/v1`) + CORS middleware
+- [x] Unit tests for schema validation and budget status threshold calculations
+
+### Remaining Tasks
+- [ ] Integration tests against a live database instance
+- [ ] Run full test suite with pytest once DB environment is up
 
 ---
 
