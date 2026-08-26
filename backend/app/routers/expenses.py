@@ -29,12 +29,12 @@ async def list_expenses(
     payment_mode: Optional[PaymentMode] = Query(default=None, description="Filter by payment mode"),
     sort_by: str = Query(
         default="expense_date",
-        regex="^(expense_date|amount|title|created_at)$",
+        pattern="^(expense_date|amount|title|created_at)$",
         description="Sort field",
     ),
     sort_order: str = Query(
         default="desc",
-        regex="^(asc|desc)$",
+        pattern="^(asc|desc)$",
         description="Sort direction",
     ),
     page: int = Query(default=1, ge=1, description="Page number"),

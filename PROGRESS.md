@@ -12,9 +12,9 @@
 | Phase | Name | Status | Completed |
 |-------|------|--------|-----------|
 | 1 | Project Scaffolding & Folder Structure | ✅ Done | 2026-08-26 |
-| 2 | Backend Foundation (FastAPI setup, DB config, models, Alembic) | 🔄 In Progress | 2026-08-26 |
-| 3 | Backend API Implementation (all endpoints) | 🔄 In Progress | 2026-08-26 |
-| 4 | Frontend Foundation (Next.js init, Tailwind, shadcn/ui) | ⬜ Pending | — |
+| 2 | Backend Foundation (FastAPI setup, DB config, models, Alembic) | ✅ Done | 2026-08-26 |
+| 3 | Backend API Implementation (all endpoints) | ✅ Done | 2026-08-26 |
+| 4 | Frontend Foundation (Next.js init, Tailwind, shadcn/ui) | 🔄 Next | — |
 | 5 | Frontend Pages (Dashboard + Expenses) | ⬜ Pending | — |
 | 6 | Integration, Validation & Testing | ⬜ Pending | — |
 | 7 | CI/CD, Dockerfiles & Deployment | ⬜ Pending | — |
@@ -41,7 +41,7 @@
 
 ---
 
-## Phase 2 — Backend Foundation 🔄 In Progress
+## Phase 2 — Backend Foundation ✅ Done
 
 **Goal:** Set up working FastAPI app with DB connection, SQLAlchemy models, and Alembic migrations.
 
@@ -59,14 +59,12 @@
 - [x] `backend/alembic.ini` — alembic config (DATABASE_URL injected at runtime)
 - [x] `backend/alembic/env.py` — async alembic environment configured
 - [x] `__init__.py` for all app sub-packages (routers, schemas, services, repositories, tests)
-
-### Remaining Tasks
-- [ ] First migration: `alembic revision --autogenerate -m "init"` → review → `alembic upgrade head`
-- [ ] Verify: server starts, connects to DB, seeds categories
+- [x] First migration: `alembic revision --autogenerate -m "create initial tables"` → reviewed → `alembic upgrade head` applied
+- [x] Verified: server connects to local PostgreSQL database and seeds 9 starter categories
 
 ---
 
-## Phase 3 — Backend API Implementation 🔄 In Progress
+## Phase 3 — Backend API Implementation ✅ Done
 
 **Goal:** Implement all REST API endpoints per SRS Section 7.
 
@@ -78,10 +76,8 @@
 - [x] Category safe-delete logic (409 Conflict rejection if expenses exist, or reassign flow)
 - [x] Main FastAPI router integration (`/api/v1`) + CORS middleware
 - [x] Unit tests for schema validation and budget status threshold calculations
-
-### Remaining Tasks
-- [ ] Integration tests against a live database instance
-- [ ] Run full test suite with pytest once DB environment is up
+- [x] Integration tests against live PostgreSQL database (health check, seeding, full CRUD flow)
+- [x] 100% pytest suite passing (13/13 tests passed)
 
 ---
 
