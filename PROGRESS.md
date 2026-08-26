@@ -14,8 +14,8 @@
 | 1 | Project Scaffolding & Folder Structure | ✅ Done | 2026-08-26 |
 | 2 | Backend Foundation (FastAPI setup, DB config, models, Alembic) | ✅ Done | 2026-08-26 |
 | 3 | Backend API Implementation (all endpoints) | ✅ Done | 2026-08-26 |
-| 4 | Frontend Foundation (Next.js init, Tailwind, shadcn/ui) | 🔄 Next | — |
-| 5 | Frontend Pages (Dashboard + Expenses) | ⬜ Pending | — |
+| 4 | Frontend Foundation (Next.js init, Tailwind, shadcn/ui) | ✅ Done | 2026-08-26 |
+| 5 | Frontend Pages (Dashboard + Expenses) | 🔄 Next | — |
 | 6 | Integration, Validation & Testing | ⬜ Pending | — |
 | 7 | CI/CD, Dockerfiles & Deployment | ⬜ Pending | — |
 
@@ -81,18 +81,20 @@
 
 ---
 
-## Phase 4 — Frontend Foundation ⬜
+## Phase 4 — Frontend Foundation ✅ Done
 
 **Goal:** Scaffold Next.js app with all tooling wired up.
 
-### Planned Tasks
-- [ ] `npx create-next-app` — TypeScript + Tailwind + App Router
-- [ ] Install shadcn/ui, Framer Motion, React Three Fiber, Recharts/Chart.js, Zod, React Hook Form
-- [ ] `frontend/.env.example` — `NEXT_PUBLIC_API_URL`
-- [ ] Global layout, theme, typography (Inter/Outfit from Google Fonts)
-- [ ] Hamburger navigation (Dashboard + Expenses links)
-- [ ] API client helpers in `frontend/lib/api.ts`
-- [ ] Shared Zod schemas in `frontend/lib/schemas.ts`
+### Completed Tasks
+- [x] Initialized Next.js (App Router, TypeScript) with Tailwind CSS
+- [x] Installed dependencies: Radix UI, Framer Motion, Three.js / React Three Fiber, Recharts, Zod, React Hook Form, Sonner toasts
+- [x] Configured `frontend/.env.example` and `frontend/.env.local` (`NEXT_PUBLIC_API_URL`)
+- [x] Global layout with dark theme tokens, glassmorphism card styling, Inter font, and Toast notifications
+- [x] Responsive navigation bar with Hamburger menu (FR-1) and INR currency badge
+- [x] Type-safe API client helper in `frontend/lib/api.ts` wrapping all FastAPI endpoints
+- [x] Zod validation schemas in `frontend/lib/schemas.ts` for all forms
+- [x] UI component primitives: `Button`, `Card`, `Badge`, `Input`, `Dialog`, `LoadingSkeleton`, `EmptyState`, `Hero3D`
+- [x] Verified zero-error Next.js production build (`npm run build`)
 
 ---
 
