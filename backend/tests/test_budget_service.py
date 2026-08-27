@@ -37,6 +37,6 @@ def test_budget_calculation_over_budget():
 
     remaining, pct, status_val = service._calculate_budget_status(budget, spent)
 
-    assert remaining == Decimal("-1200.50")
+    assert remaining == Decimal("0.00")
     assert pct == 112.0
     assert status_val == "over_budget"

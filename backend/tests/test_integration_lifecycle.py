@@ -106,7 +106,7 @@ async def test_end_to_end_financial_tracking_lifecycle(client: AsyncClient):
     budgets_res2 = await client.get("/api/v1/budgets", params={"period_month": curr_month})
     custom_budget_info2 = next(cb for cb in budgets_res2.json()["category_budgets"] if cb["category_id"] == custom_cat_id)
     assert custom_budget_info2["status"] == "over_budget"
-    assert custom_budget_info2["remaining"] == "-50.00"
+    assert custom_budget_info2["remaining"] == "0.00"
 
     # 8. Reassign exp2 to Food Category
     update_res = await client.put(

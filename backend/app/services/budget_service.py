@@ -27,7 +27,7 @@ class BudgetService:
     def _calculate_budget_status(
         self, budget_amount: Decimal, spent: Decimal
     ) -> Tuple[Decimal, float, Literal["on_track", "near_limit", "over_budget"]]:
-        remaining = budget_amount - spent
+        remaining = max(Decimal("0.00"), budget_amount - spent)
         percentage_used = (
             float((spent / budget_amount) * 100) if budget_amount > 0 else 0.0
         )

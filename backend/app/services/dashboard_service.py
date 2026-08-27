@@ -44,7 +44,7 @@ class DashboardService:
 
         if overall_budget:
             total_budget = overall_budget.amount
-            remaining = total_budget - total_spent
+            remaining = max(Decimal("0.00"), total_budget - total_spent)
             percentage = float((total_spent / total_budget) * 100) if total_budget > 0 else 0.0
             threshold = Decimal(str(settings.BUDGET_NEAR_LIMIT_THRESHOLD)) * total_budget
 

@@ -315,7 +315,7 @@ export function BudgetManagerModal({ open, onOpenChange, onSuccess }: BudgetMana
                         ₹{parseFloat(budgets.overall_budget.amount).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                       </div>
                       <div className="text-xs text-muted-foreground mt-1">
-                        Rem: ₹{parseFloat(budgets.overall_budget.remaining).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                        Rem: ₹{Math.max(0, parseFloat(budgets.overall_budget.remaining)).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                       </div>
                     </div>
                     <div className="flex items-center gap-1 border-l border-border/60 pl-2">
@@ -374,7 +374,7 @@ export function BudgetManagerModal({ open, onOpenChange, onSuccess }: BudgetMana
                         ₹{parseFloat(b.amount).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                       </div>
                       <div className="text-xs text-muted-foreground mt-1">
-                        Rem: ₹{parseFloat(b.remaining).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                        Rem: ₹{Math.max(0, parseFloat(b.remaining)).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                       </div>
                     </div>
                     <div className="flex items-center gap-1 border-l border-border/60 pl-2">

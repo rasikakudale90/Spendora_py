@@ -39,7 +39,9 @@ export function KpiCards({ summary, stats }: KpiCardsProps) {
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold tracking-tight text-foreground">
-            {summary.remaining_budget ? `₹${parseFloat(summary.remaining_budget).toLocaleString('en-IN', { minimumFractionDigits: 2 })}` : 'N/A'}
+            {summary.remaining_budget !== undefined && summary.remaining_budget !== null 
+              ? `₹${Math.max(0, parseFloat(summary.remaining_budget)).toLocaleString('en-IN', { minimumFractionDigits: 2 })}` 
+              : 'N/A'}
           </div>
           {summary.total_budget ? (
             <div className="space-y-1.5 mt-2">

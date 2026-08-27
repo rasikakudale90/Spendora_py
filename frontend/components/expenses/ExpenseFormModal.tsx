@@ -21,13 +21,22 @@ export function ExpenseFormModal({ open, onOpenChange, expenseToEdit, onSuccess 
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(false);
 
+  const getLocalTodayDateString = () => {
+    const d = new Date();
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  };
+  const todayDateString = getLocalTodayDateString();
+
   const { register, handleSubmit, control, reset, formState: { errors } } = useForm<ExpenseFormValues>({
     resolver: zodResolver(expenseFormSchema),
     defaultValues: {
       title: "",
       amount: "",
       category_id: "",
-      expense_date: new Date().toISOString().split("T")[0],
+      expense_date: todayDateString,
       payment_mode: "Card",
       notes: ""
     }
@@ -50,13 +59,13 @@ export function ExpenseFormModal({ open, onOpenChange, expenseToEdit, onSuccess 
           title: "",
           amount: "",
           category_id: "",
-          expense_date: new Date().toISOString().split("T")[0],
+          expense_date: todayDateString,
           payment_mode: "Card",
           notes: ""
         });
       }
     }
-  }, [open, expenseToEdit, reset]);
+  }, [open, expenseToEdit, reset, todayDateString]);
 
   const onSubmit = async (data: ExpenseFormValues) => {
     try {
@@ -101,7 +110,7 @@ export function ExpenseFormModal({ open, onOpenChange, expenseToEdit, onSuccess 
             
             <div className="space-y-1.5">
               <Label htmlFor="expense_date">Date</Label>
-              <Input id="expense_date" type="date" {...register("expense_date")} />
+              <Input id="expense_date" type="date" max={todayDateString} {...register("expense_date")} />
               {errors.expense_date && <p className="text-xs text-rose-500">{errors.expense_date.message}</p>}
             </div>
           </div>

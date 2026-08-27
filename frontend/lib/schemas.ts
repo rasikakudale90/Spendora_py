@@ -1,5 +1,13 @@
 import { z } from "zod";
 
+const getLocalTodayDateString = () => {
+  const d = new Date();
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+};
+
 export const expenseFormSchema = z.object({
   title: z
     .string()
@@ -15,7 +23,7 @@ export const expenseFormSchema = z.object({
   expense_date: z
     .string()
     .min(1, "Date is required")
-    .refine((val) => new Date(val) <= new Date(new Date().setHours(23, 59, 59, 999)), {
+    .refine((val) => val <= getLocalTodayDateString(), {
       message: "Expense date cannot be in the future",
     }),
   payment_mode: z.enum(["Cash", "Card", "UPI", "Net Banking", "Other"]).optional(),
