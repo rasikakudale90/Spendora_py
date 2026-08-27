@@ -9,33 +9,44 @@ from sqlalchemy.orm import selectinload
 from app.models.budget import Budget
 from app.models.category import Category
 from app.models.expense import Expense
-from app.schemas.budget import BudgetCreate
+from app.schemas.budget import BudgetCreate, compute_period_bounds
 
 
 class BudgetRepository:
     def __init__(self, session: AsyncSession):
         self.session = session
 
-    async def get_by_period(self, period_month: date) -> Sequence[Budget]:
+    async def get_by_period(
+        self, period_start: date, period_type: str = "monthly"
+    ) -> Sequence[Budget]:
         stmt = (
             select(Budget)
             .options(selectinload(Budget.category))
-            .where(Budget.period_month == period_month)
+            .where(
+                Budget.period_type == period_type,
+                Budget.period_start == period_start,
+            )
             .order_by(Budget.scope.desc(), Budget.created_at.asc())
         )
         result = await self.session.execute(stmt)
         return result.scalars().all()
 
-    async def get_overall(self, period_month: date) -> Optional[Budget]:
+    async def get_overall(
+        self, period_start: date, period_type: str = "monthly"
+    ) -> Optional[Budget]:
         stmt = (
             select(Budget)
-            .where(Budget.scope == "overall", Budget.period_month == period_month)
+            .where(
+                Budget.scope == "overall",
+                Budget.period_type == period_type,
+                Budget.period_start == period_start,
+            )
         )
         result = await self.session.execute(stmt)
         return result.scalars().first()
 
     async def get_category_budget(
-        self, category_id: uuid.UUID, period_month: date
+        self, category_id: uuid.UUID, period_start: date, period_type: str = "monthly"
     ) -> Optional[Budget]:
         stmt = (
             select(Budget)
@@ -43,22 +54,29 @@ class BudgetRepository:
             .where(
                 Budget.scope == "category",
                 Budget.category_id == category_id,
-                Budget.period_month == period_month,
+                Budget.period_type == period_type,
+                Budget.period_start == period_start,
             )
         )
         result = await self.session.execute(stmt)
         return result.scalars().first()
 
     async def upsert(self, data: BudgetCreate) -> Budget:
-        normalized_period = date(data.period_month.year, data.period_month.month, 1)
+        start_date, end_date = compute_period_bounds(
+            data.period_start or data.period_month or date.today(),
+            data.period_type,
+        )
 
         if data.scope == "overall":
-            existing = await self.get_overall(normalized_period)
+            existing = await self.get_overall(start_date, data.period_type)
         else:
-            existing = await self.get_category_budget(data.category_id, normalized_period)
+            existing = await self.get_category_budget(data.category_id, start_date, data.period_type)
 
         if existing:
             existing.amount = data.amount
+            existing.period_start = start_date
+            existing.period_end = end_date
+            existing.period_month = date(start_date.year, start_date.month, 1)
             await self.session.commit()
             await self.session.refresh(existing)
             return existing
@@ -67,7 +85,10 @@ class BudgetRepository:
                 scope=data.scope,
                 category_id=data.category_id,
                 amount=data.amount,
-                period_month=normalized_period,
+                period_type=data.period_type,
+                period_start=start_date,
+                period_end=end_date,
+                period_month=date(start_date.year, start_date.month, 1),
             )
             self.session.add(budget)
             await self.session.commit()

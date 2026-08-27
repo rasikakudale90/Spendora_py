@@ -70,7 +70,7 @@ export default function DashboardPage() {
             Financial Dashboard
           </h1>
           <p className="text-sm text-muted-foreground mt-1">
-            Real-time spending analysis and monthly budget control
+            Real-time spending analysis and multi-period budget control (Weekly, Monthly, Yearly)
           </p>
         </div>
         <div className="flex gap-2">

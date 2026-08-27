@@ -6,18 +6,14 @@ Table: budgets
 - scope: 'overall' or 'category' (enforced via CHECK constraint)
 - category_id: NULL for overall budgets; required for category budgets
 - amount: NUMERIC(12,2), CHECK > 0
-- period_month: DATE stored as first-of-month (e.g. 2026-08-01)
+- period_type: 'weekly', 'monthly', or 'yearly' (default: 'monthly')
+- period_start: DATE stored as start of the period (e.g. Monday for week, 1st for month, Jan 1 for year)
+- period_end: DATE stored as end of the period
+- period_month: DATE stored as first-of-month (maintained for backward compatibility)
 
 Unique constraints (partial indexes):
-  - One 'overall' budget per period_month
-  - One 'category' budget per (category_id, period_month)
-
-These are implemented as partial unique indexes to handle the conditional
-uniqueness (scope-dependent), which cannot be expressed as a simple
-UniqueConstraint across all rows.
-
-Budget remaining formula (computed at query time, never stored):
-    Remaining = Budget.amount − SUM(expenses.amount WHERE expense_date in period_month)
+  - One 'overall' budget per (period_type, period_start)
+  - One 'category' budget per (category_id, period_type, period_start)
 """
 import uuid
 from datetime import date
@@ -47,20 +43,27 @@ class Budget(Base, TimestampMixin):
             "scope IN ('overall', 'category')",
             name="ck_budgets_scope_valid",
         ),
+        # Period type must be one of three values
+        CheckConstraint(
+            "period_type IN ('weekly', 'monthly', 'yearly')",
+            name="ck_budgets_period_type_valid",
+        ),
         # Amount must be positive
         CheckConstraint("amount > 0", name="ck_budgets_amount_positive"),
-        # One overall budget per period_month (partial unique index)
+        # One overall budget per (period_type, period_start) (partial unique index)
         Index(
-            "uix_budgets_overall_period",
-            "period_month",
+            "uix_budgets_overall_period_type_start",
+            "period_type",
+            "period_start",
             unique=True,
             postgresql_where=text("scope = 'overall'"),
         ),
-        # One category budget per (category_id, period_month) (partial unique index)
+        # One category budget per (category_id, period_type, period_start) (partial unique index)
         Index(
-            "uix_budgets_category_period",
+            "uix_budgets_category_period_type_start",
             "category_id",
-            "period_month",
+            "period_type",
+            "period_start",
             unique=True,
             postgresql_where=text("scope = 'category'"),
         ),
@@ -78,7 +81,9 @@ class Budget(Base, TimestampMixin):
         nullable=True,
     )
     amount: Mapped[Decimal] = mapped_column(Numeric(12, 2), nullable=False)
-    # Stored as first-of-month: always YYYY-MM-01
+    period_type: Mapped[str] = mapped_column(String(10), default="monthly", server_default="monthly", nullable=False)
+    period_start: Mapped[date] = mapped_column(Date, nullable=False)
+    period_end: Mapped[date] = mapped_column(Date, nullable=False)
     period_month: Mapped[date] = mapped_column(Date, nullable=False)
 
     # ── Relationships ─────────────────────────────────────────────────────────
@@ -90,6 +95,6 @@ class Budget(Base, TimestampMixin):
 
     def __repr__(self) -> str:
         return (
-            f"<Budget id={self.id} scope={self.scope!r} "
-            f"period={self.period_month} amount={self.amount}>"
+            f"<Budget id={self.id} scope={self.scope!r} period_type={self.period_type!r} "
+            f"period_start={self.period_start} amount={self.amount}>"
         )

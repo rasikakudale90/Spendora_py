@@ -33,12 +33,17 @@ export interface ExpenseListResponse {
   total_pages: number;
 }
 
+export type PeriodType = "weekly" | "monthly" | "yearly";
+
 export interface Budget {
   id: string;
   scope: "overall" | "category";
   category_id?: string | null;
   category_name?: string | null;
   amount: string;
+  period_type: PeriodType;
+  period_start: string;
+  period_end: string;
   period_month: string;
   spent: string;
   remaining: string;
@@ -49,6 +54,9 @@ export interface Budget {
 }
 
 export interface BudgetListResponse {
+  period_type: PeriodType;
+  period_start: string;
+  period_end: string;
   overall_budget?: Budget | null;
   category_budgets: Budget[];
 }
@@ -191,15 +199,20 @@ export const api = {
     }),
 
   // Budgets
-  getBudgets: (periodMonth?: string) =>
-    fetchJson<BudgetListResponse>(
-      `/api/v1/budgets${periodMonth ? `?period_month=${periodMonth}` : ""}`
-    ),
+  getBudgets: (periodDate?: string, periodType: PeriodType = "monthly") => {
+    const params = new URLSearchParams();
+    if (periodDate) params.append("period_date", periodDate);
+    if (periodType) params.append("period_type", periodType);
+    const qs = params.toString() ? `?${params.toString()}` : "";
+    return fetchJson<BudgetListResponse>(`/api/v1/budgets${qs}`);
+  },
   setBudget: (data: {
     scope: "overall" | "category";
     category_id?: string | null;
     amount: string | number;
-    period_month: string;
+    period_type?: PeriodType;
+    period_start?: string;
+    period_month?: string;
   }) =>
     fetchJson<Budget>("/api/v1/budgets", {
       method: "POST",

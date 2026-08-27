@@ -32,7 +32,7 @@ export function KpiCards({ summary, stats }: KpiCardsProps) {
 
       <Card className="glass-card glass-card-hover">
         <CardHeader className="flex flex-row items-center justify-between pb-2">
-          <CardTitle className="text-sm font-medium text-muted-foreground">Budget Remaining</CardTitle>
+          <CardTitle className="text-sm font-medium text-muted-foreground">Monthly Budget Remaining</CardTitle>
           <div className="w-8 h-8 rounded-lg bg-blue-500/10 flex items-center justify-center">
             <Target className="h-4 w-4 text-blue-600 dark:text-blue-400" />
           </div>
@@ -42,17 +42,23 @@ export function KpiCards({ summary, stats }: KpiCardsProps) {
             {summary.remaining_budget ? `₹${parseFloat(summary.remaining_budget).toLocaleString('en-IN', { minimumFractionDigits: 2 })}` : 'N/A'}
           </div>
           {summary.total_budget ? (
-            <div className="w-full bg-slate-200 dark:bg-slate-800 rounded-full h-1.5 mt-3 overflow-hidden">
-              <div 
-                className={cn("h-1.5 rounded-full transition-all duration-500", 
-                  summary.status === 'on_track' ? 'bg-emerald-500' : 
-                  summary.status === 'near_limit' ? 'bg-amber-500' : 'bg-rose-500'
-                )}
-                style={{ width: `${Math.min(summary.percentage_used, 100)}%` }}
-              ></div>
+            <div className="space-y-1.5 mt-2">
+              <div className="flex justify-between text-xs text-muted-foreground">
+                <span>Monthly Cap: ₹{parseFloat(summary.total_budget).toLocaleString('en-IN')}</span>
+                <span>{summary.percentage_used.toFixed(1)}%</span>
+              </div>
+              <div className="w-full bg-slate-200 dark:bg-slate-800 rounded-full h-1.5 overflow-hidden">
+                <div 
+                  className={cn("h-1.5 rounded-full transition-all duration-500", 
+                    summary.status === 'on_track' ? 'bg-emerald-500' : 
+                    summary.status === 'near_limit' ? 'bg-amber-500' : 'bg-rose-500'
+                  )}
+                  style={{ width: `${Math.min(summary.percentage_used, 100)}%` }}
+                ></div>
+              </div>
             </div>
           ) : (
-            <p className="text-xs text-muted-foreground mt-1">No overall budget set</p>
+            <p className="text-xs text-muted-foreground mt-1">No monthly budget set</p>
           )}
         </CardContent>
       </Card>

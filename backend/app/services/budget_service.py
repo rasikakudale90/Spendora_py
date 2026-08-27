@@ -1,4 +1,3 @@
-import calendar
 from datetime import date
 from decimal import Decimal
 from typing import Literal, Tuple
@@ -13,6 +12,7 @@ from app.schemas.budget import (
     BudgetCreate,
     BudgetListResponse,
     BudgetResponse,
+    compute_period_bounds,
 )
 
 
@@ -21,12 +21,6 @@ class BudgetService:
         self.session = session
         self.repo = BudgetRepository(session)
         self.category_repo = CategoryRepository(session)
-
-    def _get_month_bounds(self, period_month: date) -> Tuple[date, date]:
-        start_date = date(period_month.year, period_month.month, 1)
-        _, last_day = calendar.monthrange(period_month.year, period_month.month)
-        end_date = date(period_month.year, period_month.month, last_day)
-        return start_date, end_date
 
     def _calculate_budget_status(
         self, budget_amount: Decimal, spent: Decimal
@@ -47,11 +41,12 @@ class BudgetService:
 
         return remaining, round(percentage_used, 2), status_val
 
-    async def get_budgets(self, period_month: date) -> BudgetListResponse:
-        normalized_period = date(period_month.year, period_month.month, 1)
-        start_date, end_date = self._get_month_bounds(normalized_period)
+    async def get_budgets(
+        self, target_date: date, period_type: str = "monthly"
+    ) -> BudgetListResponse:
+        start_date, end_date = compute_period_bounds(target_date, period_type)
 
-        budgets = await self.repo.get_by_period(normalized_period)
+        budgets = await self.repo.get_by_period(start_date, period_type)
 
         overall_resp = None
         category_resps = []
@@ -66,6 +61,9 @@ class BudgetService:
                     category_id=None,
                     category_name=None,
                     amount=b.amount,
+                    period_type=b.period_type,
+                    period_start=b.period_start,
+                    period_end=b.period_end,
                     period_month=b.period_month,
                     spent=spent,
                     remaining=remaining,
@@ -84,6 +82,9 @@ class BudgetService:
                         category_id=b.category_id,
                         category_name=b.category.name if b.category else None,
                         amount=b.amount,
+                        period_type=b.period_type,
+                        period_start=b.period_start,
+                        period_end=b.period_end,
                         period_month=b.period_month,
                         spent=spent,
                         remaining=remaining,
@@ -95,13 +96,18 @@ class BudgetService:
                 )
 
         return BudgetListResponse(
+            period_type=period_type,
+            period_start=start_date,
+            period_end=end_date,
             overall_budget=overall_resp,
             category_budgets=category_resps,
         )
 
     async def set_budget(self, data: BudgetCreate) -> BudgetResponse:
-        normalized_period = date(data.period_month.year, data.period_month.month, 1)
-        start_date, end_date = self._get_month_bounds(normalized_period)
+        start_date, end_date = compute_period_bounds(
+            data.period_start or data.period_month or date.today(),
+            data.period_type,
+        )
 
         if data.scope == "category":
             category = await self.category_repo.get_by_id(data.category_id)
@@ -125,6 +131,9 @@ class BudgetService:
             category_id=budget.category_id,
             category_name=category_name,
             amount=budget.amount,
+            period_type=budget.period_type,
+            period_start=budget.period_start,
+            period_end=budget.period_end,
             period_month=budget.period_month,
             spent=spent,
             remaining=remaining,

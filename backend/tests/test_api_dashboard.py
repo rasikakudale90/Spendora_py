@@ -59,7 +59,7 @@ async def test_dashboard_all_endpoints(client: AsyncClient):
         assert summary["expense_count"] >= 2
 
         # 2. Recent Expenses
-        rec_res = await client.get("/api/v1/dashboard/recent-expenses", params={"limit": 5})
+        rec_res = await client.get("/api/v1/dashboard/recent-expenses", params={"limit": 50})
         assert rec_res.status_code == 200
         rec_list = rec_res.json()
         assert isinstance(rec_list, list)
