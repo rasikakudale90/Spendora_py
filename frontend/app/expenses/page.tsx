@@ -29,7 +29,7 @@ export default function ExpensesPage() {
   const [search, setSearch] = useState("");
   const [categoryId, setCategoryId] = useState("all");
   const [sortBy, setSortBy] = useState("expense_date");
-  const [sortDesc, setSortDesc] = useState(true);
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
 
   const fetchExpenses = async () => {
     try {
@@ -38,7 +38,7 @@ export default function ExpensesPage() {
       if (search) params.search = search;
       if (categoryId !== "all") params.category_id = categoryId;
       params.sort_by = sortBy;
-      params.sort_desc = sortDesc;
+      params.sort_order = sortOrder;
 
       const res = await api.getExpenses(params);
       setData(res);
@@ -56,7 +56,7 @@ export default function ExpensesPage() {
   useEffect(() => {
     fetchExpenses();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [page, search, categoryId, sortBy, sortDesc]);
+  }, [page, search, categoryId, sortBy, sortOrder]);
 
   const handleEdit = (expense: Expense) => {
     setExpenseToEdit(expense);
@@ -111,20 +111,20 @@ export default function ExpensesPage() {
             </SelectContent>
           </Select>
 
-          <Select value={`${sortBy}-${sortDesc}`} onValueChange={(v) => {
-            const [by, desc] = v.split('-');
+          <Select value={`${sortBy}-${sortOrder}`} onValueChange={(v) => {
+            const [by, order] = v.split('-');
             setSortBy(by);
-            setSortDesc(desc === 'true');
+            setSortOrder(order as "asc" | "desc");
             setPage(1);
           }}>
             <SelectTrigger className="w-[170px]">
               <SelectValue placeholder="Sort by" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="expense_date-true">Date (Newest)</SelectItem>
-              <SelectItem value="expense_date-false">Date (Oldest)</SelectItem>
-              <SelectItem value="amount-true">Amount (Highest)</SelectItem>
-              <SelectItem value="amount-false">Amount (Lowest)</SelectItem>
+              <SelectItem value="expense_date-desc">Date (Newest)</SelectItem>
+              <SelectItem value="expense_date-asc">Date (Oldest)</SelectItem>
+              <SelectItem value="amount-desc">Amount (Highest)</SelectItem>
+              <SelectItem value="amount-asc">Amount (Lowest)</SelectItem>
             </SelectContent>
           </Select>
         </div>

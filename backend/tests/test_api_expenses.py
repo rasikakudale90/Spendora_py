@@ -173,14 +173,31 @@ async def test_expense_filters_and_search(client: AsyncClient):
         assert not any(i["id"] == e2_id for i in pm_res.json()["items"])
 
         # Sorting Test: Amount Descending
-        sort_res = await client.get(
+        sort_res_desc = await client.get(
             "/api/v1/expenses",
             params={"category_id": cat_id, "sort_by": "amount", "sort_order": "desc", "page_size": 50},
         )
-        assert sort_res.status_code == 200
-        sorted_items = sort_res.json()["items"]
-        amounts = [Decimal(i["amount"]) for i in sorted_items]
-        assert amounts == sorted(amounts, reverse=True)
+        assert sort_res_desc.status_code == 200
+        amounts_desc = [Decimal(i["amount"]) for i in sort_res_desc.json()["items"]]
+        assert amounts_desc == sorted(amounts_desc, reverse=True)
+
+        # Sorting Test: Amount Ascending (Lowest)
+        sort_res_asc = await client.get(
+            "/api/v1/expenses",
+            params={"category_id": cat_id, "sort_by": "amount", "sort_order": "asc", "page_size": 50},
+        )
+        assert sort_res_asc.status_code == 200
+        amounts_asc = [Decimal(i["amount"]) for i in sort_res_asc.json()["items"]]
+        assert amounts_asc == sorted(amounts_asc)
+
+        # Sorting Test: Date Ascending (Oldest)
+        sort_res_date_asc = await client.get(
+            "/api/v1/expenses",
+            params={"category_id": cat_id, "sort_by": "expense_date", "sort_order": "asc", "page_size": 50},
+        )
+        assert sort_res_date_asc.status_code == 200
+        dates_asc = [i["expense_date"] for i in sort_res_date_asc.json()["items"]]
+        assert dates_asc == sorted(dates_asc)
 
         # Pagination Test
         pag_res = await client.get("/api/v1/expenses", params={"page": 1, "page_size": 2})
