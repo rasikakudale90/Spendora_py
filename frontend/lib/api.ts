@@ -218,6 +218,15 @@ export const api = {
       method: "POST",
       body: JSON.stringify(data),
     }),
+  updateBudget: (id: string, amount: string | number) =>
+    fetchJson<Budget>(`/api/v1/budgets/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify({ amount }),
+    }),
+  deleteBudget: (id: string) =>
+    fetchJson<{ message: string }>(`/api/v1/budgets/${id}`, {
+      method: "DELETE",
+    }),
 
   // Dashboard
   getDashboardSummary: (periodMonth?: string) =>

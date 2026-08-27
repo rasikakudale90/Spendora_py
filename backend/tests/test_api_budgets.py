@@ -29,7 +29,7 @@ async def test_budget_upsert_and_retrieval(client: AsyncClient):
     assert overall_data["amount"] == "20000.00"
     assert overall_data["category_id"] is None
 
-    # 2. Update Monthly Overall Budget (upsert)
+    # 2. Update Monthly Overall Budget (upsert via POST)
     res_overall_update = await client.post(
         "/api/v1/budgets",
         json={
@@ -150,3 +150,45 @@ async def test_weekly_and_yearly_budgets(client: AsyncClient):
     assert y_body["period_start"] == "2026-01-01"
     assert y_body["period_end"] == "2026-12-31"
     assert any(cb["category_id"] == cat_id for cb in y_body["category_budgets"])
+
+
+@pytest.mark.asyncio
+async def test_budget_patch_and_delete(client: AsyncClient):
+    cat_resp = await client.get("/api/v1/categories")
+    cat_id = cat_resp.json()[0]["id"]
+    test_date = "2026-09-01"
+
+    # 1. Create a budget
+    create_res = await client.post(
+        "/api/v1/budgets",
+        json={
+            "scope": "category",
+            "category_id": cat_id,
+            "amount": "8000.00",
+            "period_type": "monthly",
+            "period_start": test_date,
+        },
+    )
+    assert create_res.status_code == 200
+    budget_id = create_res.json()["id"]
+
+    # 2. Update the budget amount via PATCH
+    patch_res = await client.patch(
+        f"/api/v1/budgets/{budget_id}",
+        json={"amount": "9500.00"},
+    )
+    assert patch_res.status_code == 200
+    assert patch_res.json()["amount"] == "9500.00"
+
+    # 3. Delete the budget via DELETE
+    del_res = await client.delete(f"/api/v1/budgets/{budget_id}")
+    assert del_res.status_code == 200
+    assert "deleted successfully" in del_res.json()["message"]
+
+    # 4. Verify budget is gone from the list
+    get_res = await client.get(
+        "/api/v1/budgets",
+        params={"period_date": test_date, "period_type": "monthly"},
+    )
+    assert get_res.status_code == 200
+    assert not any(b["id"] == budget_id for b in get_res.json()["category_budgets"])

@@ -61,6 +61,19 @@ class BudgetRepository:
         result = await self.session.execute(stmt)
         return result.scalars().first()
 
+    async def get_by_id(self, budget_id: uuid.UUID) -> Optional[Budget]:
+        stmt = (
+            select(Budget)
+            .options(selectinload(Budget.category))
+            .where(Budget.id == budget_id)
+        )
+        result = await self.session.execute(stmt)
+        return result.scalars().first()
+
+    async def delete(self, budget: Budget) -> None:
+        await self.session.delete(budget)
+        await self.session.commit()
+
     async def upsert(self, data: BudgetCreate) -> Budget:
         start_date, end_date = compute_period_bounds(
             data.period_start or data.period_month or date.today(),

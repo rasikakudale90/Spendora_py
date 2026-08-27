@@ -1,3 +1,4 @@
+import uuid
 from datetime import date
 from decimal import Decimal
 from typing import Literal, Tuple
@@ -12,6 +13,7 @@ from app.schemas.budget import (
     BudgetCreate,
     BudgetListResponse,
     BudgetResponse,
+    BudgetUpdate,
     compute_period_bounds,
 )
 
@@ -142,3 +144,51 @@ class BudgetService:
             created_at=budget.created_at,
             updated_at=budget.updated_at,
         )
+
+    async def update_budget(self, budget_id: uuid.UUID, data: BudgetUpdate) -> BudgetResponse:
+        budget = await self.repo.get_by_id(budget_id)
+        if not budget:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Budget with id '{budget_id}' not found",
+            )
+
+        budget.amount = data.amount
+        await self.session.commit()
+        await self.session.refresh(budget)
+
+        if budget.scope == "category":
+            category_name = budget.category.name if budget.category else None
+            spent = await self.repo.get_spent_for_period(budget.period_start, budget.period_end, budget.category_id)
+        else:
+            category_name = None
+            spent = await self.repo.get_spent_for_period(budget.period_start, budget.period_end)
+
+        remaining, pct, status_val = self._calculate_budget_status(budget.amount, spent)
+
+        return BudgetResponse(
+            id=budget.id,
+            scope=budget.scope,
+            category_id=budget.category_id,
+            category_name=category_name,
+            amount=budget.amount,
+            period_type=budget.period_type,
+            period_start=budget.period_start,
+            period_end=budget.period_end,
+            period_month=budget.period_month,
+            spent=spent,
+            remaining=remaining,
+            percentage_used=pct,
+            status=status_val,
+            created_at=budget.created_at,
+            updated_at=budget.updated_at,
+        )
+
+    async def delete_budget(self, budget_id: uuid.UUID) -> None:
+        budget = await self.repo.get_by_id(budget_id)
+        if not budget:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Budget with id '{budget_id}' not found",
+            )
+        await self.repo.delete(budget)

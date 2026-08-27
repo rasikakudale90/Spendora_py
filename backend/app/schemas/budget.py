@@ -49,6 +49,10 @@ class BudgetCreate(BudgetBase):
     pass
 
 
+class BudgetUpdate(BaseModel):
+    amount: Decimal = Field(..., gt=0, decimal_places=2, description="Updated allocated budget amount in INR")
+
+
 class BudgetResponse(BudgetBase):
     model_config = ConfigDict(from_attributes=True)
 

@@ -5,9 +5,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { api, Category, BudgetListResponse, PeriodType } from "@/lib/api";
+import { api, Category, Budget, BudgetListResponse, PeriodType } from "@/lib/api";
 import { toast } from "sonner";
-import { Calendar, CheckCircle2, AlertTriangle, AlertCircle, Sparkles } from "lucide-react";
+import { Calendar, CheckCircle2, AlertTriangle, AlertCircle, Sparkles, Pencil, Trash2, X } from "lucide-react";
 
 interface BudgetManagerModalProps {
   open: boolean;
@@ -19,11 +19,13 @@ export function BudgetManagerModal({ open, onOpenChange, onSuccess }: BudgetMana
   const [categories, setCategories] = useState<Category[]>([]);
   const [budgets, setBudgets] = useState<BudgetListResponse | null>(null);
   const [loading, setLoading] = useState(false);
+  const [actionLoading, setActionLoading] = useState(false);
   const [activePeriod, setActivePeriod] = useState<PeriodType>("monthly");
   
   const [scope, setScope] = useState<"overall" | "category">("overall");
   const [categoryId, setCategoryId] = useState<string>("");
   const [amount, setAmount] = useState<string>("");
+  const [editingBudget, setEditingBudget] = useState<Budget | null>(null);
 
   const fetchData = async (period: PeriodType = activePeriod) => {
     try {
@@ -42,17 +44,35 @@ export function BudgetManagerModal({ open, onOpenChange, onSuccess }: BudgetMana
   };
 
   useEffect(() => {
-    if (open) fetchData(activePeriod);
+    if (open) {
+      fetchData(activePeriod);
+      resetForm();
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, activePeriod]);
 
-  const handlePeriodChange = (period: PeriodType) => {
-    setActivePeriod(period);
+  const resetForm = () => {
+    setEditingBudget(null);
+    setScope("overall");
+    setCategoryId("");
+    setAmount("");
   };
 
-  const handleSetBudget = async () => {
+  const handlePeriodChange = (period: PeriodType) => {
+    setActivePeriod(period);
+    resetForm();
+  };
+
+  const startEdit = (budget: Budget) => {
+    setEditingBudget(budget);
+    setScope(budget.scope);
+    setCategoryId(budget.category_id || "");
+    setAmount(budget.amount);
+  };
+
+  const handleSaveBudget = async () => {
     if (!amount || isNaN(parseFloat(amount)) || parseFloat(amount) <= 0) {
-      toast.error("Please enter a valid amount");
+      toast.error("Please enter a valid positive amount");
       return;
     }
     if (scope === "category" && (!categoryId || categoryId === "none")) {
@@ -61,21 +81,44 @@ export function BudgetManagerModal({ open, onOpenChange, onSuccess }: BudgetMana
     }
 
     try {
-      setLoading(true);
-      await api.setBudget({
-        scope,
-        category_id: scope === "category" ? categoryId : null,
-        amount,
-        period_type: activePeriod,
-      });
-      toast.success(`${activePeriod.charAt(0).toUpperCase() + activePeriod.slice(1)} budget saved successfully`);
-      setAmount("");
+      setActionLoading(true);
+      if (editingBudget) {
+        await api.updateBudget(editingBudget.id, amount);
+        toast.success(`${getPeriodLabel()} budget updated successfully`);
+      } else {
+        await api.setBudget({
+          scope,
+          category_id: scope === "category" ? categoryId : null,
+          amount,
+          period_type: activePeriod,
+        });
+        toast.success(`${getPeriodLabel()} budget saved successfully`);
+      }
+      resetForm();
       fetchData(activePeriod);
       if (onSuccess) onSuccess();
     } catch (error: any) {
-      toast.error("Failed to set budget", { description: error.message });
+      toast.error("Failed to save budget", { description: error.message });
     } finally {
-      setLoading(false);
+      setActionLoading(false);
+    }
+  };
+
+  const handleDeleteBudget = async (budget: Budget) => {
+    const label = budget.scope === "overall" ? "Overall budget" : `${budget.category_name || "Category"} budget`;
+    try {
+      setActionLoading(true);
+      await api.deleteBudget(budget.id);
+      toast.success(`${label} deleted successfully`);
+      if (editingBudget?.id === budget.id) {
+        resetForm();
+      }
+      fetchData(activePeriod);
+      if (onSuccess) onSuccess();
+    } catch (error: any) {
+      toast.error("Failed to delete budget", { description: error.message });
+    } finally {
+      setActionLoading(false);
     }
   };
 
@@ -123,7 +166,7 @@ export function BudgetManagerModal({ open, onOpenChange, onSuccess }: BudgetMana
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-[520px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <div className="flex items-center justify-between">
             <DialogTitle className="text-xl font-bold flex items-center gap-2">
@@ -132,7 +175,7 @@ export function BudgetManagerModal({ open, onOpenChange, onSuccess }: BudgetMana
             </DialogTitle>
           </div>
           <DialogDescription className="text-xs text-muted-foreground">
-            Set and track spending limits by Weekly, Monthly, or Yearly horizons
+            Create, update, or remove spending caps by Weekly, Monthly, or Yearly horizons
           </DialogDescription>
         </DialogHeader>
 
@@ -166,16 +209,34 @@ export function BudgetManagerModal({ open, onOpenChange, onSuccess }: BudgetMana
         </div>
         
         <div className="space-y-5 pt-1">
-          {/* Create / Update Budget Card */}
-          <div className="space-y-4 bg-muted/40 p-4 rounded-xl border border-border/60 shadow-sm">
-            <h3 className="font-semibold text-sm text-foreground flex items-center justify-between">
-              <span>Set {getPeriodLabel()} Budget</span>
-              <span className="text-xs text-muted-foreground font-normal">INR (₹)</span>
-            </h3>
+          {/* Create / Update Budget Form Card */}
+          <div className={`space-y-4 p-4 rounded-xl border transition-all ${
+            editingBudget ? "bg-blue-500/5 border-blue-500/30 dark:bg-blue-950/20 dark:border-blue-800/40" : "bg-muted/40 border-border/60"
+          } shadow-sm`}>
+            <div className="flex items-center justify-between">
+              <h3 className="font-semibold text-sm text-foreground flex items-center gap-2">
+                <span>{editingBudget ? `Edit ${getPeriodLabel()} Budget` : `Set New ${getPeriodLabel()} Budget`}</span>
+                {editingBudget && (
+                  <Badge variant="secondary" className="text-[10px] bg-blue-500/10 text-blue-600 dark:text-blue-400">
+                    Editing Mode
+                  </Badge>
+                )}
+              </h3>
+              {editingBudget && (
+                <Button variant="ghost" size="sm" onClick={resetForm} className="h-6 text-xs gap-1 text-muted-foreground hover:text-foreground">
+                  <X className="w-3.5 h-3.5" /> Cancel
+                </Button>
+              )}
+            </div>
+
             <div className="grid grid-cols-2 gap-3.5">
               <div className="space-y-1.5">
                 <Label className="text-xs">Scope</Label>
-                <Select value={scope} onValueChange={(v: "overall"|"category") => setScope(v)}>
+                <Select 
+                  value={scope} 
+                  onValueChange={(v: "overall"|"category") => setScope(v)}
+                  disabled={!!editingBudget}
+                >
                   <SelectTrigger className="h-9">
                     <SelectValue />
                   </SelectTrigger>
@@ -189,7 +250,11 @@ export function BudgetManagerModal({ open, onOpenChange, onSuccess }: BudgetMana
               {scope === "category" && (
                 <div className="space-y-1.5">
                   <Label className="text-xs">Category</Label>
-                  <Select value={categoryId} onValueChange={setCategoryId}>
+                  <Select 
+                    value={categoryId} 
+                    onValueChange={setCategoryId}
+                    disabled={!!editingBudget}
+                  >
                     <SelectTrigger className="h-9">
                       <SelectValue placeholder="Select..." />
                     </SelectTrigger>
@@ -205,7 +270,7 @@ export function BudgetManagerModal({ open, onOpenChange, onSuccess }: BudgetMana
             </div>
 
             <div className="space-y-1.5">
-              <Label className="text-xs">{getPeriodLabel()} Limit Amount</Label>
+              <Label className="text-xs">{getPeriodLabel()} Limit Amount (₹)</Label>
               <div className="flex gap-2">
                 <Input 
                   type="number"
@@ -214,8 +279,8 @@ export function BudgetManagerModal({ open, onOpenChange, onSuccess }: BudgetMana
                   onChange={(e) => setAmount(e.target.value)}
                   className="h-9"
                 />
-                <Button onClick={handleSetBudget} disabled={loading} size="sm" className="shrink-0 px-4">
-                  Save Budget
+                <Button onClick={handleSaveBudget} disabled={actionLoading || loading} size="sm" className="shrink-0 px-4">
+                  {editingBudget ? "Update" : "Save"}
                 </Button>
               </div>
             </div>
@@ -224,12 +289,16 @@ export function BudgetManagerModal({ open, onOpenChange, onSuccess }: BudgetMana
           {/* Active Budgets List for Current Period */}
           <div className="space-y-3">
             <h3 className="font-semibold text-sm text-foreground flex items-center justify-between">
-              <span>Active {getPeriodLabel()} Budgets</span>
-              <span className="text-xs text-muted-foreground font-normal">Real-time spend tracking</span>
+              <span>Configured {getPeriodLabel()} Budgets</span>
+              <span className="text-xs text-muted-foreground font-normal">Manage & update</span>
             </h3>
             
             {budgets?.overall_budget && (
-              <div className="p-3.5 bg-muted/40 rounded-xl border border-border/50 space-y-2">
+              <div className={`p-3.5 rounded-xl border transition-all space-y-2 ${
+                editingBudget?.id === budgets.overall_budget.id 
+                  ? "bg-blue-500/10 border-blue-500/50" 
+                  : "bg-muted/40 border-border/50 hover:border-border"
+              }`}>
                 <div className="flex justify-between items-start">
                   <div>
                     <div className="flex items-center gap-2">
@@ -240,12 +309,34 @@ export function BudgetManagerModal({ open, onOpenChange, onSuccess }: BudgetMana
                       Spent: ₹{parseFloat(budgets.overall_budget.spent).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                     </div>
                   </div>
-                  <div className="text-right">
-                    <div className="font-bold text-sm text-emerald-600 dark:text-emerald-400">
-                      ₹{parseFloat(budgets.overall_budget.amount).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                  <div className="flex items-center gap-3">
+                    <div className="text-right">
+                      <div className="font-bold text-sm text-emerald-600 dark:text-emerald-400">
+                        ₹{parseFloat(budgets.overall_budget.amount).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                      </div>
+                      <div className="text-xs text-muted-foreground mt-1">
+                        Rem: ₹{parseFloat(budgets.overall_budget.remaining).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                      </div>
                     </div>
-                    <div className="text-xs text-muted-foreground mt-1">
-                      Remaining: ₹{parseFloat(budgets.overall_budget.remaining).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                    <div className="flex items-center gap-1 border-l border-border/60 pl-2">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => startEdit(budgets.overall_budget!)}
+                        className="h-7 w-7 text-muted-foreground hover:text-blue-600 dark:hover:text-blue-400"
+                        title="Edit Budget"
+                      >
+                        <Pencil className="w-3.5 h-3.5" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleDeleteBudget(budgets.overall_budget!)}
+                        className="h-7 w-7 text-muted-foreground hover:text-rose-600 dark:hover:text-rose-400"
+                        title="Delete Budget"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </Button>
                     </div>
                   </div>
                 </div>
@@ -262,7 +353,11 @@ export function BudgetManagerModal({ open, onOpenChange, onSuccess }: BudgetMana
             )}
 
             {budgets?.category_budgets.map(b => (
-              <div key={b.id} className="p-3.5 bg-muted/40 rounded-xl border border-border/50 space-y-2">
+              <div key={b.id} className={`p-3.5 rounded-xl border transition-all space-y-2 ${
+                editingBudget?.id === b.id 
+                  ? "bg-blue-500/10 border-blue-500/50" 
+                  : "bg-muted/40 border-border/50 hover:border-border"
+              }`}>
                 <div className="flex justify-between items-start">
                   <div>
                     <div className="flex items-center gap-2">
@@ -273,12 +368,34 @@ export function BudgetManagerModal({ open, onOpenChange, onSuccess }: BudgetMana
                       Spent: ₹{parseFloat(b.spent).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                     </div>
                   </div>
-                  <div className="text-right">
-                    <div className="font-semibold text-sm text-blue-600 dark:text-blue-400">
-                      ₹{parseFloat(b.amount).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                  <div className="flex items-center gap-3">
+                    <div className="text-right">
+                      <div className="font-semibold text-sm text-blue-600 dark:text-blue-400">
+                        ₹{parseFloat(b.amount).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                      </div>
+                      <div className="text-xs text-muted-foreground mt-1">
+                        Rem: ₹{parseFloat(b.remaining).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                      </div>
                     </div>
-                    <div className="text-xs text-muted-foreground mt-1">
-                      Remaining: ₹{parseFloat(b.remaining).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                    <div className="flex items-center gap-1 border-l border-border/60 pl-2">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => startEdit(b)}
+                        className="h-7 w-7 text-muted-foreground hover:text-blue-600 dark:hover:text-blue-400"
+                        title="Edit Budget"
+                      >
+                        <Pencil className="w-3.5 h-3.5" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleDeleteBudget(b)}
+                        className="h-7 w-7 text-muted-foreground hover:text-rose-600 dark:hover:text-rose-400"
+                        title="Delete Budget"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </Button>
                     </div>
                   </div>
                 </div>
