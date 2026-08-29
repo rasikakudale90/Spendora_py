@@ -16,23 +16,25 @@
 
 ### 1. Backend Architecture (5-Layer Pattern)
 `backend/app/`
-- **`routers/`**: HTTP endpoints (`categories.py`, `expenses.py`, `budgets.py`, `dashboard.py`, `api_router.py`)
-- **`services/`**: Business logic, budget threshold computations, category reassignment (`budget_service.py`, `dashboard_service.py`, `category_service.py`, `expense_service.py`)
-- **`repositories/`**: Raw async SQLAlchemy queries, pagination, search, aggregations
-- **`schemas/`**: Pydantic v2 schemas for request validation & response serialization
-- **`models/`**: SQLAlchemy 2.0 ORM models (`Category`, `Expense`, `Budget`, `PaymentMode`)
+- **`routers/`**: HTTP endpoints (`categories.py`, `expenses.py`, `budgets.py` [GET, POST, PATCH, DELETE], `dashboard.py`, `api_router.py`)
+- **`services/`**: Business logic, multi-period budget threshold computations, category reassignment (`budget_service.py`, `dashboard_service.py`, `category_service.py`, `expense_service.py`)
+- **`repositories/`**: Raw async SQLAlchemy queries, pagination, search, aggregations (`budget_repository.py` with multi-period bounds, `category_repository.py`, `expense_repository.py`)
+- **`schemas/`**: Pydantic v2 schemas (`budget.py` with `period_type` bounds & `BudgetUpdate`, `expense.py` with past-or-today date validation)
+- **`models/`**: SQLAlchemy 2.0 ORM models (`Category`, `Expense`, `Budget` with `period_type`, `period_start`, `period_end`, `PaymentMode`)
 - **`core/`**: Configuration (`config.py` with auto-normalizing `DATABASE_URL` validator) and async engine (`database.py` with `statement_cache_size=0` for Supabase poolers)
 
 ### 2. Frontend Architecture
 `frontend/`
-- **`app/`**: Next.js App Router (`/` Landing redirect, `/dashboard` Full analytics & modals, `/expenses` Filtering & pagination table)
-- **`components/`**: Modular UI components (`Button`, `Card`, `Badge`, `Dialog`, `LoadingSkeleton`, `EmptyState`, `Hero3D`, `ExpenseForm`, `BudgetModal`, `CategoryModal`, `ToastNotification`)
-- **`lib/`**: Type-safe HTTP client (`api.ts`), Zod validation schemas (`schemas.ts`), utils (`utils.ts`)
+- **`app/`**: Next.js App Router (`/` Landing redirect, `/dashboard` Full analytics & modals, `/expenses` Filtering & pagination table, `manifest.ts` PWA manifest)
+- **`components/`**: Modular UI components (`Button`, `Card`, `Badge`, `Dialog`, `LoadingSkeleton`, `EmptyState`, `Hero3D`, `ExpenseFormModal`, `BudgetManagerModal` [with Weekly/Monthly/Yearly tabs, Edit & Delete], `CategoryModal`, `PwaRegister` [Install banner & offline toasts])
+- **`lib/`**: Type-safe HTTP client (`api.ts` with full CRUD for expenses, budgets, categories), Zod validation schemas (`schemas.ts`), utils (`utils.ts`)
+- **`public/`**: Progressive Web App assets (`sw.js` Service Worker with offline caching, `manifest.json`, `icons/` standard 192/512px & maskable adaptive icons, vector SVG icons)
 
 ### 3. Database & Migrations
 - **Alembic:** Located in `backend/alembic/`. Migrations read `DATABASE_URL` dynamically from environment.
-- **Seeding:** Automatically checks and seeds 9 standard categories on lifespan startup if empty.
-- **Enums & Formats:** `PaymentMode` (`Cash`, `Card`, `UPI`, `Net Banking`, `Other`). `period_month` is always formatted as `YYYY-MM-01` date object.
+  - Migration `d5e1b2f3a4b5_add_budget_period_types.py` added `period_type` (`weekly`, `monthly`, `yearly`), `period_start`, `period_end`, check constraint, and composite unique indexes.
+- **Seeding:** Automatically checks and seeds standard starter categories on lifespan startup if empty.
+- **Enums & Formats:** `PaymentMode` (`Cash`, `Card`, `UPI`, `Net Banking`, `Other`). `period_type` (`weekly`, `monthly`, `yearly`). `period_start` and `period_end` are ISO date objects. Remaining balances clamped to `>= 0.00`.
 
 ---
 
@@ -44,12 +46,18 @@
 
 ---
 
-## 📊 Completed Phases (1 through 8)
+## 📊 Completed Phases (1 through 14)
 - ✅ **Phase 1:** Project Scaffolding & Folder Structure
 - ✅ **Phase 2:** Backend Foundation (FastAPI, asyncpg, models, Alembic)
 - ✅ **Phase 3:** Backend API Implementation (all 15+ endpoints)
 - ✅ **Phase 4:** Frontend Foundation (Next.js, Tailwind, Radix UI, Framer Motion, 3D visual)
-- ✅ **Phase 5:** Comprehensive Testing (38/38 pytest tests passing)
+- ✅ **Phase 5:** Comprehensive Testing (pytest test suite passing)
 - ✅ **Phase 6:** Complete Frontend Pages & Modals
 - ✅ **Phase 7:** End-to-end Integration & Validation (0 hardcoded values)
 - ✅ **Phase 8:** CI/CD (GitHub Actions), Dockerfiles (Root & Backend), Supabase pooler compatibility, and Render/Vercel configuration
+- ✅ **Phase 9:** Expense Sorting Fixes (Corrected `sort_order` mapping for `amount` and `expense_date` ascending/descending)
+- ✅ **Phase 10:** Multi-Period Budgeting System (Weekly, Monthly, and Yearly budget limits, Alembic migration `d5e1b2f3a4b5`, period bounds logic, and tabbed period UI)
+- ✅ **Phase 11:** Budget Update & Deletion Lifecycle (`PATCH /api/v1/budgets/{id}` and `DELETE /api/v1/budgets/{id}` endpoints, repository methods, and interactive Edit/Delete controls in `BudgetManagerModal`)
+- ✅ **Phase 12:** Financial Accuracy & Date Constraints (Remaining budget clamped to ₹0.00 on overspending; future expense dates blocked in native datepicker and Zod validation)
+- ✅ **Phase 13:** Category Sanitation & Test Isolation (Renamed `Hobbies_b0c83e` to clean `Hobbies` in database; introduced `try...finally` in lifecycle tests to prevent test entity leakage)
+- ✅ **Phase 14:** Progressive Web App (PWA) Implementation (Web App Manifests `manifest.ts` & `manifest.json`, Service Worker `sw.js` with offline caching and Stale-While-Revalidate, standard & maskable icons, `PwaRegister` install prompt banner, and Next.js 14 viewport configuration)
