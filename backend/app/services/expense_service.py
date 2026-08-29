@@ -7,9 +7,11 @@ from fastapi import HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.expense import PaymentMode
+from app.repositories.budget_repository import BudgetRepository
 from app.repositories.category_repository import CategoryRepository
 from app.repositories.expense_repository import ExpenseRepository
 from app.schemas.expense import (
+    DailyBudgetAlert,
     ExpenseCreate,
     ExpenseListResponse,
     ExpenseResponse,
@@ -71,6 +73,42 @@ class ExpenseService:
             )
         return ExpenseResponse.model_validate(expense)
 
+    async def _check_daily_budget_alert(
+        self, expense_date: date, category_id: uuid.UUID
+    ) -> Optional[DailyBudgetAlert]:
+        budget_repo = BudgetRepository(self.session)
+        # 1. Check overall daily budget first
+        overall_budget = await budget_repo.get_overall(expense_date, "daily")
+        if overall_budget:
+            spent = await budget_repo.get_spent_for_period(expense_date, expense_date)
+            if spent > overall_budget.amount:
+                exceeded = spent - overall_budget.amount
+                pct = round(float((spent / overall_budget.amount) * 100), 2)
+                return DailyBudgetAlert(
+                    exceeded=True,
+                    limit_amount=overall_budget.amount,
+                    total_spent=spent,
+                    exceeded_amount=exceeded,
+                    percentage_used=pct,
+                    message=f"Daily overall limit of ₹{overall_budget.amount:.2f} exceeded! Total spent today is ₹{spent:.2f} (₹{exceeded:.2f} over limit).",
+                )
+        # 2. Check category daily budget
+        cat_budget = await budget_repo.get_category_budget(category_id, expense_date, "daily")
+        if cat_budget:
+            spent = await budget_repo.get_spent_for_period(expense_date, expense_date, category_id)
+            if spent > cat_budget.amount:
+                exceeded = spent - cat_budget.amount
+                pct = round(float((spent / cat_budget.amount) * 100), 2)
+                return DailyBudgetAlert(
+                    exceeded=True,
+                    limit_amount=cat_budget.amount,
+                    total_spent=spent,
+                    exceeded_amount=exceeded,
+                    percentage_used=pct,
+                    message=f"Daily category limit of ₹{cat_budget.amount:.2f} exceeded! Spent ₹{spent:.2f} (₹{exceeded:.2f} over limit).",
+                )
+        return None
+
     async def create_expense(self, data: ExpenseCreate) -> ExpenseResponse:
         category = await self.category_repo.get_by_id(data.category_id)
         if not category:
@@ -80,7 +118,10 @@ class ExpenseService:
             )
 
         expense = await self.repo.create(data)
-        return ExpenseResponse.model_validate(expense)
+        alert = await self._check_daily_budget_alert(expense.expense_date, expense.category_id)
+        resp = ExpenseResponse.model_validate(expense)
+        resp.daily_budget_alert = alert
+        return resp
 
     async def update_expense(
         self, expense_id: uuid.UUID, data: ExpenseUpdate
@@ -101,7 +142,10 @@ class ExpenseService:
                 )
 
         updated = await self.repo.update(expense, data)
-        return ExpenseResponse.model_validate(updated)
+        alert = await self._check_daily_budget_alert(updated.expense_date, updated.category_id)
+        resp = ExpenseResponse.model_validate(updated)
+        resp.daily_budget_alert = alert
+        return resp
 
     async def delete_expense(self, expense_id: uuid.UUID) -> dict[str, str]:
         expense = await self.repo.get_by_id(expense_id)

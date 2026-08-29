@@ -26,13 +26,13 @@ async def get_budgets(
         default=None,
         description="Legacy month parameter for backwards compatibility",
     ),
-    period_type: Literal["weekly", "monthly", "yearly"] = Query(
+    period_type: Literal["daily", "weekly", "monthly", "yearly"] = Query(
         default="monthly",
-        description="Budget period type (weekly, monthly, or yearly)",
+        description="Budget period type (daily, weekly, monthly, or yearly)",
     ),
     db: AsyncSession = Depends(get_db),
 ):
-    """Retrieve overall and category budgets with live spent and remaining balances for weekly, monthly, or yearly periods."""
+    """Retrieve overall and category budgets with live spent and remaining balances for daily, weekly, monthly, or yearly periods."""
     target_date = period_date or period_month or date.today()
     service = BudgetService(db)
     return await service.get_budgets(target_date, period_type=period_type)
@@ -42,7 +42,7 @@ async def get_budgets(
 async def set_budget(
     data: BudgetCreate, db: AsyncSession = Depends(get_db)
 ):
-    """Create or update a weekly, monthly, or yearly budget goal."""
+    """Create or update a daily, weekly, monthly, or yearly budget goal."""
     service = BudgetService(db)
     return await service.set_budget(data)
 

@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { expenseFormSchema, ExpenseFormValues } from "@/lib/schemas";
-import { api, Category, Expense } from "@/lib/api";
+import { api, Category, Expense, DailyBudgetAlert } from "@/lib/api";
 import { toast } from "sonner";
 
 interface ExpenseFormModalProps {
@@ -15,9 +15,10 @@ interface ExpenseFormModalProps {
   onOpenChange: (open: boolean) => void;
   expenseToEdit?: Expense | null;
   onSuccess: () => void;
+  onDailyLimitBreached?: (alert: DailyBudgetAlert, date: string) => void;
 }
 
-export function ExpenseFormModal({ open, onOpenChange, expenseToEdit, onSuccess }: ExpenseFormModalProps) {
+export function ExpenseFormModal({ open, onOpenChange, expenseToEdit, onSuccess, onDailyLimitBreached }: ExpenseFormModalProps) {
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(false);
 
@@ -70,15 +71,19 @@ export function ExpenseFormModal({ open, onOpenChange, expenseToEdit, onSuccess 
   const onSubmit = async (data: ExpenseFormValues) => {
     try {
       setLoading(true);
+      let res: Expense;
       if (expenseToEdit) {
-        await api.updateExpense(expenseToEdit.id, data);
+        res = await api.updateExpense(expenseToEdit.id, data);
         toast.success("Expense updated successfully");
       } else {
-        await api.createExpense(data);
+        res = await api.createExpense(data);
         toast.success("Expense created successfully");
       }
       onSuccess();
       onOpenChange(false);
+      if (res?.daily_budget_alert?.exceeded && onDailyLimitBreached) {
+        onDailyLimitBreached(res.daily_budget_alert, data.expense_date);
+      }
     } catch (error: any) {
       toast.error(expenseToEdit ? "Failed to update expense" : "Failed to create expense", {
         description: error.message

@@ -12,6 +12,9 @@ import { Plus, Search, Filter, Edit, Trash2, ChevronLeft, ChevronRight } from "l
 import { toast } from "sonner";
 import { ExpenseFormModal } from "@/components/expenses/ExpenseFormModal";
 import { DeleteConfirmModal } from "@/components/expenses/DeleteConfirmModal";
+import { DailyLimitAlertModal } from "@/components/DailyLimitAlertModal";
+import { BudgetManagerModal } from "@/components/BudgetManagerModal";
+import { DailyBudgetAlert } from "@/lib/api";
 
 export default function ExpensesPage() {
   const [loading, setLoading] = useState(true);
@@ -23,6 +26,12 @@ export default function ExpensesPage() {
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [expenseToEdit, setExpenseToEdit] = useState<Expense | null>(null);
   const [expenseToDelete, setExpenseToDelete] = useState<string | null>(null);
+
+  // Daily Limit Alert state
+  const [dailyAlert, setDailyAlert] = useState<DailyBudgetAlert | null>(null);
+  const [isAlertOpen, setIsAlertOpen] = useState(false);
+  const [alertDate, setAlertDate] = useState<string>("");
+  const [isBudgetModalOpen, setIsBudgetModalOpen] = useState(false);
 
   // Filters state
   const [page, setPage] = useState(1);
@@ -217,12 +226,32 @@ export default function ExpensesPage() {
         onOpenChange={setIsFormOpen} 
         expenseToEdit={expenseToEdit}
         onSuccess={fetchExpenses}
+        onDailyLimitBreached={(alert, date) => {
+          setDailyAlert(alert);
+          setAlertDate(date);
+          setIsAlertOpen(true);
+        }}
       />
 
       <DeleteConfirmModal 
         open={isDeleteOpen}
         onOpenChange={setIsDeleteOpen}
         expenseId={expenseToDelete}
+        onSuccess={fetchExpenses}
+      />
+
+      <DailyLimitAlertModal
+        open={isAlertOpen}
+        onOpenChange={setIsAlertOpen}
+        alertData={dailyAlert}
+        targetDate={alertDate}
+        onOpenBudgetManager={() => setIsBudgetModalOpen(true)}
+      />
+
+      <BudgetManagerModal
+        open={isBudgetModalOpen}
+        onOpenChange={setIsBudgetModalOpen}
+        initialPeriod="daily"
         onSuccess={fetchExpenses}
       />
     </div>

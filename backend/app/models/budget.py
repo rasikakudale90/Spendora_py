@@ -6,7 +6,7 @@ Table: budgets
 - scope: 'overall' or 'category' (enforced via CHECK constraint)
 - category_id: NULL for overall budgets; required for category budgets
 - amount: NUMERIC(12,2), CHECK > 0
-- period_type: 'weekly', 'monthly', or 'yearly' (default: 'monthly')
+- period_type: 'daily', 'weekly', 'monthly', or 'yearly' (default: 'monthly')
 - period_start: DATE stored as start of the period (e.g. Monday for week, 1st for month, Jan 1 for year)
 - period_end: DATE stored as end of the period
 - period_month: DATE stored as first-of-month (maintained for backward compatibility)
@@ -43,9 +43,9 @@ class Budget(Base, TimestampMixin):
             "scope IN ('overall', 'category')",
             name="ck_budgets_scope_valid",
         ),
-        # Period type must be one of three values
+        # Period type must be one of four values
         CheckConstraint(
-            "period_type IN ('weekly', 'monthly', 'yearly')",
+            "period_type IN ('daily', 'weekly', 'monthly', 'yearly')",
             name="ck_budgets_period_type_valid",
         ),
         # Amount must be positive

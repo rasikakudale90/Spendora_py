@@ -13,14 +13,15 @@ interface BudgetManagerModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSuccess?: () => void;
+  initialPeriod?: PeriodType;
 }
 
-export function BudgetManagerModal({ open, onOpenChange, onSuccess }: BudgetManagerModalProps) {
+export function BudgetManagerModal({ open, onOpenChange, onSuccess, initialPeriod }: BudgetManagerModalProps) {
   const [categories, setCategories] = useState<Category[]>([]);
   const [budgets, setBudgets] = useState<BudgetListResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
-  const [activePeriod, setActivePeriod] = useState<PeriodType>("monthly");
+  const [activePeriod, setActivePeriod] = useState<PeriodType>(initialPeriod || "monthly");
   
   const [scope, setScope] = useState<"overall" | "category">("overall");
   const [categoryId, setCategoryId] = useState<string>("");
@@ -45,11 +46,13 @@ export function BudgetManagerModal({ open, onOpenChange, onSuccess }: BudgetMana
 
   useEffect(() => {
     if (open) {
-      fetchData(activePeriod);
+      const targetPeriod = initialPeriod || activePeriod;
+      setActivePeriod(targetPeriod);
+      fetchData(targetPeriod);
       resetForm();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, activePeriod]);
+  }, [open, initialPeriod]);
 
   const resetForm = () => {
     setEditingBudget(null);
@@ -123,6 +126,7 @@ export function BudgetManagerModal({ open, onOpenChange, onSuccess }: BudgetMana
   };
 
   const getPeriodLabel = () => {
+    if (activePeriod === "daily") return "Daily";
     if (activePeriod === "weekly") return "Weekly";
     if (activePeriod === "yearly") return "Yearly";
     return "Monthly";
@@ -133,6 +137,11 @@ export function BudgetManagerModal({ open, onOpenChange, onSuccess }: BudgetMana
     const s = new Date(budgets.period_start);
     const e = new Date(budgets.period_end);
 
+    if (activePeriod === "daily") {
+      const todayStr = new Date().toISOString().split("T")[0];
+      const isToday = budgets.period_start === todayStr;
+      return `${isToday ? "Today, " : ""}${s.toLocaleDateString("en-IN", { month: "short", day: "numeric", year: "numeric" })}`;
+    }
     if (activePeriod === "weekly") {
       return `${s.toLocaleDateString("en-IN", { month: "short", day: "numeric" })} – ${e.toLocaleDateString("en-IN", { month: "short", day: "numeric", year: "numeric" })}`;
     }
@@ -175,13 +184,13 @@ export function BudgetManagerModal({ open, onOpenChange, onSuccess }: BudgetMana
             </DialogTitle>
           </div>
           <DialogDescription className="text-xs text-muted-foreground">
-            Create, update, or remove spending caps by Weekly, Monthly, or Yearly horizons
+            Create, update, or remove spending caps by Daily, Weekly, Monthly, or Yearly horizons
           </DialogDescription>
         </DialogHeader>
 
         {/* Period Selector Tabs */}
         <div className="flex items-center p-1 bg-muted/70 rounded-xl border border-border/60 gap-1 mt-2">
-          {(["weekly", "monthly", "yearly"] as PeriodType[]).map((period) => (
+          {(["daily", "weekly", "monthly", "yearly"] as PeriodType[]).map((period) => (
             <button
               key={period}
               type="button"
@@ -192,7 +201,7 @@ export function BudgetManagerModal({ open, onOpenChange, onSuccess }: BudgetMana
                   : "text-muted-foreground hover:text-foreground"
               }`}
             >
-              {period === "weekly" ? "Weekly" : period === "monthly" ? "Monthly" : "Yearly"}
+              {period === "daily" ? "Daily" : period === "weekly" ? "Weekly" : period === "monthly" ? "Monthly" : "Yearly"}
             </button>
           ))}
         </div>
@@ -274,7 +283,7 @@ export function BudgetManagerModal({ open, onOpenChange, onSuccess }: BudgetMana
               <div className="flex gap-2">
                 <Input 
                   type="number"
-                  placeholder={activePeriod === "weekly" ? "e.g. 5000" : activePeriod === "yearly" ? "e.g. 500000" : "e.g. 40000"}
+                  placeholder={activePeriod === "daily" ? "e.g. 1000" : activePeriod === "weekly" ? "e.g. 5000" : activePeriod === "yearly" ? "e.g. 500000" : "e.g. 40000"}
                   value={amount}
                   onChange={(e) => setAmount(e.target.value)}
                   className="h-9"

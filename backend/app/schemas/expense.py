@@ -44,6 +44,15 @@ class ExpenseUpdate(BaseModel):
         return v
 
 
+class DailyBudgetAlert(BaseModel):
+    exceeded: bool
+    limit_amount: Decimal
+    total_spent: Decimal
+    exceeded_amount: Decimal
+    percentage_used: float
+    message: str
+
+
 class ExpenseResponse(ExpenseBase):
     model_config = ConfigDict(from_attributes=True)
 
@@ -51,6 +60,7 @@ class ExpenseResponse(ExpenseBase):
     created_at: datetime
     updated_at: datetime
     category: Optional[CategoryResponse] = None
+    daily_budget_alert: Optional[DailyBudgetAlert] = None
 
 
 class ExpenseListResponse(BaseModel):

@@ -12,6 +12,15 @@ export interface Category {
 
 export type PaymentMode = "Cash" | "Card" | "UPI" | "Net Banking" | "Other";
 
+export interface DailyBudgetAlert {
+  exceeded: boolean;
+  limit_amount: string;
+  total_spent: string;
+  exceeded_amount: string;
+  percentage_used: number;
+  message: string;
+}
+
 export interface Expense {
   id: string;
   title: string;
@@ -23,6 +32,7 @@ export interface Expense {
   created_at: string;
   updated_at: string;
   category?: Category;
+  daily_budget_alert?: DailyBudgetAlert | null;
 }
 
 export interface ExpenseListResponse {
@@ -33,7 +43,7 @@ export interface ExpenseListResponse {
   total_pages: number;
 }
 
-export type PeriodType = "weekly" | "monthly" | "yearly";
+export type PeriodType = "daily" | "weekly" | "monthly" | "yearly";
 
 export interface Budget {
   id: string;

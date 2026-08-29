@@ -192,3 +192,94 @@ async def test_budget_patch_and_delete(client: AsyncClient):
     )
     assert get_res.status_code == 200
     assert not any(b["id"] == budget_id for b in get_res.json()["category_budgets"])
+
+
+@pytest.mark.asyncio
+async def test_daily_budget_lifecycle_and_alerts(client: AsyncClient):
+    cat_resp = await client.get("/api/v1/categories")
+    categories = cat_resp.json()
+    cat_id = categories[0]["id"]
+    test_date = "2026-08-28"
+
+    budget_id = None
+    expense_id = None
+    try:
+        # 1. Set Daily Overall Budget
+        res_daily = await client.post(
+            "/api/v1/budgets",
+            json={
+                "scope": "overall",
+                "amount": "500.00",
+                "period_type": "daily",
+                "period_start": test_date,
+            },
+        )
+        assert res_daily.status_code == 200
+        daily_data = res_daily.json()
+        budget_id = daily_data["id"]
+        assert daily_data["period_type"] == "daily"
+        assert daily_data["amount"] == "500.00"
+        assert daily_data["period_start"] == test_date
+        assert daily_data["period_end"] == test_date
+
+        # 2. Retrieve Daily Budgets
+        get_daily = await client.get(
+            "/api/v1/budgets",
+            params={"period_date": test_date, "period_type": "daily"},
+        )
+        assert get_daily.status_code == 200
+        d_body = get_daily.json()
+        assert d_body["period_type"] == "daily"
+        assert d_body["period_start"] == test_date
+        assert d_body["period_end"] == test_date
+        assert d_body["overall_budget"] is not None
+        assert d_body["overall_budget"]["amount"] == "500.00"
+
+        # 3. Create an expense of ₹700 on test_date that exceeds the daily limit
+        exp_res = await client.post(
+            "/api/v1/expenses",
+            json={
+                "title": "Daily Limit Test Overspend",
+                "category_id": cat_id,
+                "amount": "700.00",
+                "expense_date": test_date,
+                "payment_mode": "UPI",
+            },
+        )
+        assert exp_res.status_code == 201
+        exp_data = exp_res.json()
+        expense_id = exp_data["id"]
+
+        # 4. Verify daily budget alert was generated in response
+        assert exp_data["daily_budget_alert"] is not None
+        assert exp_data["daily_budget_alert"]["exceeded"] is True
+        assert Decimal(exp_data["daily_budget_alert"]["limit_amount"]) == Decimal("500.00")
+        assert Decimal(exp_data["daily_budget_alert"]["total_spent"]) >= Decimal("700.00")
+        assert "exceeded" in exp_data["daily_budget_alert"]["message"].lower()
+
+        # 5. Update daily budget to ₹1000 via PATCH
+        patch_res = await client.patch(
+            f"/api/v1/budgets/{budget_id}",
+            json={"amount": "1000.00"},
+        )
+        assert patch_res.status_code == 200
+        assert patch_res.json()["amount"] == "1000.00"
+
+        # 6. Delete daily budget via DELETE
+        del_res = await client.delete(f"/api/v1/budgets/{budget_id}")
+        assert del_res.status_code == 200
+        budget_id = None
+
+        # 7. Verify deletion
+        get_after = await client.get(
+            "/api/v1/budgets",
+            params={"period_date": test_date, "period_type": "daily"},
+        )
+        assert get_after.status_code == 200
+        assert get_after.json()["overall_budget"] is None
+    finally:
+        if expense_id:
+            await client.delete(f"/api/v1/expenses/{expense_id}")
+        if budget_id:
+            await client.delete(f"/api/v1/budgets/{budget_id}")
+

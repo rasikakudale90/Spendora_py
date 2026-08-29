@@ -34,7 +34,7 @@
 - **Alembic:** Located in `backend/alembic/`. Migrations read `DATABASE_URL` dynamically from environment.
   - Migration `d5e1b2f3a4b5_add_budget_period_types.py` added `period_type` (`weekly`, `monthly`, `yearly`), `period_start`, `period_end`, check constraint, and composite unique indexes.
 - **Seeding:** Automatically checks and seeds standard starter categories on lifespan startup if empty.
-- **Enums & Formats:** `PaymentMode` (`Cash`, `Card`, `UPI`, `Net Banking`, `Other`). `period_type` (`weekly`, `monthly`, `yearly`). `period_start` and `period_end` are ISO date objects. Remaining balances clamped to `>= 0.00`.
+- **Enums & Formats:** `PaymentMode` (`Cash`, `Card`, `UPI`, `Net Banking`, `Other`). `period_type` (`daily`, `weekly`, `monthly`, `yearly`). `period_start` and `period_end` are ISO date objects. Remaining balances clamped to `>= 0.00`.
 
 ---
 
@@ -61,3 +61,4 @@
 - ✅ **Phase 12:** Financial Accuracy & Date Constraints (Remaining budget clamped to ₹0.00 on overspending; future expense dates blocked in native datepicker and Zod validation)
 - ✅ **Phase 13:** Category Sanitation & Test Isolation (Renamed `Hobbies_b0c83e` to clean `Hobbies` in database; introduced `try...finally` in lifecycle tests to prevent test entity leakage)
 - ✅ **Phase 14:** Progressive Web App (PWA) Implementation (Web App Manifests `manifest.ts` & `manifest.json`, Service Worker `sw.js` with offline caching and Stale-While-Revalidate, standard & maskable icons, `PwaRegister` install prompt banner, and Next.js 14 viewport configuration)
+- ✅ **Phase 15:** Daily Expense Limit & Over-Budget Pop-up Alert (Added `'daily'` period type across database constraint `ck_budgets_period_type_valid` via migration `e6f2a3b4c5d6`, ORM models, Pydantic schemas, and frontend API client. Added `DailyBudgetAlert` schema and automatic real-time breach detection on expense creation/update. Created `DailyLimitAlertModal` pop-up dialog, configured Daily tab in `BudgetManagerModal` with full edit/delete lifecycle, and integrated persistent over-budget banner and session alert on the dashboard)

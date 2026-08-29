@@ -51,7 +51,7 @@ export const budgetFormSchema = z
       .refine((val) => !isNaN(parseFloat(val)) && parseFloat(val) > 0, {
         message: "Amount must be greater than 0",
       }),
-    period_type: z.enum(["weekly", "monthly", "yearly"]).default("monthly"),
+    period_type: z.enum(["daily", "weekly", "monthly", "yearly"]).default("monthly"),
     period_start: z.string().optional(),
     period_month: z.string().optional(),
   })

@@ -8,7 +8,10 @@ from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 def compute_period_bounds(target_date: date, period_type: str = "monthly") -> tuple[date, date]:
     """Compute (start_date, end_date) for a given date and period_type."""
-    if period_type == "weekly":
+    if period_type == "daily":
+        start_date = target_date
+        end_date = target_date
+    elif period_type == "weekly":
         start_date = target_date - timedelta(days=target_date.weekday())  # Monday
         end_date = start_date + timedelta(days=6)  # Sunday
     elif period_type == "yearly":
@@ -25,7 +28,7 @@ class BudgetBase(BaseModel):
     scope: Literal["overall", "category"] = Field(..., description="Budget scope ('overall' or 'category')")
     category_id: Optional[uuid.UUID] = Field(default=None, description="Category UUID (required if scope is 'category')")
     amount: Decimal = Field(..., gt=0, decimal_places=2, description="Allocated budget amount in INR")
-    period_type: Literal["weekly", "monthly", "yearly"] = Field(default="monthly", description="Budget period type")
+    period_type: Literal["daily", "weekly", "monthly", "yearly"] = Field(default="monthly", description="Budget period type")
     period_start: Optional[date] = Field(default=None, description="Start date of the budget period")
     period_end: Optional[date] = Field(default=None, description="End date of the budget period")
     period_month: Optional[date] = Field(default=None, description="Reference month/date (legacy compatibility)")
@@ -67,7 +70,7 @@ class BudgetResponse(BudgetBase):
 
 
 class BudgetListResponse(BaseModel):
-    period_type: Literal["weekly", "monthly", "yearly"] = "monthly"
+    period_type: Literal["daily", "weekly", "monthly", "yearly"] = "monthly"
     period_start: date
     period_end: date
     overall_budget: Optional[BudgetResponse] = None
