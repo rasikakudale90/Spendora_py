@@ -6,6 +6,7 @@ import { useState } from "react";
 import {
   LayoutDashboard,
   ReceiptText,
+  TrendingUp,
   Menu,
   X,
   Wallet,
@@ -23,6 +24,11 @@ const NAV_ITEMS = [
     name: "Expenses",
     href: "/expenses",
     icon: ReceiptText,
+  },
+  {
+    name: "Income",
+    href: "/income",
+    icon: TrendingUp,
   },
 ];
 

@@ -7,6 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.config import settings
 from app.repositories.budget_repository import BudgetRepository
 from app.repositories.dashboard_repository import DashboardRepository
+from app.repositories.income_repository import IncomeRepository
 from app.schemas.dashboard import (
     CategoryBreakdownItem,
     DashboardStatsResponse,
@@ -23,6 +24,7 @@ class DashboardService:
         self.session = session
         self.repo = DashboardRepository(session)
         self.budget_repo = BudgetRepository(session)
+        self.income_repo = IncomeRepository(session)
 
     def _get_month_bounds(self, period_month: date) -> tuple[date, date]:
         start_date = date(period_month.year, period_month.month, 1)
@@ -40,6 +42,10 @@ class DashboardService:
         start_date, end_date = self._get_month_bounds(normalized_period)
 
         total_spent, count = await self.repo.get_period_spending_and_count(start_date, end_date)
+        total_income = await self.income_repo.get_total_for_period(start_date, end_date)
+        net_savings = total_income - total_spent
+        savings_rate = round(float((net_savings / total_income) * 100), 2) if total_income > 0 else 0.0
+
         overall_budget = await self.budget_repo.get_overall(normalized_period)
 
         if overall_budget:
@@ -68,6 +74,9 @@ class DashboardService:
             percentage_used=round(percentage, 2),
             status=status_val,
             expense_count=count,
+            total_income=total_income,
+            net_savings=net_savings,
+            savings_rate=savings_rate,
         )
 
     async def get_recent_expenses(self, limit: int = 5) -> list[ExpenseResponse]:

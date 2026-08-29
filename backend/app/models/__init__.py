@@ -9,6 +9,7 @@ from app.models.base import Base, TimestampMixin
 from app.models.category import Category
 from app.models.expense import Expense, PaymentMode
 from app.models.budget import Budget
+from app.models.income import Income, IncomeSource, IncomePaymentMode
 
 __all__ = [
     "Base",
@@ -17,4 +18,7 @@ __all__ = [
     "Expense",
     "PaymentMode",
     "Budget",
+    "Income",
+    "IncomeSource",
+    "IncomePaymentMode",
 ]

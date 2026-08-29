@@ -71,6 +71,40 @@ export interface BudgetListResponse {
   category_budgets: Budget[];
 }
 
+export interface Income {
+  id: string;
+  title: string;
+  amount: string;
+  income_date: string;
+  source: string;
+  payment_mode?: string | null;
+  notes?: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface IncomeListResponse {
+  items: Income[];
+  total: number;
+  page: number;
+  page_size: number;
+  total_pages: number;
+}
+
+export interface SourceBreakdownItem {
+  source: string;
+  total_amount: string;
+  percentage: number;
+  count: number;
+}
+
+export interface IncomeSummaryResponse {
+  period_month: string;
+  total_income: string;
+  income_count: number;
+  breakdown_by_source: SourceBreakdownItem[];
+}
+
 export interface DashboardSummary {
   period_month: string;
   total_spent: string;
@@ -79,6 +113,9 @@ export interface DashboardSummary {
   percentage_used: number;
   status: "on_track" | "near_limit" | "over_budget" | "no_budget";
   expense_count: number;
+  total_income?: string;
+  net_savings?: string;
+  savings_rate?: number;
 }
 
 export interface CategoryBreakdownItem {
@@ -266,5 +303,66 @@ export const api = {
   getDashboardStats: (periodMonth?: string) =>
     fetchJson<DashboardStats>(
       `/api/v1/dashboard/stats${periodMonth ? `?period_month=${periodMonth}` : ""}`
+    ),
+
+  // Incomes
+  getIncomes: (params?: {
+    search?: string;
+    date_from?: string;
+    date_to?: string;
+    source?: string;
+    min_amount?: number;
+    max_amount?: number;
+    sort_by?: string;
+    sort_order?: "asc" | "desc";
+    page?: number;
+    page_size?: number;
+  }) => {
+    const searchParams = new URLSearchParams();
+    if (params) {
+      Object.entries(params).forEach(([key, val]) => {
+        if (val !== undefined && val !== null && val !== "") {
+          searchParams.append(key, String(val));
+        }
+      });
+    }
+    const qs = searchParams.toString() ? `?${searchParams.toString()}` : "";
+    return fetchJson<IncomeListResponse>(`/api/v1/incomes${qs}`);
+  },
+  getIncome: (id: string) => fetchJson<Income>(`/api/v1/incomes/${id}`),
+  createIncome: (data: {
+    title: string;
+    amount: string | number;
+    income_date: string;
+    source?: string;
+    payment_mode?: string;
+    notes?: string;
+  }) =>
+    fetchJson<Income>("/api/v1/incomes", {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
+  updateIncome: (
+    id: string,
+    data: Partial<{
+      title: string;
+      amount: string | number;
+      income_date: string;
+      source: string;
+      payment_mode?: string;
+      notes?: string;
+    }>
+  ) =>
+    fetchJson<Income>(`/api/v1/incomes/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify(data),
+    }),
+  deleteIncome: (id: string) =>
+    fetchJson<{ message: string }>(`/api/v1/incomes/${id}`, {
+      method: "DELETE",
+    }),
+  getIncomeSummary: (periodMonth?: string) =>
+    fetchJson<IncomeSummaryResponse>(
+      `/api/v1/incomes/summary${periodMonth ? `?period_month=${periodMonth}` : ""}`
     ),
 };

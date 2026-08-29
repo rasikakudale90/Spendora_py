@@ -14,6 +14,9 @@ class DashboardSummaryResponse(BaseModel):
     percentage_used: float = 0.0
     status: Literal["on_track", "near_limit", "over_budget", "no_budget"] = "no_budget"
     expense_count: int = 0
+    total_income: Decimal = Decimal("0.00")
+    net_savings: Decimal = Decimal("0.00")
+    savings_rate: float = 0.0
 
 
 class CategoryBreakdownItem(BaseModel):

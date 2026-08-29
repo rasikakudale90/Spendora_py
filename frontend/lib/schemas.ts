@@ -69,3 +69,36 @@ export const budgetFormSchema = z
   );
 
 export type BudgetFormValues = z.infer<typeof budgetFormSchema>;
+
+export const incomeFormSchema = z.object({
+  title: z
+    .string()
+    .min(1, "Title is required")
+    .max(100, "Title must be at most 100 characters"),
+  amount: z
+    .string()
+    .min(1, "Amount is required")
+    .refine((val) => !isNaN(parseFloat(val)) && parseFloat(val) > 0, {
+      message: "Amount must be greater than 0",
+    }),
+  income_date: z
+    .string()
+    .min(1, "Date is required")
+    .refine(
+      (val) => {
+        const selected = new Date(val);
+        const today = new Date();
+        today.setHours(23, 59, 59, 999);
+        return selected <= today;
+      },
+      {
+        message: "Income date cannot be in the future",
+      }
+    ),
+  source: z.string().min(1, "Source is required").default("Salary"),
+  payment_mode: z.string().optional(),
+  notes: z.string().optional(),
+});
+
+export type IncomeFormValues = z.infer<typeof incomeFormSchema>;
+
