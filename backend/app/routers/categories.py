@@ -31,13 +31,21 @@ async def create_category(
     return await service.create_category(data)
 
 
+@router.get("/{category_id}", response_model=CategoryResponse)
+async def get_category(category_id: uuid.UUID, db: AsyncSession = Depends(get_db)):
+    """Retrieve a single category by UUID."""
+    service = CategoryService(db)
+    return await service.get_by_id(category_id)
+
+
+@router.put("/{category_id}", response_model=CategoryResponse)
 @router.patch("/{category_id}", response_model=CategoryResponse)
 async def rename_category(
     category_id: uuid.UUID,
     data: CategoryUpdate,
     db: AsyncSession = Depends(get_db),
 ):
-    """Rename an existing category (FR-7)."""
+    """Rename an existing category (FR-7). Supports PUT and PATCH."""
     service = CategoryService(db)
     return await service.rename_category(category_id, data)
 
