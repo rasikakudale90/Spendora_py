@@ -46,7 +46,7 @@
 
 ---
 
-## 📊 Completed Phases (1 through 14)
+## 📊 Completed Phases (1 through 17)
 - ✅ **Phase 1:** Project Scaffolding & Folder Structure
 - ✅ **Phase 2:** Backend Foundation (FastAPI, asyncpg, models, Alembic)
 - ✅ **Phase 3:** Backend API Implementation (all 15+ endpoints)
@@ -63,3 +63,4 @@
 - ✅ **Phase 14:** Progressive Web App (PWA) Implementation (Web App Manifests `manifest.ts` & `manifest.json`, Service Worker `sw.js` with offline caching and Stale-While-Revalidate, standard & maskable icons, `PwaRegister` install prompt banner, and Next.js 14 viewport configuration)
 - ✅ **Phase 15:** Daily Expense Limit & Over-Budget Pop-up Alert (Added `'daily'` period type across database constraint `ck_budgets_period_type_valid` via migration `e6f2a3b4c5d6`, ORM models, Pydantic schemas, and frontend API client. Added `DailyBudgetAlert` schema and automatic real-time breach detection on expense creation/update. Created `DailyLimitAlertModal` pop-up dialog, configured Daily tab in `BudgetManagerModal` with full edit/delete lifecycle, and integrated persistent over-budget banner and session alert on the dashboard)
 - ✅ **Phase 16:** Income Tracking & Cash Flow Analytics (Added dedicated `incomes` database table via Alembic migration `f7e8d9c0b1a2`, ORM model `Income`, Pydantic schemas, `IncomeRepository`, `IncomeService`, and REST endpoints under `/api/v1/incomes`. Integrated monthly total income, net savings [Cash Flow = Income - Expenses], and savings rate % into the dashboard summary and KPI cards. Created dedicated `/income` management page with source filtering, search, sorting, and responsive `IncomeFormModal` and `DeleteIncomeConfirmModal`).
+- ✅ **Phase 17:** Postman API Testing Suite & Router Polish (Built complete `Spendora_API.postman_collection.json` v2.1 with dynamic variable chaining [baseUrl, categoryId, expenseId, budgetId, incomeId], created `Spendora_Local.postman_environment.json` & `Spendora_Production.postman_environment.json`, added `GET /api/v1/categories/{id}` and `PUT` alias in categories router, and enhanced dashboard router to flexibly parse both `YYYY-MM` and `YYYY-MM-DD` period strings).

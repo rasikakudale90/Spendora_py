@@ -2,15 +2,15 @@
 
 ## Project
 **Spendora V1** — Personal Expense & Budget Tracking Web App  
-**Stack:** FastAPI + Next.js + PostgreSQL (Supabase) + SQLAlchemy 2.0 async  
-**Deployment:** Backend → Render | Frontend → Vercel | DB → Supabase
+**Stack:** FastAPI + Next.js 14 + PostgreSQL (Supabase) + SQLAlchemy 2.0 async + Tailwind CSS  
+**Deployment:** Backend → Render | Frontend → Vercel | DB → Supabase Managed PostgreSQL
 
 ---
 
 ## Phase Overview
 
 | Phase | Name | Status | Completed |
-|-------|------|--------|-----------|
+|---|---|---|---|
 | 1 | Project Scaffolding & Folder Structure | ✅ Done | 2026-08-26 |
 | 2 | Backend Foundation (FastAPI setup, DB config, models, Alembic) | ✅ Done | 2026-08-26 |
 | 3 | Backend API Implementation (all endpoints) | ✅ Done | 2026-08-26 |
@@ -19,10 +19,19 @@
 | 6 | Frontend Pages (Dashboard, Expenses, Budgets, Analytics) | ✅ Done | 2026-08-26 |
 | 7 | Integration, Validation & Testing | ✅ Done | 2026-08-26 |
 | 8 | CI/CD, Dockerfiles & Deployment | ✅ Done | 2026-08-26 |
+| 9 | Expense Sorting Fixes (Amount & Date Asc/Desc Mapping) | ✅ Done | 2026-08-27 |
+| 10 | Multi-Period Budgeting System (Weekly, Monthly, Yearly) | ✅ Done | 2026-08-27 |
+| 11 | Budget Update & Deletion Lifecycle (PATCH & DELETE) | ✅ Done | 2026-08-27 |
+| 12 | Financial Accuracy & Date Constraints (Clamp Remaining to ₹0 & Block Future Dates) | ✅ Done | 2026-08-27 |
+| 13 | Category Sanitation & Test Isolation (Clean Hobbies category & try/finally) | ✅ Done | 2026-08-27 |
+| 14 | Progressive Web App (PWA) Implementation (Service Worker & Manifests) | ✅ Done | 2026-08-27 |
+| 15 | Daily Expense Limit & Over-Budget Pop-up Alert | ✅ Done | 2026-08-29 |
+| 16 | Income Tracking & Cash Flow Analytics | ✅ Done | 2026-08-29 |
+| 17 | Postman API Testing Suite & Router Polish | ✅ Done | 2026-08-31 |
 
 ---
 
-## Phase 1 — Project Scaffolding ✅
+## Phase 1 — Project Scaffolding ✅ Done
 
 **Goal:** Create the full empty folder structure as defined in SRS Section 14.
 
@@ -59,7 +68,6 @@
 - [x] `backend/app/main.py` — full lifespan hook (seed) + health endpoint
 - [x] `backend/alembic.ini` — alembic config (DATABASE_URL injected at runtime)
 - [x] `backend/alembic/env.py` — async alembic environment configured
-- [x] `__init__.py` for all app sub-packages (routers, schemas, services, repositories, tests)
 - [x] First migration: `alembic revision --autogenerate -m "create initial tables"` → reviewed → `alembic upgrade head` applied
 - [x] Verified: server connects to local PostgreSQL database and seeds 9 starter categories
 
@@ -148,9 +156,6 @@
 - [x] Verify budget remaining recalculates after every expense change (dashboard summary)
 - [x] Verify category safe-delete (409 Conflict response confirmed)
 - [x] Frontend production build passes with zero errors (`next build` — ✓ Compiled successfully)
-- [x] Fixed bug: `period_month` format mismatch (frontend sent `YYYY-MM`, backend expected `YYYY-MM-01`)
-- [x] Fixed bug: removed unused `date-fns` import (package not installed)
-- [x] Fixed bug: malformed `useEffect` / `loadDashboard` function structure in Dashboard page
 - [x] All empty/loading/error states verified
 - [x] Zero hardcoded financial values confirmed
 
@@ -165,19 +170,129 @@
 - [x] Finalized `frontend/Dockerfile` with multi-stage Next.js production build
 - [x] Verified `render.yaml` Blueprint definition for zero-click Render web service deployment
 - [x] Configured `vercel.json` and verified zero-error Next.js production build (`next build`)
-- [x] Hardened backend database connection for Supabase (connection pooler / statement cache size compatibility & automatic asyncpg URL normalization)
+- [x] Hardened backend database connection for Supabase (`statement_cache_size=0` & automatic asyncpg URL normalization)
 - [x] Created full production deployment guide and runbook in `docs/deployment-guide.md`
-- [x] Configured GitHub Actions CI/CD pipeline (`.github/workflows/ci-cd.yml`) with automated PostgreSQL testing, frontend linting, and build validation
-- [x] 100% backend test suite passing (38/38 tests) and frontend production bundle successfully generated
+- [x] Configured GitHub Actions CI/CD pipeline (`.github/workflows/ci-cd.yml`)
+
+---
+
+## Phase 9 — Expense Sorting Fixes ✅ Done
+
+**Goal:** Correct sort ordering for amounts and dates across the expense repository and frontend controls.
+
+### Completed Tasks
+- [x] Fixed ascending vs descending sort order mappings for `amount` and `expense_date` in `backend/app/repositories/expense_repository.py`
+- [x] Added automated sorting assertions in `test_api_expenses.py`
+- [x] Verified frontend filter dropdown options align with API sort parameters
+
+---
+
+## Phase 10 — Multi-Period Budgeting System ✅ Done
+
+**Goal:** Expand budgeting from monthly-only to Weekly, Monthly, and Yearly limits.
+
+### Completed Tasks
+- [x] Alembic migration `d5e1b2f3a4b5_add_budget_period_types.py` adding `period_type`, `period_start`, `period_end`
+- [x] Extended `Budget` ORM model and check constraint
+- [x] Added `compute_period_bounds` logic in `schemas/budget.py`
+- [x] Tabbed UI in `BudgetManagerModal.tsx` for Weekly, Monthly, and Yearly budgets
+
+---
+
+## Phase 11 — Budget Update & Deletion Lifecycle ✅ Done
+
+**Goal:** Enable full edit and deletion capabilities for existing budget caps.
+
+### Completed Tasks
+- [x] Created `PATCH /api/v1/budgets/{id}` for updating budget amounts
+- [x] Created `DELETE /api/v1/budgets/{id}` for removing budget limits
+- [x] Added interactive Edit (inline amount adjustment) and Delete buttons in `BudgetManagerModal`
+
+---
+
+## Phase 12 — Financial Accuracy & Date Constraints ✅ Done
+
+**Goal:** Guarantee mathematical integrity on negative balances and block invalid future dates.
+
+### Completed Tasks
+- [x] Clamped remaining budget balances to `>= 0.00` on overspending
+- [x] Blocked future dates in frontend HTML5 `max` date attribute and Zod schemas
+- [x] Enforced backend validation rejecting future expense dates with HTTP 422
+
+---
+
+## Phase 13 — Category Sanitation & Test Isolation ✅ Done
+
+**Goal:** Clean dirty database test categories and ensure reliable test teardown.
+
+### Completed Tasks
+- [x] Renamed leaked database entity `Hobbies_b0c83e` to clean `Hobbies`
+- [x] Wrapped all test fixtures and entities with `try...finally` teardown blocks
+
+---
+
+## Phase 14 — Progressive Web App (PWA) Implementation ✅ Done
+
+**Goal:** Enable installation on mobile/desktop and provide offline resilience.
+
+### Completed Tasks
+- [x] Next.js App Router `manifest.ts` and `public/manifest.json`
+- [x] Service Worker `public/sw.js` with offline caching & Stale-While-Revalidate strategy
+- [x] Vector SVG icons and standard/maskable 192px/512px app icons
+- [x] `PwaRegister` component with install banner and offline status toasts
+
+---
+
+## Phase 15 — Daily Expense Limit & Over-Budget Pop-up Alert ✅ Done
+
+**Goal:** Daily expense threshold management with automatic real-time breach detection.
+
+### Completed Tasks
+- [x] Alembic migration `e6f2a3b4c5d6_add_daily_budget_period_type.py` allowing `'daily'` period type
+- [x] Real-time over-budget breach computation in `ExpenseService.create_expense` and `update_expense`
+- [x] Created `DailyLimitAlertModal.tsx` pop-up dialog with consumption progress bar and quick adjustment
+- [x] Added Daily tab in `BudgetManagerModal` with date formatting and edit/delete controls
+- [x] Persistent over-budget banner and session alert on the dashboard
+
+---
+
+## Phase 16 — Income Tracking & Cash Flow Analytics ✅ Done
+
+**Goal:** Dedicated income management and dynamic cash flow / savings rate dashboard analytics.
+
+### Completed Tasks
+- [x] Alembic migration `f7e8d9c0b1a2_create_incomes_table.py` creating the `incomes` table
+- [x] ORM model `Income`, Pydantic schemas, `IncomeRepository`, and `IncomeService`
+- [x] REST endpoints under `/api/v1/incomes` (List, Create, Get, Patch, Delete, and Monthly Summary)
+- [x] Dashboard Cash Flow math: `Total Income - Total Spent` and `Savings Rate %`
+- [x] Upgraded `KpiCards.tsx` with Total Income and Net Cash Flow KPI cards
+- [x] Created `/income` management page with source filtering, search, sorting, and modals (`IncomeFormModal` and `DeleteIncomeConfirmModal`)
+- [x] Added "Income" link in `Navbar.tsx`
+
+---
+
+## Phase 17 — Postman API Testing Suite & Router Polish ✅ Done
+
+**Goal:** Provide full Postman API testing infrastructure with dynamic variable chaining and resilient routing.
+
+### Completed Tasks
+- [x] Created `Spendora_API.postman_collection.json` v2.1 with 25+ requests across all modules
+- [x] Automated ID chaining via Postman test scripts (`categoryId`, `expenseId`, `budgetId`, `incomeId`)
+- [x] Created `Spendora_Local.postman_environment.json` (`http://localhost:8000`)
+- [x] Created `Spendora_Production.postman_environment.json` (`https://spendora-backend.onrender.com`)
+- [x] Added `GET /api/v1/categories/{id}` and `PUT /{id}` alias to `categories.py`
+- [x] Updated `dashboard.py` to flexibly accept and parse both `YYYY-MM` and `YYYY-MM-DD` period strings
+- [x] Verified full backend health and integration via Postman runner
 
 ---
 
 ## Open Items & Design Decisions
 
 | # | Item | Status | Resolution |
-|---|------|--------|------------|
-| 1 | Repository/service layer pattern — full 5-layer vs simplified direct SQLAlchemy in routes? | ✅ Resolved | Full 5-layer architecture implemented (Routers → Services → Repositories → Models → DB) |
-| 2 | Payment Mode enum — finalize list | ✅ Resolved | Finalized as `Cash`, `Card`, `UPI`, `Net Banking`, `Other` |
-| 3 | Near-limit budget threshold — confirm default value | ✅ Resolved | 80% (`0.80`) configured via environment variable with fallback |
-| 4 | FR-22 report views — filtered dashboard or separate screen? | ✅ Resolved | Multi-view analytics on Dashboard + paginated filtering table on Expenses page |
-| 5 | React Three Fiber placement — 3D visual moment | ✅ Resolved | Placed as an interactive floating financial token hero banner on the Dashboard |
+|---|---|---|---|
+| 1 | Repository/service layer pattern — full 5-layer vs simplified? | ✅ Resolved | Full 5-layer architecture (Routers → Services → Repositories → Models → DB) |
+| 2 | Payment Mode enum | ✅ Resolved | `Cash`, `Card`, `UPI`, `Net Banking`, `Other` |
+| 3 | Near-limit budget threshold | ✅ Resolved | 80% (`0.80`) configured via environment variable |
+| 4 | Multi-period budgeting system | ✅ Resolved | Daily, Weekly, Monthly, and Yearly limits with period bounds |
+| 5 | Income & cash flow tracking | ✅ Resolved | Dedicated `incomes` table + Cash Flow (`Income - Expenses`) analytics |
+| 6 | API testing tooling | ✅ Resolved | Postman Collection v2.1 + Local & Production Environment files |
