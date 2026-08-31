@@ -1,0 +1,724 @@
+{
+	"info": {
+		"_postman_id": "spendora-api-collection-v1",
+		"name": "Spendora API",
+		"description": "Comprehensive Postman collection for Spendora API testing (Categories, Expenses, Budgets [Daily, Weekly, Monthly, Yearly], Incomes, and Dashboard Analytics).",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:8000",
+			"type": "string"
+		},
+		{
+			"key": "categoryId",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "expenseId",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "budgetId",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "incomeId",
+			"value": "",
+			"type": "string"
+		}
+	],
+	"item": [
+		{
+			"name": "Health",
+			"item": [
+				{
+					"name": "Health Check Probe",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/health",
+							"host": ["{{baseUrl}}"],
+							"path": ["health"]
+						},
+						"description": "Liveness check to verify server is running."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Categories",
+			"item": [
+				{
+					"name": "List Categories",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"const data = pm.response.json();",
+									"if (data && data.length > 0) {",
+									"    pm.collectionVariables.set(\"categoryId\", data[0].id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/categories",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "categories"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create Category",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 201\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"const data = pm.response.json();",
+									"if (data && data.id) {",
+									"    pm.collectionVariables.set(\"categoryId\", data.id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Gadgets & Electronics\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/categories",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "categories"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Category by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/categories/{{categoryId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "categories", "{{categoryId}}"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Category",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Smart Gadgets\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/categories/{{categoryId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "categories", "{{categoryId}}"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Category",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/categories/{{categoryId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "categories", "{{categoryId}}"]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Expenses",
+			"item": [
+				{
+					"name": "List Expenses (Filtered & Paginated)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/expenses?page=1&page_size=10&sort_by=expense_date&sort_order=desc",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "expenses"],
+							"query": [
+								{ "key": "page", "value": "1" },
+								{ "key": "page_size", "value": "10" },
+								{ "key": "sort_by", "value": "expense_date" },
+								{ "key": "sort_order", "value": "desc" },
+								{ "key": "search", "value": "Coffee", "disabled": true },
+								{ "key": "category_id", "value": "{{categoryId}}", "disabled": true },
+								{ "key": "min_amount", "value": "100", "disabled": true },
+								{ "key": "max_amount", "value": "5000", "disabled": true },
+								{ "key": "payment_mode", "value": "UPI", "disabled": true }
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create Expense",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 201\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"const data = pm.response.json();",
+									"if (data && data.id) {",
+									"    pm.collectionVariables.set(\"expenseId\", data.id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"title\": \"Grocery Supermarket\",\n  \"category_id\": \"{{categoryId}}\",\n  \"amount\": \"1250.00\",\n  \"expense_date\": \"2026-08-31\",\n  \"payment_mode\": \"Card\",\n  \"notes\": \"Weekly pantry restocking\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/expenses",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "expenses"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Expense by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/expenses/{{expenseId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "expenses", "{{expenseId}}"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Expense",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"title\": \"Organic Grocery Supermarket\",\n  \"amount\": \"1400.00\",\n  \"payment_mode\": \"UPI\",\n  \"notes\": \"Added organic items\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/expenses/{{expenseId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "expenses", "{{expenseId}}"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Expense",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/expenses/{{expenseId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "expenses", "{{expenseId}}"]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Budgets",
+			"item": [
+				{
+					"name": "Get Daily Budgets",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/budgets?period_type=daily",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "budgets"],
+							"query": [
+								{ "key": "period_type", "value": "daily" },
+								{ "key": "period_date", "value": "2026-08-31", "disabled": true }
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Weekly Budgets",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/budgets?period_type=weekly",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "budgets"],
+							"query": [
+								{ "key": "period_type", "value": "weekly" }
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Monthly Budgets",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/budgets?period_type=monthly",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "budgets"],
+							"query": [
+								{ "key": "period_type", "value": "monthly" }
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Yearly Budgets",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/budgets?period_type=yearly",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "budgets"],
+							"query": [
+								{ "key": "period_type", "value": "yearly" }
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Set Overall Daily Budget",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"const data = pm.response.json();",
+									"if (data && data.id) {",
+									"    pm.collectionVariables.set(\"budgetId\", data.id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"scope\": \"overall\",\n  \"amount\": \"1500.00\",\n  \"period_type\": \"daily\",\n  \"period_start\": \"2026-08-31\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/budgets",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "budgets"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Set Category Monthly Budget",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"const data = pm.response.json();",
+									"if (data && data.id) {",
+									"    pm.collectionVariables.set(\"budgetId\", data.id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"scope\": \"category\",\n  \"category_id\": \"{{categoryId}}\",\n  \"amount\": \"8000.00\",\n  \"period_type\": \"monthly\",\n  \"period_start\": \"2026-08-01\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/budgets",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "budgets"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Budget Amount (PATCH)",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"amount\": \"9500.00\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/budgets/{{budgetId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "budgets", "{{budgetId}}"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Budget",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/budgets/{{budgetId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "budgets", "{{budgetId}}"]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Incomes",
+			"item": [
+				{
+					"name": "List Incomes (Filtered & Paginated)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/incomes?page=1&page_size=10&sort_by=income_date&sort_order=desc",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "incomes"],
+							"query": [
+								{ "key": "page", "value": "1" },
+								{ "key": "page_size", "value": "10" },
+								{ "key": "sort_by", "value": "income_date" },
+								{ "key": "sort_order", "value": "desc" },
+								{ "key": "source", "value": "Salary", "disabled": true },
+								{ "key": "search", "value": "Bonus", "disabled": true }
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Income Monthly Summary",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/incomes/summary?period_month=2026-08",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "incomes", "summary"],
+							"query": [
+								{ "key": "period_month", "value": "2026-08" }
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create Income",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 201\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"const data = pm.response.json();",
+									"if (data && data.id) {",
+									"    pm.collectionVariables.set(\"incomeId\", data.id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"title\": \"Monthly Tech Salary\",\n  \"amount\": \"85000.00\",\n  \"income_date\": \"2026-08-31\",\n  \"source\": \"Salary\",\n  \"payment_mode\": \"Bank Transfer\",\n  \"notes\": \"Direct payroll deposit\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/incomes",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "incomes"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Income by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/incomes/{{incomeId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "incomes", "{{incomeId}}"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Income (PATCH)",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"amount\": \"90000.00\",\n  \"notes\": \"Updated with performance bonus\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/incomes/{{incomeId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "incomes", "{{incomeId}}"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Income",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/incomes/{{incomeId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "incomes", "{{incomeId}}"]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Dashboard & Analytics",
+			"item": [
+				{
+					"name": "Get Dashboard Summary (Cash Flow & Net Savings)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/dashboard/summary?period_month=2026-08",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "dashboard", "summary"],
+							"query": [
+								{ "key": "period_month", "value": "2026-08" }
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Dashboard Stats",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/dashboard/stats?period_month=2026-08",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "dashboard", "stats"],
+							"query": [
+								{ "key": "period_month", "value": "2026-08" }
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Recent Expenses",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/dashboard/recent-expenses?limit=5",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "dashboard", "recent-expenses"],
+							"query": [
+								{ "key": "limit", "value": "5" }
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Category Breakdown",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/dashboard/category-breakdown?period_month=2026-08",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "dashboard", "category-breakdown"],
+							"query": [
+								{ "key": "period_month", "value": "2026-08" }
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Daily Spending Trend",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/dashboard/trend?period_month=2026-08",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "dashboard", "trend"],
+							"query": [
+								{ "key": "period_month", "value": "2026-08" }
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Month Comparison",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/dashboard/comparison?period_month=2026-08",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "dashboard", "comparison"],
+							"query": [
+								{ "key": "period_month", "value": "2026-08" }
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Top Categories",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/dashboard/top-categories?limit=5&period_month=2026-08",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "dashboard", "top-categories"],
+							"query": [
+								{ "key": "limit", "value": "5" },
+								{ "key": "period_month", "value": "2026-08" }
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	]
+}
