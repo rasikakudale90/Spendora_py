@@ -11,7 +11,7 @@ Seeded on startup with 9 starter categories if the table is empty
 """
 import uuid
 
-from sqlalchemy import String, text
+from sqlalchemy import ForeignKey, Index, String, text
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -21,15 +21,29 @@ from app.models.base import Base, TimestampMixin
 class Category(Base, TimestampMixin):
     __tablename__ = "categories"
 
+    __table_args__ = (
+        Index(
+            "uix_categories_name_user",
+            "name",
+            text("coalesce(user_id, '00000000-0000-0000-0000-000000000000'::uuid)"),
+            unique=True,
+        ),
+    )
+
     id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
         primary_key=True,
         server_default=text("gen_random_uuid()"),
     )
+    user_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("users.id", ondelete="CASCADE"),
+        nullable=True,
+        index=True,
+    )
     name: Mapped[str] = mapped_column(
         String(50),
         nullable=False,
-        unique=True,
     )
 
     # ── Relationships ─────────────────────────────────────────────────────────
@@ -43,6 +57,11 @@ class Category(Base, TimestampMixin):
         back_populates="category",
         cascade="all, delete-orphan",
         passive_deletes=True,
+        lazy="select",
+    )
+    user: Mapped["User | None"] = relationship(  # noqa: F821
+        "User",
+        back_populates="custom_categories",
         lazy="select",
     )
 

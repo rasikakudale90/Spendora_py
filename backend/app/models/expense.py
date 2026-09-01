@@ -59,6 +59,8 @@ class Expense(Base, TimestampMixin):
         # Performance indexes for dashboard queries
         Index("ix_expenses_expense_date", "expense_date"),
         Index("ix_expenses_category_id", "category_id"),
+        Index("ix_expenses_user_id_date", "user_id", "expense_date"),
+        Index("ix_expenses_user_category", "user_id", "category_id"),
         # Full-text search support on title (case-insensitive prefix search via LIKE)
         # A GIN/GIST index for full-text would be added in a later migration if needed
         Index("ix_expenses_title", "title"),
@@ -68,6 +70,12 @@ class Expense(Base, TimestampMixin):
         UUID(as_uuid=True),
         primary_key=True,
         server_default=text("gen_random_uuid()"),
+    )
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("users.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
     )
     title: Mapped[str] = mapped_column(String(50), nullable=False)
     category_id: Mapped[uuid.UUID] = mapped_column(
@@ -84,6 +92,11 @@ class Expense(Base, TimestampMixin):
     # ── Relationships ─────────────────────────────────────────────────────────
     category: Mapped["Category"] = relationship(  # noqa: F821
         "Category",
+        back_populates="expenses",
+        lazy="select",
+    )
+    user: Mapped["User"] = relationship(  # noqa: F821
+        "User",
         back_populates="expenses",
         lazy="select",
     )

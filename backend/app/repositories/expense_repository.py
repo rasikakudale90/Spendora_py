@@ -15,18 +15,21 @@ class ExpenseRepository:
     def __init__(self, session: AsyncSession):
         self.session = session
 
-    async def get_by_id(self, expense_id: uuid.UUID) -> Optional[Expense]:
+    async def get_by_id(self, expense_id: uuid.UUID, user_id: Optional[uuid.UUID] = None) -> Optional[Expense]:
         stmt = (
             select(Expense)
             .options(selectinload(Expense.category))
             .where(Expense.id == expense_id)
         )
+        if user_id is not None:
+            stmt = stmt.where(Expense.user_id == user_id)
         result = await self.session.execute(stmt)
         return result.scalars().first()
 
     async def get_paginated(
         self,
         *,
+        user_id: uuid.UUID,
         search: Optional[str] = None,
         date_from: Optional[date] = None,
         date_to: Optional[date] = None,
@@ -39,8 +42,15 @@ class ExpenseRepository:
         page: int = 1,
         page_size: int = 20,
     ) -> Tuple[Sequence[Expense], int]:
-        query = select(Expense).options(selectinload(Expense.category))
-        count_query = select(func.count(Expense.id))
+        query = (
+            select(Expense)
+            .options(selectinload(Expense.category))
+            .where(Expense.user_id == user_id)
+        )
+        count_query = (
+            select(func.count(Expense.id))
+            .where(Expense.user_id == user_id)
+        )
 
         # Filters
         if search:
@@ -100,8 +110,9 @@ class ExpenseRepository:
         items = result.scalars().all()
         return items, total
 
-    async def create(self, data: ExpenseCreate) -> Expense:
+    async def create(self, data: ExpenseCreate, user_id: uuid.UUID) -> Expense:
         expense = Expense(
+            user_id=user_id,
             title=data.title.strip(),
             category_id=data.category_id,
             amount=data.amount,
@@ -112,7 +123,7 @@ class ExpenseRepository:
         self.session.add(expense)
         await self.session.commit()
         await self.session.refresh(expense)
-        return await self.get_by_id(expense.id)
+        return await self.get_by_id(expense.id, user_id=user_id)
 
     async def update(self, expense: Expense, data: ExpenseUpdate) -> Expense:
         update_dict = data.model_dump(exclude_unset=True)
@@ -135,7 +146,7 @@ class ExpenseRepository:
 
         await self.session.commit()
         await self.session.refresh(expense)
-        return await self.get_by_id(expense.id)
+        return await self.get_by_id(expense.id, user_id=expense.user_id)
 
     async def delete(self, expense: Expense) -> None:
         await self.session.delete(expense)

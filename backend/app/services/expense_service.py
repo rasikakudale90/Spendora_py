@@ -28,6 +28,7 @@ class ExpenseService:
     async def list_expenses(
         self,
         *,
+        user_id: uuid.UUID,
         search: Optional[str] = None,
         date_from: Optional[date] = None,
         date_to: Optional[date] = None,
@@ -41,6 +42,7 @@ class ExpenseService:
         page_size: int = 20,
     ) -> ExpenseListResponse:
         items, total = await self.repo.get_paginated(
+            user_id=user_id,
             search=search,
             date_from=date_from,
             date_to=date_to,
@@ -64,8 +66,8 @@ class ExpenseService:
             total_pages=total_pages,
         )
 
-    async def get_expense(self, expense_id: uuid.UUID) -> ExpenseResponse:
-        expense = await self.repo.get_by_id(expense_id)
+    async def get_expense(self, expense_id: uuid.UUID, user_id: uuid.UUID) -> ExpenseResponse:
+        expense = await self.repo.get_by_id(expense_id, user_id=user_id)
         if not expense:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
@@ -74,13 +76,13 @@ class ExpenseService:
         return ExpenseResponse.model_validate(expense)
 
     async def _check_daily_budget_alert(
-        self, expense_date: date, category_id: uuid.UUID
+        self, user_id: uuid.UUID, expense_date: date, category_id: uuid.UUID
     ) -> Optional[DailyBudgetAlert]:
         budget_repo = BudgetRepository(self.session)
         # 1. Check overall daily budget first
-        overall_budget = await budget_repo.get_overall(expense_date, "daily")
+        overall_budget = await budget_repo.get_overall(user_id, expense_date, "daily")
         if overall_budget:
-            spent = await budget_repo.get_spent_for_period(expense_date, expense_date)
+            spent = await budget_repo.get_spent_for_period(user_id, expense_date, expense_date)
             if spent > overall_budget.amount:
                 exceeded = spent - overall_budget.amount
                 pct = round(float((spent / overall_budget.amount) * 100), 2)
@@ -93,9 +95,9 @@ class ExpenseService:
                     message=f"Daily overall limit of ₹{overall_budget.amount:.2f} exceeded! Total spent today is ₹{spent:.2f} (₹{exceeded:.2f} over limit).",
                 )
         # 2. Check category daily budget
-        cat_budget = await budget_repo.get_category_budget(category_id, expense_date, "daily")
+        cat_budget = await budget_repo.get_category_budget(user_id, category_id, expense_date, "daily")
         if cat_budget:
-            spent = await budget_repo.get_spent_for_period(expense_date, expense_date, category_id)
+            spent = await budget_repo.get_spent_for_period(user_id, expense_date, expense_date, category_id)
             if spent > cat_budget.amount:
                 exceeded = spent - cat_budget.amount
                 pct = round(float((spent / cat_budget.amount) * 100), 2)
@@ -109,7 +111,7 @@ class ExpenseService:
                 )
         return None
 
-    async def create_expense(self, data: ExpenseCreate) -> ExpenseResponse:
+    async def create_expense(self, data: ExpenseCreate, user_id: uuid.UUID) -> ExpenseResponse:
         category = await self.category_repo.get_by_id(data.category_id)
         if not category:
             raise HTTPException(
@@ -117,16 +119,16 @@ class ExpenseService:
                 detail=f"Category with id '{data.category_id}' does not exist",
             )
 
-        expense = await self.repo.create(data)
-        alert = await self._check_daily_budget_alert(expense.expense_date, expense.category_id)
+        expense = await self.repo.create(data, user_id=user_id)
+        alert = await self._check_daily_budget_alert(user_id, expense.expense_date, expense.category_id)
         resp = ExpenseResponse.model_validate(expense)
         resp.daily_budget_alert = alert
         return resp
 
     async def update_expense(
-        self, expense_id: uuid.UUID, data: ExpenseUpdate
+        self, expense_id: uuid.UUID, data: ExpenseUpdate, user_id: uuid.UUID
     ) -> ExpenseResponse:
-        expense = await self.repo.get_by_id(expense_id)
+        expense = await self.repo.get_by_id(expense_id, user_id=user_id)
         if not expense:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
@@ -142,13 +144,13 @@ class ExpenseService:
                 )
 
         updated = await self.repo.update(expense, data)
-        alert = await self._check_daily_budget_alert(updated.expense_date, updated.category_id)
+        alert = await self._check_daily_budget_alert(user_id, updated.expense_date, updated.category_id)
         resp = ExpenseResponse.model_validate(updated)
         resp.daily_budget_alert = alert
         return resp
 
-    async def delete_expense(self, expense_id: uuid.UUID) -> dict[str, str]:
-        expense = await self.repo.get_by_id(expense_id)
+    async def delete_expense(self, expense_id: uuid.UUID, user_id: uuid.UUID) -> dict[str, str]:
+        expense = await self.repo.get_by_id(expense_id, user_id=user_id)
         if not expense:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,

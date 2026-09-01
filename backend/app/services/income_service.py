@@ -26,6 +26,7 @@ class IncomeService:
     async def list_incomes(
         self,
         *,
+        user_id: uuid.UUID,
         search: Optional[str] = None,
         date_from: Optional[date] = None,
         date_to: Optional[date] = None,
@@ -38,6 +39,7 @@ class IncomeService:
         page_size: int = 20,
     ) -> IncomeListResponse:
         items, total = await self.repo.get_paginated(
+            user_id=user_id,
             search=search,
             date_from=date_from,
             date_to=date_to,
@@ -60,8 +62,8 @@ class IncomeService:
             total_pages=total_pages,
         )
 
-    async def get_income(self, income_id: uuid.UUID) -> IncomeResponse:
-        income = await self.repo.get_by_id(income_id)
+    async def get_income(self, income_id: uuid.UUID, user_id: uuid.UUID) -> IncomeResponse:
+        income = await self.repo.get_by_id(income_id, user_id=user_id)
         if not income:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
@@ -69,14 +71,14 @@ class IncomeService:
             )
         return IncomeResponse.model_validate(income)
 
-    async def create_income(self, data: IncomeCreate) -> IncomeResponse:
-        income = await self.repo.create(data)
+    async def create_income(self, data: IncomeCreate, user_id: uuid.UUID) -> IncomeResponse:
+        income = await self.repo.create(data, user_id=user_id)
         return IncomeResponse.model_validate(income)
 
     async def update_income(
-        self, income_id: uuid.UUID, data: IncomeUpdate
+        self, income_id: uuid.UUID, data: IncomeUpdate, user_id: uuid.UUID
     ) -> IncomeResponse:
-        income = await self.repo.get_by_id(income_id)
+        income = await self.repo.get_by_id(income_id, user_id=user_id)
         if not income:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
@@ -86,8 +88,8 @@ class IncomeService:
         updated = await self.repo.update(income, data)
         return IncomeResponse.model_validate(updated)
 
-    async def delete_income(self, income_id: uuid.UUID) -> dict[str, str]:
-        income = await self.repo.get_by_id(income_id)
+    async def delete_income(self, income_id: uuid.UUID, user_id: uuid.UUID) -> dict[str, str]:
+        income = await self.repo.get_by_id(income_id, user_id=user_id)
         if not income:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
@@ -97,7 +99,7 @@ class IncomeService:
         return {"message": "Income deleted successfully"}
 
     async def get_summary(
-        self, period_month: Optional[str] = None
+        self, user_id: uuid.UUID, period_month: Optional[str] = None
     ) -> IncomeSummaryResponse:
         today = date.today()
         if period_month:
@@ -113,8 +115,8 @@ class IncomeService:
         _, last_day = calendar.monthrange(start_date.year, start_date.month)
         end_date = date(start_date.year, start_date.month, last_day)
 
-        total_income = await self.repo.get_total_for_period(start_date, end_date)
-        breakdown_tuples = await self.repo.get_breakdown_by_source(start_date, end_date)
+        total_income = await self.repo.get_total_for_period(user_id, start_date, end_date)
+        breakdown_tuples = await self.repo.get_breakdown_by_source(user_id, start_date, end_date)
 
         total_count = sum(t[2] for t in breakdown_tuples)
         breakdown_items = []

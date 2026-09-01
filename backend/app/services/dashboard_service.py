@@ -1,4 +1,5 @@
 import calendar
+import uuid
 from datetime import date, timedelta
 from decimal import Decimal
 from typing import Optional
@@ -37,16 +38,16 @@ class DashboardService:
         last_of_prev = first_of_month - timedelta(days=1)
         return date(last_of_prev.year, last_of_prev.month, 1)
 
-    async def get_summary(self, period_month: date) -> DashboardSummaryResponse:
+    async def get_summary(self, user_id: uuid.UUID, period_month: date) -> DashboardSummaryResponse:
         normalized_period = date(period_month.year, period_month.month, 1)
         start_date, end_date = self._get_month_bounds(normalized_period)
 
-        total_spent, count = await self.repo.get_period_spending_and_count(start_date, end_date)
-        total_income = await self.income_repo.get_total_for_period(start_date, end_date)
+        total_spent, count = await self.repo.get_period_spending_and_count(user_id, start_date, end_date)
+        total_income = await self.income_repo.get_total_for_period(user_id, start_date, end_date)
         net_savings = total_income - total_spent
         savings_rate = round(float((net_savings / total_income) * 100), 2) if total_income > 0 else 0.0
 
-        overall_budget = await self.budget_repo.get_overall(normalized_period)
+        overall_budget = await self.budget_repo.get_overall(user_id, normalized_period)
 
         if overall_budget:
             total_budget = overall_budget.amount
@@ -79,15 +80,15 @@ class DashboardService:
             savings_rate=savings_rate,
         )
 
-    async def get_recent_expenses(self, limit: int = 5) -> list[ExpenseResponse]:
-        expenses = await self.repo.get_recent_expenses(limit=limit)
+    async def get_recent_expenses(self, user_id: uuid.UUID, limit: int = 5) -> list[ExpenseResponse]:
+        expenses = await self.repo.get_recent_expenses(user_id, limit=limit)
         return [ExpenseResponse.model_validate(e) for e in expenses]
 
-    async def get_category_breakdown(self, period_month: date) -> list[CategoryBreakdownItem]:
+    async def get_category_breakdown(self, user_id: uuid.UUID, period_month: date) -> list[CategoryBreakdownItem]:
         normalized_period = date(period_month.year, period_month.month, 1)
         start_date, end_date = self._get_month_bounds(normalized_period)
 
-        rows = await self.repo.get_category_breakdown(start_date, end_date)
+        rows = await self.repo.get_category_breakdown(user_id, start_date, end_date)
         total_spent = sum((amount for _, _, amount in rows), Decimal("0.00"))
 
         result = []
@@ -103,11 +104,11 @@ class DashboardService:
             )
         return result
 
-    async def get_trend(self, period_month: date) -> list[TrendItem]:
+    async def get_trend(self, user_id: uuid.UUID, period_month: date) -> list[TrendItem]:
         normalized_period = date(period_month.year, period_month.month, 1)
         start_date, end_date = self._get_month_bounds(normalized_period)
 
-        rows = await self.repo.get_daily_trend(start_date, end_date)
+        rows = await self.repo.get_daily_trend(user_id, start_date, end_date)
         return [
             TrendItem(
                 label=d.strftime("%Y-%m-%d"),
@@ -117,15 +118,15 @@ class DashboardService:
             for d, amount, cnt in rows
         ]
 
-    async def get_comparison(self, period_month: date) -> MonthComparisonResponse:
+    async def get_comparison(self, user_id: uuid.UUID, period_month: date) -> MonthComparisonResponse:
         current_period = date(period_month.year, period_month.month, 1)
         prev_period = self._get_previous_month(current_period)
 
         curr_start, curr_end = self._get_month_bounds(current_period)
         prev_start, prev_end = self._get_month_bounds(prev_period)
 
-        curr_spend, _ = await self.repo.get_period_spending_and_count(curr_start, curr_end)
-        prev_spend, _ = await self.repo.get_period_spending_and_count(prev_start, prev_end)
+        curr_spend, _ = await self.repo.get_period_spending_and_count(user_id, curr_start, curr_end)
+        prev_spend, _ = await self.repo.get_period_spending_and_count(user_id, prev_start, prev_end)
 
         diff = curr_spend - prev_spend
         if prev_spend > 0:
@@ -149,12 +150,12 @@ class DashboardService:
         )
 
     async def get_top_categories(
-        self, period_month: date, limit: int = 5
+        self, user_id: uuid.UUID, period_month: date, limit: int = 5
     ) -> list[TopCategoryItem]:
         normalized_period = date(period_month.year, period_month.month, 1)
         start_date, end_date = self._get_month_bounds(normalized_period)
 
-        rows = await self.repo.get_category_breakdown(start_date, end_date)
+        rows = await self.repo.get_category_breakdown(user_id, start_date, end_date)
         total_spent = sum((amount for _, _, amount in rows), Decimal("0.00"))
 
         result = []
@@ -171,12 +172,12 @@ class DashboardService:
             )
         return result
 
-    async def get_stats(self, period_month: date) -> DashboardStatsResponse:
+    async def get_stats(self, user_id: uuid.UUID, period_month: date) -> DashboardStatsResponse:
         normalized_period = date(period_month.year, period_month.month, 1)
         start_date, end_date = self._get_month_bounds(normalized_period)
 
-        total_spent, count = await self.repo.get_period_spending_and_count(start_date, end_date)
-        highest = await self.repo.get_highest_expense(start_date, end_date)
+        total_spent, count = await self.repo.get_period_spending_and_count(user_id, start_date, end_date)
+        highest = await self.repo.get_highest_expense(user_id, start_date, end_date)
 
         # Days in the month
         days_in_month = (end_date - start_date).days + 1

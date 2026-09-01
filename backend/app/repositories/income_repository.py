@@ -13,14 +13,17 @@ class IncomeRepository:
     def __init__(self, session: AsyncSession):
         self.session = session
 
-    async def get_by_id(self, income_id: uuid.UUID) -> Optional[Income]:
+    async def get_by_id(self, income_id: uuid.UUID, user_id: Optional[uuid.UUID] = None) -> Optional[Income]:
         stmt = select(Income).where(Income.id == income_id)
+        if user_id is not None:
+            stmt = stmt.where(Income.user_id == user_id)
         result = await self.session.execute(stmt)
         return result.scalars().first()
 
     async def get_paginated(
         self,
         *,
+        user_id: uuid.UUID,
         search: Optional[str] = None,
         date_from: Optional[date] = None,
         date_to: Optional[date] = None,
@@ -32,8 +35,8 @@ class IncomeRepository:
         page: int = 1,
         page_size: int = 20,
     ) -> Tuple[Sequence[Income], int]:
-        query = select(Income)
-        count_query = select(func.count(Income.id))
+        query = select(Income).where(Income.user_id == user_id)
+        count_query = select(func.count(Income.id)).where(Income.user_id == user_id)
 
         # Filters
         if search:
@@ -89,8 +92,9 @@ class IncomeRepository:
 
         return items, total
 
-    async def create(self, data: IncomeCreate) -> Income:
+    async def create(self, data: IncomeCreate, user_id: uuid.UUID) -> Income:
         income = Income(
+            user_id=user_id,
             title=data.title,
             amount=data.amount,
             income_date=data.income_date,
@@ -116,18 +120,21 @@ class IncomeRepository:
         await self.session.commit()
 
     async def get_total_for_period(
-        self, start_date: date, end_date: date
+        self, user_id: uuid.UUID, start_date: date, end_date: date
     ) -> Decimal:
         stmt = (
             select(func.coalesce(func.sum(Income.amount), Decimal("0.00")))
-            .where(Income.income_date >= start_date)
-            .where(Income.income_date <= end_date)
+            .where(
+                Income.user_id == user_id,
+                Income.income_date >= start_date,
+                Income.income_date <= end_date,
+            )
         )
         result = await self.session.execute(stmt)
         return Decimal(str(result.scalar() or "0.00"))
 
     async def get_breakdown_by_source(
-        self, start_date: date, end_date: date
+        self, user_id: uuid.UUID, start_date: date, end_date: date
     ) -> list[tuple[str, Decimal, int]]:
         stmt = (
             select(
@@ -135,10 +142,13 @@ class IncomeRepository:
                 func.coalesce(func.sum(Income.amount), Decimal("0.00")),
                 func.count(Income.id),
             )
-            .where(Income.income_date >= start_date)
-            .where(Income.income_date <= end_date)
+            .where(
+                Income.user_id == user_id,
+                Income.income_date >= start_date,
+                Income.income_date <= end_date,
+            )
             .group_by(Income.source)
             .order_by(func.sum(Income.amount).desc())
         )
         result = await self.session.execute(stmt)
-        return [(r[0], Decimal(str(r[1])), r[2]) for r in result.all()]
+        return [(row[0], Decimal(str(row[1])), row[2]) for row in result.all()]

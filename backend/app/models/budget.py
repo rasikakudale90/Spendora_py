@@ -50,17 +50,19 @@ class Budget(Base, TimestampMixin):
         ),
         # Amount must be positive
         CheckConstraint("amount > 0", name="ck_budgets_amount_positive"),
-        # One overall budget per (period_type, period_start) (partial unique index)
+        # One overall budget per user per (period_type, period_start) (partial unique index)
         Index(
-            "uix_budgets_overall_period_type_start",
+            "uix_budgets_user_overall_period_type_start",
+            "user_id",
             "period_type",
             "period_start",
             unique=True,
             postgresql_where=text("scope = 'overall'"),
         ),
-        # One category budget per (category_id, period_type, period_start) (partial unique index)
+        # One category budget per user per (category_id, period_type, period_start) (partial unique index)
         Index(
-            "uix_budgets_category_period_type_start",
+            "uix_budgets_user_category_period_type_start",
+            "user_id",
             "category_id",
             "period_type",
             "period_start",
@@ -73,6 +75,12 @@ class Budget(Base, TimestampMixin):
         UUID(as_uuid=True),
         primary_key=True,
         server_default=text("gen_random_uuid()"),
+    )
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("users.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
     )
     scope: Mapped[str] = mapped_column(String(10), nullable=False)
     category_id: Mapped[uuid.UUID | None] = mapped_column(
@@ -89,6 +97,11 @@ class Budget(Base, TimestampMixin):
     # ── Relationships ─────────────────────────────────────────────────────────
     category: Mapped["Category | None"] = relationship(  # noqa: F821
         "Category",
+        back_populates="budgets",
+        lazy="select",
+    )
+    user: Mapped["User"] = relationship(  # noqa: F821
+        "User",
         back_populates="budgets",
         lazy="select",
     )

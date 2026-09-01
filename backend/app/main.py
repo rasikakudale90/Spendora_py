@@ -56,6 +56,11 @@ async def lifespan(app: FastAPI):
     await engine.dispose()
 
 
+from slowapi import _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
+
+from app.core.limiter import limiter
+
 # ── Application ───────────────────────────────────────────────────────────────
 app = FastAPI(
     title="Spendora API",
@@ -65,6 +70,8 @@ app = FastAPI(
     docs_url="/docs",
     redoc_url="/redoc",
 )
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 # ── CORS Middleware ───────────────────────────────────────────────────────────
 # Parse configured origins

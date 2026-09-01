@@ -6,7 +6,9 @@ from fastapi import APIRouter, Depends, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
+from app.core.dependencies import get_current_user
 from app.models.expense import PaymentMode
+from app.models.user import User
 from app.schemas.expense import (
     ExpenseCreate,
     ExpenseListResponse,
@@ -20,6 +22,7 @@ router = APIRouter(prefix="/expenses", tags=["Expenses"])
 
 @router.get("", response_model=ExpenseListResponse)
 async def list_expenses(
+    current_user: User = Depends(get_current_user),
     search: Optional[str] = Query(default=None, description="Search in title and notes"),
     date_from: Optional[date] = Query(default=None, description="Filter from date (YYYY-MM-DD)"),
     date_to: Optional[date] = Query(default=None, description="Filter to date (YYYY-MM-DD)"),
@@ -41,9 +44,10 @@ async def list_expenses(
     page_size: int = Query(default=20, ge=1, le=100, description="Items per page"),
     db: AsyncSession = Depends(get_db),
 ):
-    """List expenses with comprehensive filtering, search, sorting, and pagination (FR-3, FR-11–16)."""
+    """List expenses scoped strictly to the authenticated user (FR-3, FR-11–16)."""
     service = ExpenseService(db)
     return await service.list_expenses(
+        user_id=current_user.id,
         search=search,
         date_from=date_from,
         date_to=date_to,
@@ -60,37 +64,45 @@ async def list_expenses(
 
 @router.post("", response_model=ExpenseResponse, status_code=status.HTTP_201_CREATED)
 async def create_expense(
-    data: ExpenseCreate, db: AsyncSession = Depends(get_db)
+    data: ExpenseCreate,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
 ):
-    """Create a new expense (FR-2)."""
+    """Create a new expense for the authenticated user (FR-2)."""
     service = ExpenseService(db)
-    return await service.create_expense(data)
+    return await service.create_expense(data, user_id=current_user.id)
 
 
 @router.get("/{expense_id}", response_model=ExpenseResponse)
 async def get_expense(
-    expense_id: uuid.UUID, db: AsyncSession = Depends(get_db)
+    expense_id: uuid.UUID,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
 ):
-    """Retrieve single expense details."""
+    """Retrieve single expense owned by the authenticated user."""
     service = ExpenseService(db)
-    return await service.get_expense(expense_id)
+    return await service.get_expense(expense_id, user_id=current_user.id)
 
 
 @router.put("/{expense_id}", response_model=ExpenseResponse)
+@router.patch("/{expense_id}", response_model=ExpenseResponse)
 async def update_expense(
     expense_id: uuid.UUID,
     data: ExpenseUpdate,
+    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    """Update an existing expense (FR-4)."""
+    """Update an existing expense owned by the authenticated user (FR-4)."""
     service = ExpenseService(db)
-    return await service.update_expense(expense_id, data)
+    return await service.update_expense(expense_id, data, user_id=current_user.id)
 
 
 @router.delete("/{expense_id}")
 async def delete_expense(
-    expense_id: uuid.UUID, db: AsyncSession = Depends(get_db)
+    expense_id: uuid.UUID,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
 ):
-    """Delete an expense (FR-5)."""
+    """Delete an expense owned by the authenticated user (FR-5)."""
     service = ExpenseService(db)
-    return await service.delete_expense(expense_id)
+    return await service.delete_expense(expense_id, user_id=current_user.id)

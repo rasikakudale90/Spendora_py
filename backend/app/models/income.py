@@ -18,6 +18,7 @@ from enum import Enum
 from sqlalchemy import (
     CheckConstraint,
     Date,
+    ForeignKey,
     Index,
     Numeric,
     String,
@@ -25,7 +26,7 @@ from sqlalchemy import (
     text,
 )
 from sqlalchemy.dialects.postgresql import UUID
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.base import Base, TimestampMixin
 
@@ -55,6 +56,7 @@ class Income(Base, TimestampMixin):
         CheckConstraint("amount > 0", name="ck_incomes_amount_positive"),
         Index("ix_incomes_income_date", "income_date"),
         Index("ix_incomes_source", "source"),
+        Index("ix_incomes_user_id_date", "user_id", "income_date"),
     )
 
     id: Mapped[uuid.UUID] = mapped_column(
@@ -62,12 +64,25 @@ class Income(Base, TimestampMixin):
         primary_key=True,
         server_default=text("gen_random_uuid()"),
     )
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("users.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
     title: Mapped[str] = mapped_column(String(100), nullable=False)
     amount: Mapped[Decimal] = mapped_column(Numeric(12, 2), nullable=False)
     income_date: Mapped[date] = mapped_column(Date, nullable=False)
     source: Mapped[str] = mapped_column(String(50), default="Salary", server_default="Salary", nullable=False)
     payment_mode: Mapped[str | None] = mapped_column(String(30), nullable=True)
     notes: Mapped[str | None] = mapped_column(Text, nullable=True)
+
+    # ── Relationships ─────────────────────────────────────────────────────────
+    user: Mapped["User"] = relationship(  # noqa: F821
+        "User",
+        back_populates="incomes",
+        lazy="select",
+    )
 
     def __repr__(self) -> str:
         return f"<Income id={self.id} title={self.title!r} amount={self.amount} source={self.source!r}>"

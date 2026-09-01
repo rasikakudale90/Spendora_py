@@ -44,18 +44,18 @@ class BudgetService:
         return remaining, round(percentage_used, 2), status_val
 
     async def get_budgets(
-        self, target_date: date, period_type: str = "monthly"
+        self, user_id: uuid.UUID, target_date: date, period_type: str = "monthly"
     ) -> BudgetListResponse:
         start_date, end_date = compute_period_bounds(target_date, period_type)
 
-        budgets = await self.repo.get_by_period(start_date, period_type)
+        budgets = await self.repo.get_by_period(user_id, start_date, period_type)
 
         overall_resp = None
         category_resps = []
 
         for b in budgets:
             if b.scope == "overall":
-                spent = await self.repo.get_spent_for_period(start_date, end_date)
+                spent = await self.repo.get_spent_for_period(user_id, start_date, end_date)
                 remaining, pct, status_val = self._calculate_budget_status(b.amount, spent)
                 overall_resp = BudgetResponse(
                     id=b.id,
@@ -75,7 +75,7 @@ class BudgetService:
                     updated_at=b.updated_at,
                 )
             else:
-                spent = await self.repo.get_spent_for_period(start_date, end_date, b.category_id)
+                spent = await self.repo.get_spent_for_period(user_id, start_date, end_date, b.category_id)
                 remaining, pct, status_val = self._calculate_budget_status(b.amount, spent)
                 category_resps.append(
                     BudgetResponse(
@@ -105,7 +105,7 @@ class BudgetService:
             category_budgets=category_resps,
         )
 
-    async def set_budget(self, data: BudgetCreate) -> BudgetResponse:
+    async def set_budget(self, user_id: uuid.UUID, data: BudgetCreate) -> BudgetResponse:
         start_date, end_date = compute_period_bounds(
             data.period_start or data.period_month or date.today(),
             data.period_type,
@@ -119,12 +119,12 @@ class BudgetService:
                     detail=f"Category with id '{data.category_id}' does not exist",
                 )
             category_name = category.name
-            spent = await self.repo.get_spent_for_period(start_date, end_date, data.category_id)
+            spent = await self.repo.get_spent_for_period(user_id, start_date, end_date, data.category_id)
         else:
             category_name = None
-            spent = await self.repo.get_spent_for_period(start_date, end_date)
+            spent = await self.repo.get_spent_for_period(user_id, start_date, end_date)
 
-        budget = await self.repo.upsert(data)
+        budget = await self.repo.upsert(data, user_id=user_id)
         remaining, pct, status_val = self._calculate_budget_status(budget.amount, spent)
 
         return BudgetResponse(
@@ -145,8 +145,8 @@ class BudgetService:
             updated_at=budget.updated_at,
         )
 
-    async def update_budget(self, budget_id: uuid.UUID, data: BudgetUpdate) -> BudgetResponse:
-        budget = await self.repo.get_by_id(budget_id)
+    async def update_budget(self, user_id: uuid.UUID, budget_id: uuid.UUID, data: BudgetUpdate) -> BudgetResponse:
+        budget = await self.repo.get_by_id(budget_id, user_id=user_id)
         if not budget:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
@@ -159,10 +159,10 @@ class BudgetService:
 
         if budget.scope == "category":
             category_name = budget.category.name if budget.category else None
-            spent = await self.repo.get_spent_for_period(budget.period_start, budget.period_end, budget.category_id)
+            spent = await self.repo.get_spent_for_period(user_id, budget.period_start, budget.period_end, budget.category_id)
         else:
             category_name = None
-            spent = await self.repo.get_spent_for_period(budget.period_start, budget.period_end)
+            spent = await self.repo.get_spent_for_period(user_id, budget.period_start, budget.period_end)
 
         remaining, pct, status_val = self._calculate_budget_status(budget.amount, spent)
 
@@ -184,8 +184,8 @@ class BudgetService:
             updated_at=budget.updated_at,
         )
 
-    async def delete_budget(self, budget_id: uuid.UUID) -> None:
-        budget = await self.repo.get_by_id(budget_id)
+    async def delete_budget(self, user_id: uuid.UUID, budget_id: uuid.UUID) -> None:
+        budget = await self.repo.get_by_id(budget_id, user_id=user_id)
         if not budget:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,

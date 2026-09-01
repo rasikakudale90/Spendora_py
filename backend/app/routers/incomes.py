@@ -6,6 +6,8 @@ from fastapi import APIRouter, Depends, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
+from app.core.dependencies import get_current_user
+from app.models.user import User
 from app.schemas.income import (
     IncomeCreate,
     IncomeListResponse,
@@ -20,6 +22,7 @@ router = APIRouter(prefix="/incomes", tags=["Incomes"])
 
 @router.get("", response_model=IncomeListResponse)
 async def list_incomes(
+    current_user: User = Depends(get_current_user),
     search: Optional[str] = Query(default=None, description="Search in title and notes"),
     date_from: Optional[date] = Query(default=None, description="Filter from date (YYYY-MM-DD)"),
     date_to: Optional[date] = Query(default=None, description="Filter to date (YYYY-MM-DD)"),
@@ -40,9 +43,10 @@ async def list_incomes(
     page_size: int = Query(default=20, ge=1, le=100, description="Items per page"),
     db: AsyncSession = Depends(get_db),
 ):
-    """List incomes with search, filtering by source/date, sorting, and pagination."""
+    """List incomes for the authenticated user with search, filtering by source/date, sorting, and pagination."""
     service = IncomeService(db)
     return await service.list_incomes(
+        user_id=current_user.id,
         search=search,
         date_from=date_from,
         date_to=date_to,
@@ -58,6 +62,7 @@ async def list_incomes(
 
 @router.get("/summary", response_model=IncomeSummaryResponse)
 async def get_income_summary(
+    current_user: User = Depends(get_current_user),
     period_month: Optional[str] = Query(
         default=None,
         pattern=r"^\d{4}-\d{2}$",
@@ -65,47 +70,52 @@ async def get_income_summary(
     ),
     db: AsyncSession = Depends(get_db),
 ):
-    """Retrieve monthly total income and breakdown by source."""
+    """Retrieve monthly total income and breakdown by source for the authenticated user."""
     service = IncomeService(db)
-    return await service.get_summary(period_month=period_month)
+    return await service.get_summary(user_id=current_user.id, period_month=period_month)
 
 
 @router.get("/{income_id}", response_model=IncomeResponse)
 async def get_income(
     income_id: uuid.UUID,
+    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    """Retrieve a single income by UUID."""
+    """Retrieve a single income by UUID owned by the authenticated user."""
     service = IncomeService(db)
-    return await service.get_income(income_id)
+    return await service.get_income(income_id, user_id=current_user.id)
 
 
 @router.post("", response_model=IncomeResponse, status_code=status.HTTP_201_CREATED)
 async def create_income(
     data: IncomeCreate,
+    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    """Record a new income entry."""
+    """Record a new income entry for the authenticated user."""
     service = IncomeService(db)
-    return await service.create_income(data)
+    return await service.create_income(data, user_id=current_user.id)
 
 
 @router.patch("/{income_id}", response_model=IncomeResponse)
+@router.put("/{income_id}", response_model=IncomeResponse)
 async def update_income(
     income_id: uuid.UUID,
     data: IncomeUpdate,
+    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    """Update an existing income entry."""
+    """Update an existing income entry owned by the authenticated user."""
     service = IncomeService(db)
-    return await service.update_income(income_id, data)
+    return await service.update_income(income_id, data, user_id=current_user.id)
 
 
 @router.delete("/{income_id}")
 async def delete_income(
     income_id: uuid.UUID,
+    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    """Delete an income entry by UUID."""
+    """Delete an income entry owned by the authenticated user."""
     service = IncomeService(db)
-    return await service.delete_income(income_id)
+    return await service.delete_income(income_id, user_id=current_user.id)

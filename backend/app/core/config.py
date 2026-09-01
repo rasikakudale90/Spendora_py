@@ -22,6 +22,23 @@ class Settings(BaseSettings):
     # Web server port (injected dynamically by Render)
     PORT: int = 8000
 
+    # ── Authentication & Security ─────────────────────────────────
+    # JWT signing secret — in production, inject securely via env var
+    JWT_SECRET_KEY: str = "spendora-production-jwt-secret-key-32-chars-min-change-me"
+    JWT_ALGORITHM: str = "HS256"
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 15
+    REFRESH_TOKEN_EXPIRE_DAYS: int = 30
+
+    # Google OAuth 2.0 / OpenID Connect Client ID
+    GOOGLE_CLIENT_ID: str | None = None
+
+    # Frontend URL (used for CORS and cookies)
+    FRONTEND_URL: str = "http://localhost:3000"
+
+    # Cookie security settings
+    COOKIE_SECURE: bool = False  # Set to True in production (HTTPS)
+    COOKIE_SAMESITE: str = "lax"
+
     @field_validator("DATABASE_URL", mode="before")
     @classmethod
     def assemble_db_connection(cls, v: str) -> str:

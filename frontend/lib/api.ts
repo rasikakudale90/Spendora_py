@@ -2,6 +2,36 @@ const API_BASE_URL = (
   process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"
 ).replace(/\/+$/, "");
 
+// ── In-Memory Token Management ──────────────────────────────────────────────
+let inMemoryAccessToken: string | null = null;
+
+export const setAccessToken = (token: string | null) => {
+  inMemoryAccessToken = token;
+};
+
+export const getAccessToken = (): string | null => {
+  return inMemoryAccessToken;
+};
+
+// ── Auth Types ──────────────────────────────────────────────────────────────
+export interface User {
+  id: string;
+  email: string;
+  full_name?: string | null;
+  avatar_url?: string | null;
+  auth_provider: string;
+  is_active: boolean;
+  is_verified: boolean;
+  created_at: string;
+}
+
+export interface AuthSuccessResponse {
+  user: User;
+  access_token: string;
+  token_type: string;
+  expires_in: number;
+}
+
 export interface Category {
   id: string;
   name: string;
@@ -113,9 +143,9 @@ export interface DashboardSummary {
   percentage_used: number;
   status: "on_track" | "near_limit" | "over_budget" | "no_budget";
   expense_count: number;
-  total_income?: string;
-  net_savings?: string;
-  savings_rate?: number;
+  total_income: string;
+  net_savings: string;
+  savings_rate: number;
 }
 
 export interface CategoryBreakdownItem {
@@ -156,15 +186,71 @@ export interface DashboardStats {
   total_expense_count: number;
 }
 
+// ── Refresh Mutex / Single-flight Promise ───────────────────────────────────
+let refreshPromise: Promise<string | null> | null = null;
+
+async function silentRefresh(): Promise<string | null> {
+  if (refreshPromise) return refreshPromise;
+
+  refreshPromise = (async () => {
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/v1/auth/refresh`, {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+      });
+      if (!res.ok) {
+        setAccessToken(null);
+        return null;
+      }
+      const data: AuthSuccessResponse = await res.json();
+      setAccessToken(data.access_token);
+      return data.access_token;
+    } catch {
+      setAccessToken(null);
+      return null;
+    } finally {
+      refreshPromise = null;
+    }
+  })();
+
+  return refreshPromise;
+}
+
 async function fetchJson<T>(endpoint: string, options?: RequestInit): Promise<T> {
   const url = `${API_BASE_URL}${endpoint}`;
-  const response = await fetch(url, {
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+    ...(options?.headers as Record<string, string> || {}),
+  };
+
+  if (inMemoryAccessToken) {
+    headers["Authorization"] = `Bearer ${inMemoryAccessToken}`;
+  }
+
+  let response = await fetch(url, {
     ...options,
-    headers: {
-      "Content-Type": "application/json",
-      ...(options?.headers || {}),
-    },
+    credentials: "include", // Send HttpOnly refresh cookies
+    headers,
   });
+
+  // Handle 401: attempt transparent token refresh once if not an auth endpoint
+  if (
+    response.status === 401 &&
+    !endpoint.startsWith("/api/v1/auth/login") &&
+    !endpoint.startsWith("/api/v1/auth/register") &&
+    !endpoint.startsWith("/api/v1/auth/refresh")
+  ) {
+    const newToken = await silentRefresh();
+    if (newToken) {
+      headers["Authorization"] = `Bearer ${newToken}`;
+      response = await fetch(url, {
+        ...options,
+        credentials: "include",
+        headers,
+      });
+    }
+  }
 
   if (!response.ok) {
     let errorDetail = "An unexpected error occurred";
@@ -180,6 +266,85 @@ async function fetchJson<T>(endpoint: string, options?: RequestInit): Promise<T>
   return response.json();
 }
 
+// ── Auth API ─────────────────────────────────────────────────────────────────
+export const authApi = {
+  register: async (data: { email: string; password: string; full_name?: string }) => {
+    const res = await fetchJson<AuthSuccessResponse>("/api/v1/auth/register", {
+      method: "POST",
+      body: JSON.stringify(data),
+    });
+    setAccessToken(res.access_token);
+    return res;
+  },
+
+  login: async (data: { email: string; password: string }) => {
+    const res = await fetchJson<AuthSuccessResponse>("/api/v1/auth/login", {
+      method: "POST",
+      body: JSON.stringify(data),
+    });
+    setAccessToken(res.access_token);
+    return res;
+  },
+
+  googleSignIn: async (credential: string) => {
+    const res = await fetchJson<AuthSuccessResponse>("/api/v1/auth/google", {
+      method: "POST",
+      body: JSON.stringify({ credential }),
+    });
+    setAccessToken(res.access_token);
+    return res;
+  },
+
+  refreshToken: async () => {
+    const res = await fetchJson<AuthSuccessResponse>("/api/v1/auth/refresh", {
+      method: "POST",
+    });
+    setAccessToken(res.access_token);
+    return res;
+  },
+
+  logout: async () => {
+    try {
+      await fetchJson<{ message: string }>("/api/v1/auth/logout", {
+        method: "POST",
+      });
+    } finally {
+      setAccessToken(null);
+    }
+  },
+
+  logoutAll: async () => {
+    try {
+      await fetchJson<{ message: string }>("/api/v1/auth/logout-all", {
+        method: "POST",
+      });
+    } finally {
+      setAccessToken(null);
+    }
+  },
+
+  getMe: () => fetchJson<User>("/api/v1/auth/me"),
+
+  forgotPassword: (email: string) =>
+    fetchJson<{ message: string; dev_reset_token?: string }>("/api/v1/auth/forgot-password", {
+      method: "POST",
+      body: JSON.stringify({ email }),
+    }),
+
+  resetPassword: (token: string, new_password: string) =>
+    fetchJson<{ message: string }>("/api/v1/auth/reset-password", {
+      method: "POST",
+      body: JSON.stringify({ token, new_password }),
+    }),
+
+  changePassword: (current_password: string, new_password: string) =>
+    fetchJson<{ message: string }>("/api/v1/auth/change-password", {
+      method: "POST",
+      body: JSON.stringify({ current_password, new_password }),
+    }),
+};
+
+// ── Application Resources API ────────────────────────────────────────────────
 export const api = {
   // Categories
   getCategories: () => fetchJson<Category[]>("/api/v1/categories"),

@@ -15,12 +15,13 @@ class DashboardRepository:
         self.session = session
 
     async def get_period_spending_and_count(
-        self, start_date: date, end_date: date
+        self, user_id: uuid.UUID, start_date: date, end_date: date
     ) -> Tuple[Decimal, int]:
         stmt = select(
             func.coalesce(func.sum(Expense.amount), Decimal("0.00")),
             func.count(Expense.id),
         ).where(
+            Expense.user_id == user_id,
             Expense.expense_date >= start_date,
             Expense.expense_date <= end_date,
         )
@@ -30,10 +31,11 @@ class DashboardRepository:
             return Decimal("0.00"), 0
         return row[0], row[1]
 
-    async def get_recent_expenses(self, limit: int = 5) -> Sequence[Expense]:
+    async def get_recent_expenses(self, user_id: uuid.UUID, limit: int = 5) -> Sequence[Expense]:
         stmt = (
             select(Expense)
             .options(selectinload(Expense.category))
+            .where(Expense.user_id == user_id)
             .order_by(Expense.expense_date.desc(), Expense.created_at.desc())
             .limit(limit)
         )
@@ -41,7 +43,7 @@ class DashboardRepository:
         return result.scalars().all()
 
     async def get_category_breakdown(
-        self, start_date: date, end_date: date
+        self, user_id: uuid.UUID, start_date: date, end_date: date
     ) -> Sequence[Tuple[uuid.UUID, str, Decimal]]:
         stmt = (
             select(
@@ -51,6 +53,7 @@ class DashboardRepository:
             )
             .join(Expense, Expense.category_id == Category.id)
             .where(
+                Expense.user_id == user_id,
                 Expense.expense_date >= start_date,
                 Expense.expense_date <= end_date,
             )
@@ -61,7 +64,7 @@ class DashboardRepository:
         return result.all()
 
     async def get_daily_trend(
-        self, start_date: date, end_date: date
+        self, user_id: uuid.UUID, start_date: date, end_date: date
     ) -> Sequence[Tuple[date, Decimal, int]]:
         stmt = (
             select(
@@ -70,6 +73,7 @@ class DashboardRepository:
                 func.count(Expense.id).label("expense_count"),
             )
             .where(
+                Expense.user_id == user_id,
                 Expense.expense_date >= start_date,
                 Expense.expense_date <= end_date,
             )
@@ -80,11 +84,12 @@ class DashboardRepository:
         return result.all()
 
     async def get_highest_expense(
-        self, start_date: date, end_date: date
+        self, user_id: uuid.UUID, start_date: date, end_date: date
     ) -> Optional[Tuple[str, Decimal]]:
         stmt = (
             select(Expense.title, Expense.amount)
             .where(
+                Expense.user_id == user_id,
                 Expense.expense_date >= start_date,
                 Expense.expense_date <= end_date,
             )
