@@ -95,8 +95,14 @@ class UserResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 
+class UserRegisterResponse(BaseModel):
+    message: str = "Account created successfully. Please sign in."
+    user: UserResponse
+
+
 class AuthSuccessResponse(BaseModel):
     user: UserResponse
     access_token: str
     token_type: str = "bearer"
     expires_in: int = 900
+

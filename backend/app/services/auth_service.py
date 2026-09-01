@@ -55,9 +55,7 @@ class AuthService:
     async def register(
         self,
         data: UserRegister,
-        user_agent: Optional[str] = None,
-        ip_address: Optional[str] = None,
-    ) -> Tuple[User, str, str]:
+    ) -> User:
         existing = await self.user_repo.get_by_email(data.email)
         if existing:
             raise HTTPException(
@@ -72,8 +70,7 @@ class AuthService:
             full_name=data.full_name,
             auth_provider="email",
         )
-        access_token, raw_refresh_token = await self._issue_token_pair(user, user_agent, ip_address)
-        return user, access_token, raw_refresh_token
+        return user
 
     async def authenticate_password(
         self,

@@ -67,8 +67,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const register = async (data: { email: string; password: string; full_name?: string }) => {
-    const res = await authApi.register(data);
-    setUser(res.user);
+    await authApi.register(data);
+    // User is created but not logged in. Must sign in on /login.
   };
 
   const googleSignIn = async (credential: string) => {

@@ -269,12 +269,10 @@ async function fetchJson<T>(endpoint: string, options?: RequestInit): Promise<T>
 // ── Auth API ─────────────────────────────────────────────────────────────────
 export const authApi = {
   register: async (data: { email: string; password: string; full_name?: string }) => {
-    const res = await fetchJson<AuthSuccessResponse>("/api/v1/auth/register", {
+    return fetchJson<{ message: string; user: User }>("/api/v1/auth/register", {
       method: "POST",
       body: JSON.stringify(data),
     });
-    setAccessToken(res.access_token);
-    return res;
   },
 
   login: async (data: { email: string; password: string }) => {

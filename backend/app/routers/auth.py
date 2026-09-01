@@ -20,6 +20,7 @@ from app.schemas.user import (
     PasswordResetRequest,
     UserLogin,
     UserRegister,
+    UserRegisterResponse,
     UserResponse,
 )
 from app.services.auth_service import AuthService
@@ -62,7 +63,7 @@ def get_client_metadata(request: Request) -> tuple[Optional[str], Optional[str]]
 
 @router.post(
     "/register",
-    response_model=AuthSuccessResponse,
+    response_model=UserRegisterResponse,
     status_code=status.HTTP_201_CREATED,
     summary="Register new user account",
 )
@@ -70,21 +71,14 @@ def get_client_metadata(request: Request) -> tuple[Optional[str], Optional[str]]
 async def register(
     data: UserRegister,
     request: Request,
-    response: Response,
     session: Annotated[AsyncSession, Depends(get_db)],
 ):
-    user_agent, ip_address = get_client_metadata(request)
     service = AuthService(session)
-    user, access_token, raw_refresh_token = await service.register(
-        data, user_agent=user_agent, ip_address=ip_address
-    )
+    user = await service.register(data)
     await session.commit()
-    set_refresh_cookie(response, raw_refresh_token)
-    return AuthSuccessResponse(
+    return UserRegisterResponse(
+        message="Account created successfully. Please sign in with your credentials.",
         user=UserResponse.model_validate(user),
-        access_token=access_token,
-        token_type="bearer",
-        expires_in=settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
     )
 
 

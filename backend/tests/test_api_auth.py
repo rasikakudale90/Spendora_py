@@ -41,10 +41,10 @@ async def test_register_and_login_flow(unauth_client: AsyncClient):
     )
     assert reg_res.status_code == 201
     data = reg_res.json()
-    assert "access_token" in data
-    assert data["token_type"] == "bearer"
+    assert "user" in data
     assert data["user"]["email"] == unique_email.lower()
-    assert "spendora_refresh_token" in reg_res.cookies
+    assert "access_token" not in data
+    assert "spendora_refresh_token" not in reg_res.cookies
 
     # 3. Duplicate registration rejected
     dup_res = await unauth_client.post(
@@ -85,7 +85,13 @@ async def test_refresh_token_rotation_and_reuse_detection(unauth_client: AsyncCl
         json={"email": unique_email, "password": password},
     )
     assert reg_res.status_code == 201
-    initial_refresh_cookie = reg_res.cookies.get("spendora_refresh_token")
+
+    login_res = await unauth_client.post(
+        "/api/v1/auth/login",
+        json={"email": unique_email, "password": password},
+    )
+    assert login_res.status_code == 200
+    initial_refresh_cookie = login_res.cookies.get("spendora_refresh_token")
     assert initial_refresh_cookie is not None
 
     # 1. Rotate token
@@ -126,7 +132,13 @@ async def test_password_recovery_and_change(unauth_client: AsyncClient):
         json={"email": unique_email, "password": old_password},
     )
     assert reg_res.status_code == 201
-    access_token = reg_res.json()["access_token"]
+
+    login_res = await unauth_client.post(
+        "/api/v1/auth/login",
+        json={"email": unique_email, "password": old_password},
+    )
+    assert login_res.status_code == 200
+    access_token = login_res.json()["access_token"]
 
     # 1. Change password while authenticated
     change_res = await unauth_client.post(
@@ -177,8 +189,15 @@ async def test_me_and_logout(unauth_client: AsyncClient):
         "/api/v1/auth/register",
         json={"email": unique_email, "password": password, "full_name": "Profile User"},
     )
-    token = reg_res.json()["access_token"]
-    refresh_cookie = reg_res.cookies.get("spendora_refresh_token")
+    assert reg_res.status_code == 201
+
+    login_res = await unauth_client.post(
+        "/api/v1/auth/login",
+        json={"email": unique_email, "password": password},
+    )
+    assert login_res.status_code == 200
+    token = login_res.json()["access_token"]
+    refresh_cookie = login_res.cookies.get("spendora_refresh_token")
 
     # 1. Get Me
     me_res = await unauth_client.get("/api/v1/auth/me", headers={"Authorization": f"Bearer {token}"})

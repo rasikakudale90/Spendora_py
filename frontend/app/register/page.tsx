@@ -48,8 +48,8 @@ export default function RegisterPage() {
         password,
         full_name: fullName.trim() || undefined,
       });
-      toast.success("Account created successfully! Welcome to Spendora.");
-      router.replace("/dashboard");
+      toast.success("Account created successfully! Please sign in with your credentials.");
+      router.replace(`/login?email=${encodeURIComponent(email)}&registered=true`);
     } catch (err: any) {
       setErrorMsg(err.message || "Failed to create account");
     } finally {

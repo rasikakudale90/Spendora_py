@@ -6,15 +6,17 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { GoogleSignInButton } from "@/components/GoogleSignInButton";
 import { toast } from "sonner";
-import { Wallet, LogIn, Lock, Mail, ArrowRight } from "lucide-react";
+import { Wallet, LogIn, Lock, Mail, ArrowRight, CheckCircle2 } from "lucide-react";
 
 function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const redirect = searchParams.get("redirect") || "/dashboard";
+  const emailFromUrl = searchParams.get("email") || "";
+  const isRegistered = searchParams.get("registered") === "true";
 
   const { login } = useAuth();
-  const [email, setEmail] = useState("");
+  const [email, setEmail] = useState(emailFromUrl);
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
@@ -50,6 +52,13 @@ function LoginForm() {
 
       {/* Form Card */}
       <div className="glass-card border border-border/70 rounded-3xl p-6 sm:p-8 shadow-2xl backdrop-blur-xl">
+        {isRegistered && !errorMsg && (
+          <div className="mb-5 p-3.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 text-xs font-medium flex items-center gap-2.5">
+            <CheckCircle2 className="w-4 h-4 text-emerald-500 flex-shrink-0" />
+            <span>Account created successfully! Please enter your password to sign in.</span>
+          </div>
+        )}
+
         {errorMsg && (
           <div className="mb-5 p-3.5 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-600 dark:text-rose-400 text-xs font-medium">
             {errorMsg}

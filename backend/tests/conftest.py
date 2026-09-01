@@ -31,8 +31,13 @@ async def client():
                 },
             )
             if reg_resp.status_code == 201:
-                token = reg_resp.json()["access_token"]
-                ac.headers["Authorization"] = f"Bearer {token}"
+                login_resp = await ac.post(
+                    "/api/v1/auth/login",
+                    json={"email": test_email, "password": test_password},
+                )
+                if login_resp.status_code == 200:
+                    token = login_resp.json()["access_token"]
+                    ac.headers["Authorization"] = f"Bearer {token}"
             yield ac
 
 
@@ -58,8 +63,14 @@ def client_factory():
             json={"email": email, "password": password, "full_name": "Isolated User"},
         )
         assert reg_resp.status_code == 201, f"Failed to register factory user: {reg_resp.text}"
-        data = reg_resp.json()
-        token = data["access_token"]
+        user_data = reg_resp.json()["user"]
+
+        login_resp = await ac.post(
+            "/api/v1/auth/login",
+            json={"email": email, "password": password},
+        )
+        assert login_resp.status_code == 200, f"Failed to login factory user: {login_resp.text}"
+        token = login_resp.json()["access_token"]
         ac.headers["Authorization"] = f"Bearer {token}"
-        return ac, data["user"]
+        return ac, user_data
     return _factory
