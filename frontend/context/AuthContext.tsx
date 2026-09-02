@@ -35,6 +35,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   useEffect(() => {
+    let warmupTimer: NodeJS.Timeout | null = setTimeout(() => {
+      // If server took > 2.5s, inform the user it's waking up
+      try {
+        const { toast } = require("sonner");
+        toast.info("Connecting to server (waking up cloud instance)...", {
+          id: "server-wakeup",
+          duration: 45000,
+        });
+      } catch {}
+    }, 2500);
+
     const initAuth = async () => {
       try {
         const authRes = await authApi.refreshToken();
@@ -42,10 +53,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       } catch {
         setUser(null);
       } finally {
+        if (warmupTimer) {
+          clearTimeout(warmupTimer);
+          warmupTimer = null;
+        }
+        try {
+          const { toast } = require("sonner");
+          toast.dismiss("server-wakeup");
+        } catch {}
         setIsLoading(false);
       }
     };
     initAuth();
+
+    return () => {
+      if (warmupTimer) clearTimeout(warmupTimer);
+    };
   }, []);
 
   // Route protection

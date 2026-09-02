@@ -39,6 +39,22 @@ class Settings(BaseSettings):
     COOKIE_SECURE: bool = False  # Set to True in production (HTTPS)
     COOKIE_SAMESITE: str = "lax"
 
+    # ── Email Provider Configuration (100% Environment-Driven) ──
+    # HTTP REST API provider (e.g. Resend, SendGrid, Mailgun)
+    EMAIL_API_URL: str | None = None
+    EMAIL_API_KEY: str | None = None
+    EMAIL_FROM: str | None = None
+    EMAIL_FROM_NAME: str = "Spendora"
+
+    # SMTP Configuration (Fallback for local dev or traditional SMTP relays)
+    SMTP_HOST: str = "smtp.gmail.com"
+    SMTP_PORT: int = 587
+    SMTP_USER: str | None = None
+    SMTP_PASSWORD: str | None = None
+    SMTP_FROM_EMAIL: str | None = None
+    SMTP_FROM_NAME: str = "Spendora"
+    SMTP_TLS: bool = True
+
     @field_validator("DATABASE_URL", mode="before")
     @classmethod
     def assemble_db_connection(cls, v: str) -> str:

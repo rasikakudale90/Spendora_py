@@ -4,7 +4,7 @@ token rotation, session revocation, and password recovery.
 """
 from typing import Annotated, Optional
 
-from fastapi import APIRouter, Cookie, Depends, Request, Response, status
+from fastapi import APIRouter, BackgroundTasks, Cookie, Depends, HTTPException, Request, Response, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
@@ -24,6 +24,7 @@ from app.schemas.user import (
     UserResponse,
 )
 from app.services.auth_service import AuthService
+from app.services.email_service import send_password_reset_email, send_welcome_registration_email
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 
@@ -71,11 +72,16 @@ def get_client_metadata(request: Request) -> tuple[Optional[str], Optional[str]]
 async def register(
     data: UserRegister,
     request: Request,
+    background_tasks: BackgroundTasks,
     session: Annotated[AsyncSession, Depends(get_db)],
 ):
     service = AuthService(session)
     user = await service.register(data)
     await session.commit()
+
+    # Dispatch welcome registration email asynchronously
+    background_tasks.add_task(send_welcome_registration_email, data.email, data.full_name)
+
     return UserRegisterResponse(
         message="Account created successfully. Please sign in with your credentials.",
         user=UserResponse.model_validate(user),
@@ -160,7 +166,10 @@ async def refresh_tokens(
 
     if not spendora_refresh_token:
         clear_refresh_cookie(response)
-        raise status.HTTP_401_UNAUTHORIZED
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Refresh token missing or expired",
+        )
 
     user_agent, ip_address = get_client_metadata(request)
     service = AuthService(session)
@@ -235,12 +244,16 @@ async def get_me(
 async def forgot_password(
     data: PasswordResetRequest,
     request: Request,
+    background_tasks: BackgroundTasks,
     session: Annotated[AsyncSession, Depends(get_db)],
 ):
     service = AuthService(session)
     reset_token = await service.forgot_password(data.email)
     await session.commit()
-    # In production, send via email. Return generic message to prevent email enumeration.
+
+    if reset_token:
+        background_tasks.add_task(send_password_reset_email, data.email, reset_token)
+
     response_payload = {"message": "If this email is registered, password reset instructions have been sent."}
     # For dev/test environments, also surface the token
     if reset_token and (settings.JWT_SECRET_KEY.startswith("spendora-") or not settings.COOKIE_SECURE):

@@ -93,10 +93,12 @@ app.include_router(api_router)
 
 
 # ── Health check (liveness — no DB dependency) ────────────────────────────────
+@app.get("/", tags=["Health"])
 @app.get("/health", tags=["Health"])
 async def health() -> dict[str, str]:
     """
     Liveness probe.
     Returns 200 OK immediately without touching the database.
+    Used for uptime monitoring and zero-cost keep-alive pings.
     """
-    return {"status": "ok"}
+    return {"status": "ok", "app": "Spendora API", "version": "1.0.0"}
