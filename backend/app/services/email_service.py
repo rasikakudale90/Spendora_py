@@ -40,15 +40,17 @@ async def _dispatch_email(to_email: str, subject: str, html_body: str) -> bool:
             async with httpx.AsyncClient(timeout=15.0) as client:
                 response = await client.post(settings.EMAIL_API_URL, json=payload, headers=headers)
                 if response.status_code in (200, 201, 202):
-                    print(f"[Spendora Email API] Successfully delivered '{subject}' to {to_email}")
+                    print(f"[Spendora Email API] Successfully delivered email to {to_email}")
                     logger.info("Successfully dispatched email via HTTP API to %s", to_email)
                     return True
                 else:
-                    print(f"[Spendora Email API ERROR] {response.status_code} - {response.text}")
+                    clean_text = response.text.encode("ascii", "replace").decode("ascii")
+                    print(f"[Spendora Email API ERROR] {response.status_code} - {clean_text}")
                     logger.error("Failed to dispatch email via HTTP API: %s %s", response.status_code, response.text)
                     return False
         except Exception as exc:
-            print(f"[Spendora Email API EXCEPTION] Failed to send to {to_email}: {exc}")
+            clean_exc = str(exc).encode("ascii", "replace").decode("ascii")
+            print(f"[Spendora Email API EXCEPTION] Failed to send to {to_email}: {clean_exc}")
             logger.error("Exception in HTTP email dispatch: %s", exc)
             return False
 
@@ -198,7 +200,7 @@ async def send_welcome_registration_email(to_email: str, full_name: str | None =
     login_url = f"{frontend_base}/login?email={to_email}"
     name_display = full_name.strip() if full_name and full_name.strip() else "there"
 
-    subject = "Welcome to Spendora! 🚀"
+    subject = "Welcome to Spendora!"
     html_content = f"""<!DOCTYPE html>
 <html>
 <head>
