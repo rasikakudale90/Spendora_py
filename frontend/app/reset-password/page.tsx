@@ -152,13 +152,13 @@ function ResetPasswordForm() {
               <div>
                 <div className="flex items-center justify-between mb-1.5">
                   <label className="block text-xs font-semibold text-foreground">
-                    4-Digit Verification Code
+                    4-Digit Verification Code (Valid for 50s)
                   </label>
                   <Link
                     href="/forgot-password"
                     className="text-[11px] font-semibold text-primary hover:underline"
                   >
-                    Need a code?
+                    Request new code
                   </Link>
                 </div>
                 <div className="relative">

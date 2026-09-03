@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { authApi } from "@/lib/api";
 import { toast } from "sonner";
 import {
@@ -19,11 +18,11 @@ import {
   Check,
   X,
   ShieldCheck,
+  Clock,
+  AlertTriangle,
 } from "lucide-react";
 
 export default function ForgotPasswordPage() {
-  const router = useRouter();
-
   // Multi-step State: 1 = Email Input, 2 = OTP & New Password, 3 = Reset Success
   const [step, setStep] = useState<1 | 2 | 3>(1);
 
@@ -37,21 +36,23 @@ export default function ForgotPasswordPage() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const [isLoading, setIsLoading] = useState(false);
-  const [resendCooldown, setResendCooldown] = useState(0);
+  
+  // 50-second OTP expiration countdown
+  const [otpSecondsLeft, setOtpSecondsLeft] = useState(50);
 
   // References to the 4 OTP input elements
   const otpInputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
-  // Cooldown timer effect
+  // 50-Second Countdown timer effect
   useEffect(() => {
-    if (resendCooldown <= 0) return;
+    if (step !== 2 || otpSecondsLeft <= 0) return;
     const interval = setInterval(() => {
-      setResendCooldown((prev) => (prev > 0 ? prev - 1 : 0));
+      setOtpSecondsLeft((prev) => (prev > 0 ? prev - 1 : 0));
     }, 1000);
     return () => clearInterval(interval);
-  }, [resendCooldown]);
+  }, [step, otpSecondsLeft]);
 
-  // Handle Step 1: Send OTP
+  // Handle Step 1 & Resend: Send 50s OTP
   const handleSendOtp = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     if (!email || !email.includes("@")) {
@@ -63,10 +64,10 @@ export default function ForgotPasswordPage() {
     try {
       const res = await authApi.forgotPassword(email);
       setDevOtp(res.dev_otp || res.dev_reset_token || null);
+      setOtpDigits(["", "", "", ""]);
+      setOtpSecondsLeft(50); // Reset timer to 50 seconds
       setStep(2);
-      setResendCooldown(60);
-      toast.success("4-digit OTP sent to your email!");
-      // Auto-focus the first OTP input after switching step
+      toast.success("New 4-digit OTP sent (valid for 50 seconds)!");
       setTimeout(() => {
         otpInputRefs.current[0]?.focus();
       }, 150);
@@ -79,7 +80,11 @@ export default function ForgotPasswordPage() {
 
   // Handle OTP digit changes with auto-advance and backspace handling
   const handleOtpChange = (index: number, val: string) => {
-    // If multiple characters pasted
+    if (otpSecondsLeft === 0) {
+      toast.error("This OTP has expired. Please click 'Resend OTP Code' to generate a fresh code.");
+      return;
+    }
+
     if (val.length > 1) {
       const digits = val.replace(/\D/g, "").slice(0, 4).split("");
       const newDigits = [...otpDigits];
@@ -110,6 +115,11 @@ export default function ForgotPasswordPage() {
 
   const handleOtpPaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
     e.preventDefault();
+    if (otpSecondsLeft === 0) {
+      toast.error("This OTP has expired. Please click 'Resend OTP Code' to generate a fresh code.");
+      return;
+    }
+
     const pasted = e.clipboardData.getData("text").replace(/\D/g, "").slice(0, 4);
     if (!pasted) return;
 
@@ -124,6 +134,10 @@ export default function ForgotPasswordPage() {
 
   const handleQuickFillDevOtp = () => {
     if (!devOtp) return;
+    if (otpSecondsLeft === 0) {
+      toast.error("This OTP has expired. Please click 'Resend OTP Code' to generate a fresh code.");
+      return;
+    }
     const digits = devOtp.slice(0, 4).split("");
     setOtpDigits(digits);
     toast.info("Auto-filled development OTP!");
@@ -142,8 +156,13 @@ export default function ForgotPasswordPage() {
   // Handle Step 2: Reset Password with OTP
   const handleResetPassword = async (e: React.FormEvent) => {
     e.preventDefault();
-    const fullOtp = otpDigits.join("");
 
+    if (otpSecondsLeft === 0) {
+      toast.error("This OTP has expired after 50 seconds. Please click 'Resend OTP Code' to generate a new code.");
+      return;
+    }
+
+    const fullOtp = otpDigits.join("");
     if (fullOtp.length !== 4) {
       toast.error("Please enter the complete 4-digit OTP code");
       return;
@@ -165,7 +184,7 @@ export default function ForgotPasswordPage() {
       setStep(3);
       toast.success("Password reset successfully!");
     } catch (err: any) {
-      toast.error(err.message || "Failed to reset password. Please verify the OTP.");
+      toast.error(err.message || "Failed to reset password. The OTP may be invalid or expired.");
     } finally {
       setIsLoading(false);
     }
@@ -186,7 +205,7 @@ export default function ForgotPasswordPage() {
           </h1>
           <p className="text-xs sm:text-sm text-muted-foreground mt-1">
             {step === 1 && "Enter your registered email to receive a 4-digit OTP"}
-            {step === 2 && `We've sent a 4-digit verification code to ${email}`}
+            {step === 2 && `Sent 4-digit code to ${email} (valid for 50 seconds)`}
             {step === 3 && "Your account password has been updated securely"}
           </p>
         </div>
@@ -258,6 +277,21 @@ export default function ForgotPasswordPage() {
                 </button>
               </div>
 
+              {/* 50-Second Countdown / Expiry Status Badge */}
+              <div className="flex items-center justify-center">
+                {otpSecondsLeft > 0 ? (
+                  <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 text-xs font-semibold animate-pulse">
+                    <Clock className="w-3.5 h-3.5" />
+                    <span>OTP expires in {otpSecondsLeft}s</span>
+                  </div>
+                ) : (
+                  <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-rose-500/10 border border-rose-500/30 text-rose-600 dark:text-rose-400 text-xs font-semibold">
+                    <AlertTriangle className="w-3.5 h-3.5" />
+                    <span>OTP expired! Request a new code below.</span>
+                  </div>
+                )}
+              </div>
+
               {/* 4-Digit OTP Boxes */}
               <div>
                 <label className="block text-xs font-semibold text-foreground mb-2 text-center">
@@ -274,17 +308,22 @@ export default function ForgotPasswordPage() {
                       inputMode="numeric"
                       pattern="[0-9]*"
                       maxLength={1}
+                      disabled={otpSecondsLeft === 0}
                       value={digit}
                       onChange={(e) => handleOtpChange(idx, e.target.value)}
                       onKeyDown={(e) => handleOtpKeyDown(idx, e)}
                       onPaste={handleOtpPaste}
-                      className="w-12 h-14 sm:w-14 sm:h-16 text-center text-xl sm:text-2xl font-black font-mono rounded-2xl bg-muted/50 border-2 border-border/80 focus:border-primary focus:bg-primary/5 focus:outline-none focus:ring-4 focus:ring-primary/20 text-foreground transition-all duration-150 shadow-inner"
+                      className={`w-12 h-14 sm:w-14 sm:h-16 text-center text-xl sm:text-2xl font-black font-mono rounded-2xl bg-muted/50 border-2 transition-all duration-150 shadow-inner ${
+                        otpSecondsLeft === 0
+                          ? "border-rose-500/40 opacity-60 cursor-not-allowed bg-rose-500/5 text-muted-foreground"
+                          : "border-border/80 focus:border-primary focus:bg-primary/5 focus:outline-none focus:ring-4 focus:ring-primary/20 text-foreground"
+                      }`}
                     />
                   ))}
                 </div>
 
                 {/* Dev Quick-Action */}
-                {devOtp && (
+                {devOtp && otpSecondsLeft > 0 && (
                   <div className="mt-3 flex items-center justify-center">
                     <button
                       type="button"
@@ -371,7 +410,13 @@ export default function ForgotPasswordPage() {
               {/* Submit Button */}
               <button
                 type="submit"
-                disabled={isLoading || otpDigits.some((d) => !d) || !allCriteriaMet || newPassword !== confirmPassword}
+                disabled={
+                  isLoading ||
+                  otpSecondsLeft === 0 ||
+                  otpDigits.some((d) => !d) ||
+                  !allCriteriaMet ||
+                  newPassword !== confirmPassword
+                }
                 className="w-full py-3 px-4 rounded-xl bg-primary text-white text-sm font-semibold hover:bg-primary/90 transition-all duration-200 shadow-md shadow-primary/20 flex items-center justify-center gap-2 disabled:opacity-50"
               >
                 {isLoading ? (
@@ -392,10 +437,11 @@ export default function ForgotPasswordPage() {
                 <button
                   type="button"
                   onClick={() => handleSendOtp()}
-                  disabled={resendCooldown > 0 || isLoading}
-                  className="text-primary hover:underline font-semibold disabled:text-muted-foreground disabled:no-underline"
+                  disabled={isLoading}
+                  className="text-primary hover:underline font-semibold flex items-center gap-1 disabled:text-muted-foreground"
                 >
-                  {resendCooldown > 0 ? `Resend OTP in ${resendCooldown}s` : "Resend OTP Code"}
+                  <RefreshCw className={`w-3 h-3 ${isLoading ? "animate-spin" : ""}`} />
+                  {otpSecondsLeft === 0 ? "Resend New OTP Code" : `Resend Code (${otpSecondsLeft}s)`}
                 </button>
 
                 <Link

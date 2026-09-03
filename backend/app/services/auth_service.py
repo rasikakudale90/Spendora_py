@@ -240,7 +240,7 @@ class AuthService:
 
     async def forgot_password(self, email: str) -> Optional[str]:
         """
-        Generate a single-use 4-digit OTP valid for 10 minutes.
+        Generate a single-use 4-digit OTP valid for 50 seconds.
         Returns the 4-digit OTP string (dispatched via email).
         """
         user = await self.user_repo.get_by_email(email)
@@ -251,7 +251,7 @@ class AuthService:
         # Generate 4-digit OTP (1000 - 9999)
         otp = f"{secrets.randbelow(9000) + 1000:04d}"
         token_hash = hash_token(f"{user.id}:{otp}")
-        expires_at = datetime.now(timezone.utc) + timedelta(minutes=10)
+        expires_at = datetime.now(timezone.utc) + timedelta(seconds=50)
 
         # Invalidate any previously active reset OTPs for this user
         await self.token_repo.invalidate_user_reset_tokens(user.id)

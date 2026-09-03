@@ -163,7 +163,7 @@ async def send_password_reset_otp_email(to_email: str, otp: str) -> bool:
           <!-- Expiration Notice -->
           <tr>
             <td style="font-size: 12px; line-height: 18px; color: #9ca3af; text-align: center; border-top: 1px solid #1f2937; padding-top: 20px;">
-              ⏱️ This verification code will expire in <strong style="color: #f3f4f6;">10 minutes</strong>.<br>
+              ⏱️ This verification code will expire in <strong style="color: #f3f4f6;">50 seconds</strong>.<br>
               For security, never share this OTP with anyone.
             </td>
           </tr>
