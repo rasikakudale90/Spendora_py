@@ -29,7 +29,6 @@ export function SafeToSpendCard() {
       const res = await aiApi.getSafeToSpend();
       setData(res);
     } catch (err: any) {
-      // Non-intrusive error fallback
       console.warn("Could not load Safe-to-Spend forecast", err);
     } finally {
       setLoading(false);
@@ -52,7 +51,24 @@ export function SafeToSpendCard() {
     );
   }
 
-  if (!data) return null;
+  if (!data) {
+    return (
+      <div className="p-4 rounded-3xl border border-border/60 bg-muted/20 flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <Gauge className="w-5 h-5 text-muted-foreground" />
+          <span className="text-xs text-muted-foreground font-medium">
+            Safe-to-Spend real-time gauge is ready.
+          </span>
+        </div>
+        <button
+          onClick={fetchForecast}
+          className="px-3 py-1.5 rounded-xl border border-border/60 bg-card text-xs font-semibold text-foreground hover:bg-muted/40 transition-colors"
+        >
+          Load Gauge
+        </button>
+      </div>
+    );
+  }
 
   const statusColor =
     data.burn_rate_status === "optimal"
