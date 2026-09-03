@@ -41,10 +41,10 @@ async def lifespan(app: FastAPI):
     # ── Startup ───────────────────────────────────────────────────────────────
     try:
         async with AsyncSessionFactory() as session:
-            result = await session.execute(select(Category).limit(1))
+            result = await session.execute(select(Category).where(Category.user_id.is_(None)).limit(1))
             if result.scalars().first() is None:
                 for name in STARTER_CATEGORIES:
-                    session.add(Category(name=name))
+                    session.add(Category(name=name, user_id=None))
                 await session.commit()
     except Exception as e:
         # If database is not ready or tables not yet created, log and continue

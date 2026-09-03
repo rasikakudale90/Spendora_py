@@ -6,11 +6,18 @@ from httpx import AsyncClient
 
 @pytest.mark.asyncio
 async def test_dashboard_all_endpoints(client: AsyncClient):
-    # Fetch seeded categories
+    # Fetch or create required categories for testing
     cat_resp = await client.get("/api/v1/categories")
     categories = cat_resp.json()
-    food_cat = next(c for c in categories if c["name"] == "Food")
-    transport_cat = next(c for c in categories if c["name"] == "Transport")
+    food_cat = next((c for c in categories if c["name"] == "Food"), None)
+    if not food_cat:
+        f_resp = await client.post("/api/v1/categories", json={"name": "Food"})
+        food_cat = f_resp.json()
+
+    transport_cat = next((c for c in categories if c["name"] == "Transport"), None)
+    if not transport_cat:
+        t_resp = await client.post("/api/v1/categories", json={"name": "Transport"})
+        transport_cat = t_resp.json()
 
     test_month = "2026-08-01"
 

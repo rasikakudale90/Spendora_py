@@ -43,10 +43,19 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r backend/requirements.txt
 
+      - name: Run Alembic Migrations
+        env:
+          DATABASE_URL: postgresql+asyncpg://postgres:password@localhost:5432/spendora_test
+        run: |
+          cd backend
+          alembic upgrade head
+
       - name: Run Pytest Suite
         env:
           DATABASE_URL: postgresql+asyncpg://postgres:password@localhost:5432/spendora_test
           BUDGET_NEAR_LIMIT_THRESHOLD: "0.80"
+          JWT_SECRET_KEY: "spendora-ci-test-jwt-secret-key-32-chars-min"
+          COOKIE_SECURE: "false"
         run: |
           cd backend
           pytest -v

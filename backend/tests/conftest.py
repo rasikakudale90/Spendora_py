@@ -9,6 +9,28 @@ from app.main import app, lifespan
 limiter.enabled = False
 
 
+@pytest_asyncio.fixture(scope="session", autouse=True)
+async def init_test_db():
+    """Ensure all database tables and starter categories exist for test execution."""
+    from sqlalchemy import select
+    from app.core.database import AsyncSessionFactory, engine
+    from app.main import STARTER_CATEGORIES
+    from app.models import Base
+    from app.models.category import Category
+
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
+
+    async with AsyncSessionFactory() as session:
+        result = await session.execute(select(Category).where(Category.user_id.is_(None)).limit(1))
+        if result.scalars().first() is None:
+            for name in STARTER_CATEGORIES:
+                session.add(Category(name=name, user_id=None))
+            await session.commit()
+
+    yield
+
+
 @pytest_asyncio.fixture(scope="function")
 async def client():
     """
