@@ -2,6 +2,7 @@
 AuthService: Business logic for authentication, Google OAuth verification,
 token rotation, session revocation, and password recovery.
 """
+import secrets
 import uuid
 from datetime import datetime, timedelta, timezone
 from typing import Optional, Tuple
@@ -239,39 +240,66 @@ class AuthService:
 
     async def forgot_password(self, email: str) -> Optional[str]:
         """
-        Generate a single-use password reset token valid for 15 minutes.
-        Returns the raw token string (can be emailed in production).
+        Generate a single-use 4-digit OTP valid for 10 minutes.
+        Returns the 4-digit OTP string (dispatched via email).
         """
         user = await self.user_repo.get_by_email(email)
         if not user or not user.is_active:
             # Don't leak whether email exists
             return None
 
-        raw_reset_token = generate_raw_token()
-        token_hash = hash_token(raw_reset_token)
-        expires_at = datetime.now(timezone.utc) + timedelta(minutes=15)
+        # Generate 4-digit OTP (1000 - 9999)
+        otp = f"{secrets.randbelow(9000) + 1000:04d}"
+        token_hash = hash_token(f"{user.id}:{otp}")
+        expires_at = datetime.now(timezone.utc) + timedelta(minutes=10)
+
+        # Invalidate any previously active reset OTPs for this user
+        await self.token_repo.invalidate_user_reset_tokens(user.id)
 
         await self.token_repo.create_password_reset_token(
             user_id=user.id,
             token_hash=token_hash,
             expires_at=expires_at,
         )
-        return raw_reset_token
+        return otp
 
-    async def reset_password(self, raw_token: str, new_password: str) -> None:
-        token_hash = hash_token(raw_token)
-        reset_token = await self.token_repo.get_valid_password_reset_token(token_hash)
-        if not reset_token:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Invalid, expired, or already used password reset link",
-            )
-
-        user = await self.user_repo.get_by_id(reset_token.user_id)
+    async def verify_otp(self, email: str, otp: str) -> bool:
+        """
+        Verify if the given 4-digit OTP is valid, unexpired, and unused for the user email.
+        """
+        user = await self.user_repo.get_by_email(email)
         if not user or not user.is_active:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="User account not found or inactive",
+                detail="Invalid or expired OTP code",
+            )
+
+        token_hash = hash_token(f"{user.id}:{otp.strip()}")
+        reset_token = await self.token_repo.get_valid_password_reset_token_by_user(user.id, token_hash)
+        if not reset_token:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Invalid or expired OTP code",
+            )
+        return True
+
+    async def reset_password(self, email: str, otp: str, new_password: str) -> None:
+        """
+        Validate 4-digit OTP and update user's password.
+        """
+        user = await self.user_repo.get_by_email(email)
+        if not user or not user.is_active:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Invalid or expired OTP code",
+            )
+
+        token_hash = hash_token(f"{user.id}:{otp.strip()}")
+        reset_token = await self.token_repo.get_valid_password_reset_token_by_user(user.id, token_hash)
+        if not reset_token:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Invalid or expired OTP code",
             )
 
         hashed_password = get_password_hash(new_password)

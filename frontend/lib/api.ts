@@ -324,15 +324,21 @@ export const authApi = {
   getMe: () => fetchJson<User>("/api/v1/auth/me"),
 
   forgotPassword: (email: string) =>
-    fetchJson<{ message: string; dev_reset_token?: string }>("/api/v1/auth/forgot-password", {
+    fetchJson<{ message: string; dev_otp?: string; dev_reset_token?: string }>("/api/v1/auth/forgot-password", {
       method: "POST",
       body: JSON.stringify({ email }),
     }),
 
-  resetPassword: (token: string, new_password: string) =>
+  verifyOtp: (email: string, otp: string) =>
+    fetchJson<{ valid: boolean; message: string }>("/api/v1/auth/verify-otp", {
+      method: "POST",
+      body: JSON.stringify({ email, otp }),
+    }),
+
+  resetPassword: (email: string, otp: string, new_password: string) =>
     fetchJson<{ message: string }>("/api/v1/auth/reset-password", {
       method: "POST",
-      body: JSON.stringify({ token, new_password }),
+      body: JSON.stringify({ email, otp, new_password }),
     }),
 
   changePassword: (current_password: string, new_password: string) =>

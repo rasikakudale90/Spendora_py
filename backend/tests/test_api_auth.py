@@ -155,24 +155,41 @@ async def test_password_recovery_and_change(unauth_client: AsyncClient):
     )
     assert login_new.status_code == 200
 
-    # 3. Forgot password request
+    # 3. Forgot password request (generates 4-digit OTP)
     forgot_res = await unauth_client.post(
         "/api/v1/auth/forgot-password",
         json={"email": unique_email},
     )
     assert forgot_res.status_code == 200
-    reset_token = forgot_res.json().get("dev_reset_token")
-    assert reset_token is not None
+    otp = forgot_res.json().get("dev_otp")
+    assert otp is not None
+    assert len(otp) == 4
+    assert otp.isdigit()
 
-    # 4. Reset password using token
+    # 4. Verify OTP endpoint (invalid code test)
+    bad_verify = await unauth_client.post(
+        "/api/v1/auth/verify-otp",
+        json={"email": unique_email, "otp": "0000" if otp != "0000" else "9999"},
+    )
+    assert bad_verify.status_code == 400
+
+    # 5. Verify OTP endpoint (valid code test)
+    good_verify = await unauth_client.post(
+        "/api/v1/auth/verify-otp",
+        json={"email": unique_email, "otp": otp},
+    )
+    assert good_verify.status_code == 200
+    assert good_verify.json()["valid"] is True
+
+    # 6. Reset password using 4-digit OTP
     final_password = "FinalPassword123!"
     reset_res = await unauth_client.post(
         "/api/v1/auth/reset-password",
-        json={"token": reset_token, "new_password": final_password},
+        json={"email": unique_email, "otp": otp, "new_password": final_password},
     )
     assert reset_res.status_code == 200
 
-    # 5. Verify login with final password
+    # 7. Verify login with final password
     login_final = await unauth_client.post(
         "/api/v1/auth/login",
         json={"email": unique_email, "password": final_password},

@@ -74,6 +74,16 @@ class TokenRepository:
         await self.session.refresh(token)
         return token
 
+    async def invalidate_user_reset_tokens(self, user_id: uuid.UUID) -> None:
+        """Mark any pending unused password reset tokens as used for the user."""
+        stmt = (
+            update(PasswordResetToken)
+            .where(PasswordResetToken.user_id == user_id, PasswordResetToken.used == False)  # noqa: E712
+            .values(used=True)
+        )
+        await self.session.execute(stmt)
+        await self.session.flush()
+
     async def get_valid_password_reset_token(self, token_hash: str) -> Optional[PasswordResetToken]:
         now = datetime.now(timezone.utc)
         stmt = select(PasswordResetToken).where(
@@ -84,6 +94,20 @@ class TokenRepository:
         result = await self.session.execute(stmt)
         return result.scalar_one_or_none()
 
+    async def get_valid_password_reset_token_by_user(
+        self, user_id: uuid.UUID, token_hash: str
+    ) -> Optional[PasswordResetToken]:
+        now = datetime.now(timezone.utc)
+        stmt = select(PasswordResetToken).where(
+            PasswordResetToken.user_id == user_id,
+            PasswordResetToken.token_hash == token_hash,
+            PasswordResetToken.used == False,  # noqa: E712
+            PasswordResetToken.expires_at > now,
+        )
+        result = await self.session.execute(stmt)
+        return result.scalar_one_or_none()
+
     async def mark_password_reset_token_used(self, token: PasswordResetToken) -> None:
         token.used = True
         await self.session.flush()
+

@@ -96,21 +96,18 @@ def _send_smtp_sync(to_email: str, subject: str, html_body: str) -> bool:
         return False
 
 
-async def send_password_reset_email(to_email: str, reset_token: str) -> bool:
+async def send_password_reset_otp_email(to_email: str, otp: str) -> bool:
     """
-    Constructs a responsive, branded HTML password reset email and dispatches
-    it asynchronously using Gmail SMTP.
+    Constructs a responsive, branded HTML password reset email displaying the 4-digit OTP
+    and dispatches it asynchronously via Resend HTTP API or Gmail SMTP.
     """
-    frontend_base = settings.FRONTEND_URL.rstrip("/")
-    reset_url = f"{frontend_base}/reset-password?token={reset_token}"
-
-    subject = "Reset your Spendora password"
+    subject = f"{otp} is your Spendora password reset code"
     html_content = f"""<!DOCTYPE html>
 <html>
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Reset your Spendora password</title>
+  <title>Password Reset Code - Spendora</title>
 </head>
 <body style="margin: 0; padding: 0; background-color: #0b0f19; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #f3f4f6;">
   <table width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color: #0b0f19; padding: 40px 16px;">
@@ -135,40 +132,46 @@ async def send_password_reset_email(to_email: str, reset_token: str) -> bool:
 
           <!-- Heading -->
           <tr>
-            <td style="font-size: 20px; font-weight: 700; color: #ffffff; text-align: center; padding-bottom: 12px;">
-              Reset Your Password
+            <td style="font-size: 20px; font-weight: 700; color: #ffffff; text-align: center; padding-bottom: 10px;">
+              Password Reset Code
             </td>
           </tr>
 
           <!-- Message -->
           <tr>
-            <td style="font-size: 14px; line-height: 22px; color: #9ca3af; text-align: center; padding-bottom: 28px;">
-              We received a request to reset the password for your Spendora account associated with <strong style="color: #e5e7eb;">{to_email}</strong>.<br><br>
-              Click the button below to choose a new password.
+            <td style="font-size: 14px; line-height: 22px; color: #9ca3af; text-align: center; padding-bottom: 24px;">
+              We received a request to reset the password for <strong style="color: #e5e7eb;">{to_email}</strong>.<br>
+              Use the 4-digit verification code below to complete your password reset:
             </td>
           </tr>
 
-          <!-- Action Button -->
+          <!-- OTP Code Box -->
           <tr>
-            <td align="center" style="padding-bottom: 28px;">
-              <a href="{reset_url}" target="_blank" style="display: inline-block; background-color: #10b981; color: #022c22; font-size: 14px; font-weight: 700; text-decoration: none; padding: 14px 32px; border-radius: 12px; box-shadow: 0 4px 14px rgba(16, 185, 129, 0.3);">
-                Reset Password
-              </a>
+            <td align="center" style="padding-bottom: 24px;">
+              <table border="0" cellspacing="0" cellpadding="0">
+                <tr>
+                  <td align="center" style="background-color: #1f2937; border: 2px solid #10b981; border-radius: 16px; padding: 16px 36px;">
+                    <span style="font-family: 'Courier New', Courier, monospace; font-size: 38px; font-weight: 800; letter-spacing: 12px; color: #10b981; text-indent: 12px; display: inline-block;">
+                      {otp}
+                    </span>
+                  </td>
+                </tr>
+              </table>
             </td>
           </tr>
 
           <!-- Expiration Notice -->
           <tr>
-            <td style="font-size: 12px; line-height: 18px; color: #6b7280; text-align: center; border-top: 1px solid #1f2937; padding-top: 20px;">
-              This link is valid for <strong>1 hour</strong>. If you did not request a password reset, you can safely ignore this email — your account remains secure.
+            <td style="font-size: 12px; line-height: 18px; color: #9ca3af; text-align: center; border-top: 1px solid #1f2937; padding-top: 20px;">
+              ⏱️ This verification code will expire in <strong style="color: #f3f4f6;">10 minutes</strong>.<br>
+              For security, never share this OTP with anyone.
             </td>
           </tr>
 
-          <!-- Fallback URL -->
+          <!-- Security Note -->
           <tr>
-            <td style="font-size: 11px; line-height: 16px; color: #4b5563; word-break: break-all; text-align: center; padding-top: 16px;">
-              If the button doesn't work, copy and paste this link into your browser:<br>
-              <a href="{reset_url}" style="color: #10b981; text-decoration: underline;">{reset_url}</a>
+            <td style="font-size: 11px; line-height: 16px; color: #4b5563; text-align: center; padding-top: 14px;">
+              If you did not request a password reset, you can safely ignore this email — your Spendora account is safe.
             </td>
           </tr>
         </table>
@@ -187,8 +190,11 @@ async def send_password_reset_email(to_email: str, reset_token: str) -> bool:
 </body>
 </html>"""
 
-    # Unified dispatcher: sends via HTTP REST API (Resend) if configured, else fallback to SMTP
     return await _dispatch_email(to_email, subject, html_content)
+
+
+# Alias for backward compatibility
+send_password_reset_email = send_password_reset_otp_email
 
 
 async def send_welcome_registration_email(to_email: str, full_name: str | None = None) -> bool:

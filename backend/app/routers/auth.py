@@ -22,9 +22,13 @@ from app.schemas.user import (
     UserRegister,
     UserRegisterResponse,
     UserResponse,
+    VerifyOtpRequest,
 )
 from app.services.auth_service import AuthService
-from app.services.email_service import send_password_reset_email, send_welcome_registration_email
+from app.services.email_service import (
+    send_password_reset_otp_email,
+    send_welcome_registration_email,
+)
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 
@@ -238,7 +242,7 @@ async def get_me(
 @router.post(
     "/forgot-password",
     status_code=status.HTTP_200_OK,
-    summary="Request a password reset link",
+    summary="Request a 4-digit password reset OTP",
 )
 @limiter.limit("5/minute")
 async def forgot_password(
@@ -248,30 +252,49 @@ async def forgot_password(
     session: Annotated[AsyncSession, Depends(get_db)],
 ):
     service = AuthService(session)
-    reset_token = await service.forgot_password(data.email)
+    otp = await service.forgot_password(data.email)
     await session.commit()
 
-    if reset_token:
-        background_tasks.add_task(send_password_reset_email, data.email, reset_token)
+    if otp:
+        background_tasks.add_task(send_password_reset_otp_email, data.email, otp)
 
-    response_payload = {"message": "If this email is registered, password reset instructions have been sent."}
-    # For dev/test environments, also surface the token
-    if reset_token and (settings.JWT_SECRET_KEY.startswith("spendora-") or not settings.COOKIE_SECURE):
-        response_payload["dev_reset_token"] = reset_token
+    response_payload = {"message": "If this email is registered, a 4-digit verification code has been sent."}
+    # For dev/test environments, also surface the OTP
+    if otp and (settings.JWT_SECRET_KEY.startswith("spendora-") or not settings.COOKIE_SECURE):
+        response_payload["dev_otp"] = otp
+        response_payload["dev_reset_token"] = otp
     return response_payload
+
+
+@router.post(
+    "/verify-otp",
+    status_code=status.HTTP_200_OK,
+    summary="Verify if a 4-digit OTP code is valid and unexpired",
+)
+@limiter.limit("10/minute")
+async def verify_otp(
+    data: VerifyOtpRequest,
+    request: Request,
+    session: Annotated[AsyncSession, Depends(get_db)],
+):
+    service = AuthService(session)
+    await service.verify_otp(data.email, data.otp)
+    return {"valid": True, "message": "Verification code is valid."}
 
 
 @router.post(
     "/reset-password",
     status_code=status.HTTP_200_OK,
-    summary="Reset password using a valid reset token",
+    summary="Reset password using a 4-digit verification OTP",
 )
+@limiter.limit("5/minute")
 async def reset_password(
     data: PasswordResetConfirm,
+    request: Request,
     session: Annotated[AsyncSession, Depends(get_db)],
 ):
     service = AuthService(session)
-    await service.reset_password(data.token, data.new_password)
+    await service.reset_password(data.email, data.otp, data.new_password)
     await session.commit()
     return {"message": "Password reset successfully. You can now log in with your new password."}
 

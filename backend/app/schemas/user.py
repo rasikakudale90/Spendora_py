@@ -62,9 +62,41 @@ class PasswordResetRequest(BaseModel):
         return v.strip().lower()
 
 
+class VerifyOtpRequest(BaseModel):
+    email: EmailStr
+    otp: str
+
+    @field_validator("email")
+    @classmethod
+    def lowercase_email(cls, v: str) -> str:
+        return v.strip().lower()
+
+    @field_validator("otp")
+    @classmethod
+    def check_otp_format(cls, v: str) -> str:
+        cleaned = v.strip()
+        if not re.match(r"^\d{4}$", cleaned):
+            raise ValueError("OTP must be exactly 4 digits")
+        return cleaned
+
+
 class PasswordResetConfirm(BaseModel):
-    token: str
+    email: EmailStr
+    otp: str
     new_password: str
+
+    @field_validator("email")
+    @classmethod
+    def lowercase_email(cls, v: str) -> str:
+        return v.strip().lower()
+
+    @field_validator("otp")
+    @classmethod
+    def check_otp_format(cls, v: str) -> str:
+        cleaned = v.strip()
+        if not re.match(r"^\d{4}$", cleaned):
+            raise ValueError("OTP must be exactly 4 digits")
+        return cleaned
 
     @field_validator("new_password")
     @classmethod

@@ -329,6 +329,39 @@
 
 ---
 
+## Phase 20 — 4-Digit OTP Password Reset Flow ✅ Done
+
+**Goal:** Transition password recovery from token reset links to a secure, instant 4-Digit OTP (One-Time Password) verification flow.
+
+### Completed Tasks
+- [x] **Backend Schemas & Validation:**
+  - Updated `PasswordResetConfirm` in `backend/app/schemas/user.py` to validate `email: EmailStr`, `otp: str` (enforcing exactly 4 numeric digits), and `new_password: str`
+  - Added `VerifyOtpRequest` schema for real-time OTP validity checking
+- [x] **Cryptographic OTP Generation & Service Layer:**
+  - Implemented `AuthService.forgot_password` using Python `secrets.randbelow(9000) + 1000` to generate uniform 4-digit codes (`1000`–`9999`)
+  - Applied user ID salting `hash_token(f"{user.id}:{otp}")` stored in `password_reset_tokens` with 10-minute expiry
+  - Invalided all prior active reset tokens when a new OTP is requested to prevent collision or reuse
+  - Implemented `AuthService.verify_otp` and `AuthService.reset_password`
+- [x] **Branded Responsive OTP Email Template:**
+  - Created high-contrast dark email template in `backend/app/services/email_service.py` with large, spaced 4-digit verification code (`letter-spacing: 12px; font-size: 38px`), emerald accents, 10-minute validity notice, and hybrid dispatch (Resend API / SMTP)
+- [x] **FastAPI Auth Endpoints:**
+  - `POST /api/v1/auth/forgot-password`: Generates 4-digit OTP, sends email, and returns `dev_otp` in development mode
+  - `POST /api/v1/auth/verify-otp`: Validates 4-digit code (Rate-limited to 10/min)
+  - `POST /api/v1/auth/reset-password`: Validates OTP, updates password hash, marks OTP used, and revokes active sessions
+- [x] **Frontend Interactive 4-Box OTP Wizard:**
+  - Redesigned `frontend/app/forgot-password/page.tsx` into a 3-step interactive recovery wizard:
+    - Step 1: Email entry
+    - Step 2: 4 discrete numeric auto-advancing OTP input boxes with backspace jumping, paste handling, development quick-fill, new password show/hide toggles, live password strength checklist, and 60-second resend cooldown timer
+    - Step 3: Success confirmation screen redirecting to `/login`
+  - Updated `frontend/app/reset-password/page.tsx` to support direct OTP entry and query parameters
+  - Updated `frontend/lib/api.ts` with `authApi.verifyOtp`, `authApi.forgotPassword`, and `authApi.resetPassword`
+- [x] **Postman & Automated Tests:**
+  - Added complete "Authentication" request group to `Spendora_API.postman_collection.json` with dynamic `accessToken` and `otpCode` variable capture
+  - Updated `backend/tests/test_api_auth.py` verifying 4-digit OTP generation, invalid OTP rejection, valid OTP verification, password update, and subsequent login (4/4 passing tests)
+  - Successfully verified Next.js production build
+
+---
+
 ## Open Items & Design Decisions
 
 | # | Item | Status | Resolution |
@@ -341,5 +374,7 @@
 | 6 | API testing tooling | ✅ Resolved | Postman Collection v2.1 + Local & Production Environment files |
 | 7 | User Data Isolation & Roles | ✅ Resolved | Zero-trust per-user isolation without RBAC; short-lived access JWT + HttpOnly refresh token rotation |
 | 8 | Transactional Email Provider Architecture | ✅ Resolved | 100% environment-driven hybrid system: Resend HTTP REST API for production, Gmail SMTP for local testing |
+| 9 | Password Recovery Mechanism | ✅ Resolved | 4-Digit Numeric OTP (1000–9999) with 10-minute expiry, user-salted SHA-256 storage, and 4-box interactive UI |
+
 
 
