@@ -8,12 +8,13 @@ import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Search, Filter, Edit, Trash2, ChevronLeft, ChevronRight } from "lucide-react";
+import { Plus, Search, Filter, Edit, Trash2, ChevronLeft, ChevronRight, Scan } from "lucide-react";
 import { toast } from "sonner";
 import { ExpenseFormModal } from "@/components/expenses/ExpenseFormModal";
 import { DeleteConfirmModal } from "@/components/expenses/DeleteConfirmModal";
 import { DailyLimitAlertModal } from "@/components/DailyLimitAlertModal";
 import { BudgetManagerModal } from "@/components/BudgetManagerModal";
+import { SmartTransactionScannerModal } from "@/components/SmartTransactionScannerModal";
 import { DailyBudgetAlert } from "@/lib/api";
 
 export default function ExpensesPage() {
@@ -24,6 +25,7 @@ export default function ExpensesPage() {
   // Modals state
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
+  const [isScannerOpen, setIsScannerOpen] = useState(false);
   const [expenseToEdit, setExpenseToEdit] = useState<Expense | null>(null);
   const [expenseToDelete, setExpenseToDelete] = useState<string | null>(null);
 
@@ -93,9 +95,19 @@ export default function ExpensesPage() {
             Manage your daily transactions and outgoings
           </p>
         </div>
-        <Button onClick={openNewForm} className="gap-2">
-          <Plus className="w-4 h-4" /> Add Expense
-        </Button>
+        <div className="flex flex-wrap items-center gap-2.5">
+          <Button
+            onClick={() => setIsScannerOpen(true)}
+            variant="outline"
+            className="gap-2 border-cyan-500/40 text-cyan-400 hover:text-cyan-300 hover:bg-cyan-950/40 shadow-sm"
+          >
+            <Scan className="w-4 h-4 text-cyan-400" />
+            <span>⚡ Scan / Paste SMS</span>
+          </Button>
+          <Button onClick={openNewForm} className="gap-2">
+            <Plus className="w-4 h-4" /> Add Expense
+          </Button>
+        </div>
       </div>
 
       <div className="flex flex-col md:flex-row gap-4 items-center p-4 rounded-2xl glass-card">
@@ -252,6 +264,13 @@ export default function ExpensesPage() {
         open={isBudgetModalOpen}
         onOpenChange={setIsBudgetModalOpen}
         initialPeriod="daily"
+        onSuccess={fetchExpenses}
+      />
+
+      <SmartTransactionScannerModal
+        isOpen={isScannerOpen}
+        onClose={() => setIsScannerOpen(false)}
+        categories={categories}
         onSuccess={fetchExpenses}
       />
     </div>

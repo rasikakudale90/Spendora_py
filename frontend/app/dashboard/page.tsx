@@ -10,13 +10,14 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Folder, Target, ShieldAlert, Sparkles, Search } from "lucide-react";
+import { Folder, Target, ShieldAlert, Sparkles, Search, Scan } from "lucide-react";
 import { CategoryManagerModal } from "@/components/CategoryManagerModal";
 import { BudgetManagerModal } from "@/components/BudgetManagerModal";
 import { DailyLimitAlertModal } from "@/components/DailyLimitAlertModal";
 import { PurchaseSimulatorModal } from "@/components/PurchaseSimulatorModal";
 import { LeakHunterModal } from "@/components/LeakHunterModal";
 import { SafeToSpendCard } from "@/components/SafeToSpendCard";
+import { SmartTransactionScannerModal } from "@/components/SmartTransactionScannerModal";
 
 export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
@@ -33,6 +34,7 @@ export default function DashboardPage() {
   const [budgetModalPeriod, setBudgetModalPeriod] = useState<PeriodType>("monthly");
   const [isSimulatorOpen, setIsSimulatorOpen] = useState(false);
   const [isLeakModalOpen, setIsLeakModalOpen] = useState(false);
+  const [isScannerOpen, setIsScannerOpen] = useState(false);
 
   // Daily alert state
   const [dailyAlert, setDailyAlert] = useState<DailyBudgetAlert | null>(null);
@@ -95,6 +97,33 @@ export default function DashboardPage() {
 
   useEffect(() => {
     loadDashboard();
+    
+    // Listen for custom events dispatched by AI Assistant widget
+    const handleOpenSimulator = (e: any) => {
+      setIsSimulatorOpen(true);
+    };
+    const handleOpenLeak = () => {
+      setIsLeakModalOpen(true);
+    };
+    const handleOpenScanner = () => {
+      setIsScannerOpen(true);
+    };
+    const handleOpenBudget = () => {
+      setBudgetModalPeriod("monthly");
+      setIsBudgetModalOpen(true);
+    };
+
+    window.addEventListener("open-purchase-simulator", handleOpenSimulator);
+    window.addEventListener("open-leak-hunter", handleOpenLeak);
+    window.addEventListener("open-transaction-scanner", handleOpenScanner);
+    window.addEventListener("open-budget-manager", handleOpenBudget);
+
+    return () => {
+      window.removeEventListener("open-purchase-simulator", handleOpenSimulator);
+      window.removeEventListener("open-leak-hunter", handleOpenLeak);
+      window.removeEventListener("open-transaction-scanner", handleOpenScanner);
+      window.removeEventListener("open-budget-manager", handleOpenBudget);
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -118,6 +147,14 @@ export default function DashboardPage() {
         <div className="flex flex-wrap gap-2">
           <Button
             variant="outline"
+            onClick={() => window.dispatchEvent(new CustomEvent("open-ai-assistant"))}
+            className="gap-2 bg-gradient-to-r from-emerald-500/15 via-teal-500/15 to-cyan-500/15 border-emerald-500/40 hover:border-emerald-500/80 text-emerald-700 dark:text-emerald-300 font-bold shadow-sm"
+          >
+            <Sparkles className="w-4 h-4 text-emerald-500 animate-pulse" />
+            <span>AI Assistant</span>
+          </Button>
+          <Button
+            variant="outline"
             onClick={() => setIsSimulatorOpen(true)}
             className="gap-2 bg-gradient-to-r from-indigo-500/10 to-purple-500/10 border-indigo-500/30 hover:border-indigo-500/60 text-indigo-600 dark:text-indigo-400 font-semibold shadow-sm"
           >
@@ -131,6 +168,14 @@ export default function DashboardPage() {
           >
             <Search className="w-4 h-4 text-amber-500" />
             <span>Leak Hunter</span>
+          </Button>
+          <Button
+            variant="outline"
+            onClick={() => setIsScannerOpen(true)}
+            className="gap-2 bg-gradient-to-r from-cyan-500/10 to-emerald-500/10 border-cyan-500/30 hover:border-cyan-500/60 text-cyan-600 dark:text-cyan-400 font-semibold shadow-sm"
+          >
+            <Scan className="w-4 h-4 text-cyan-500" />
+            <span>Scan / Paste</span>
           </Button>
           <Button variant="outline" onClick={() => setIsCatModalOpen(true)} className="gap-2">
             <Folder className="w-4 h-4 text-emerald-600 dark:text-emerald-400" /> <span className="hidden sm:inline">Categories</span>
@@ -253,6 +298,12 @@ export default function DashboardPage() {
       <LeakHunterModal
         isOpen={isLeakModalOpen}
         onClose={() => setIsLeakModalOpen(false)}
+      />
+      <SmartTransactionScannerModal
+        isOpen={isScannerOpen}
+        onClose={() => setIsScannerOpen(false)}
+        categories={categories}
+        onSuccess={refreshData}
       />
     </div>
   );

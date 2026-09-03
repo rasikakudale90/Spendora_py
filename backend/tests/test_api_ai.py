@@ -115,3 +115,69 @@ async def test_safe_to_spend_forecast(client: AsyncClient):
     assert len(data["actionable_tips"]) >= 1
 
 
+@pytest.mark.asyncio
+async def test_chat_financial_assistant(client: AsyncClient):
+    # 1. Ask about safe daily limit
+    chat_resp = await client.post(
+        "/api/v1/ai/chat",
+        json={
+            "message": "What is my daily safe spending limit?",
+            "history": [],
+        },
+    )
+    assert chat_resp.status_code == 200
+    data = chat_resp.json()
+    assert "reply" in data
+    assert "suggested_prompts" in data
+    assert len(data["suggested_prompts"]) >= 1
+    assert "context_summary" in data
+    assert "provider_used" in data
+
+    # 2. Ask affordability question
+    afford_resp = await client.post(
+        "/api/v1/ai/chat",
+        json={
+            "message": "Can I afford to buy new headphones for 2500?",
+            "history": [{"role": "user", "content": "What is my balance?"}],
+        },
+    )
+    assert afford_resp.status_code == 200
+    afford_data = afford_resp.json()
+    assert "reply" in afford_data
+    assert "action_intent" in afford_data
+    if afford_data["action_intent"]:
+        assert afford_data["action_intent"]["action"] == "simulate_purchase"
+
+
+@pytest.mark.asyncio
+async def test_extract_transaction_sms_and_duplicate(client: AsyncClient):
+    # 1. Test UPI Debit SMS (Swiggy food order)
+    sms_debit = "Sent Rs. 450.00 to Swiggy on 12-09-2026 via UPI Ref 429381029182. Avl Bal Rs. 32,450.00"
+    resp = await client.post(
+        "/api/v1/ai/extract-transaction",
+        json={"text": sms_debit, "source_type": "sms_text"},
+    )
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["type"] == "expense"
+    assert "Swiggy" in data["title"]
+    assert float(data["amount"]) == 450.00
+    assert data["payment_mode"] == "UPI"
+    assert "Food" in data["category_name"]
+    assert "Avl Bal" not in data["sanitized_input"]
+
+    # 2. Test Salary / Income Credit SMS
+    sms_credit = "A/c *1234 credited by Rs. 65,000.00 on 01-09-2026 by InfoTech Salary. Net Bal Rs. 85,000"
+    resp_credit = await client.post(
+        "/api/v1/ai/extract-transaction",
+        json={"text": sms_credit, "source_type": "sms_text"},
+    )
+    assert resp_credit.status_code == 200
+    data_credit = resp_credit.json()
+    assert data_credit["type"] == "income"
+    assert float(data_credit["amount"]) == 65000.00
+    assert "*1234" not in data_credit["sanitized_input"]
+
+
+
+

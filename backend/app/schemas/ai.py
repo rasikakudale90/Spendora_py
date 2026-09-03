@@ -86,3 +86,63 @@ class SafeToSpendResponse(BaseModel):
     ai_recommendation: str
     actionable_tips: List[str]
     provider_used: str
+
+
+# ── Feature 4: Natural Language Financial Assistant / Chatbot Schemas ────────
+
+class ChatMessage(BaseModel):
+    role: Literal["user", "assistant", "system"]
+    content: str
+    timestamp: Optional[str] = None
+
+
+class FinancialActionIntent(BaseModel):
+    action: Literal["simulate_purchase", "view_leaks", "navigate", "set_budget", "add_expense", "none"]
+    label: str
+    payload: Optional[dict] = None
+
+
+class FinancialChatRequest(BaseModel):
+    message: str = Field(..., min_length=1, max_length=1000, description="User's query in natural language")
+    history: Optional[List[ChatMessage]] = Field(default=[], description="Recent conversation history for multi-turn context")
+
+
+class FinancialChatResponse(BaseModel):
+    reply: str
+    suggested_prompts: List[str]
+    action_intent: Optional[FinancialActionIntent] = None
+    context_summary: dict
+    provider_used: str
+
+
+# ── Feature 5: Smart Receipt & UPI SMS Parser Schemas ───────────────────────
+
+class ExtractedItem(BaseModel):
+    name: str
+    amount: Decimal
+    category_name: Optional[str] = None
+
+
+class TransactionExtractionRequest(BaseModel):
+    text: Optional[str] = Field(None, description="Pasted SMS or notification text")
+    image_base64: Optional[str] = Field(None, description="Base64 encoded receipt/bill image data")
+    source_type: Literal["sms_text", "receipt_image"] = Field("sms_text", description="Input modality")
+
+
+class TransactionExtractionResponse(BaseModel):
+    type: Literal["expense", "income"]
+    title: str
+    amount: Decimal
+    transaction_date: str
+    category_id: Optional[UUID] = None
+    category_name: Optional[str] = None
+    payment_mode: Literal["Cash", "Card", "UPI", "Net Banking", "Other"] = "UPI"
+    raw_reference: Optional[str] = None
+    is_potential_duplicate: bool = False
+    duplicate_warning: Optional[str] = None
+    items: List[ExtractedItem] = []
+    confidence_score: float = 0.95
+    extraction_method: str = "regex_engine"
+    sanitized_input: str
+
+

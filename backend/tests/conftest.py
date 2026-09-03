@@ -1,4 +1,13 @@
+import os
 import uuid
+from pathlib import Path
+from dotenv import load_dotenv
+
+# Load backend/.env if not already loaded in environment
+env_path = Path(__file__).resolve().parent.parent / ".env"
+if env_path.exists():
+    load_dotenv(dotenv_path=env_path)
+
 import pytest_asyncio
 from httpx import ASGITransport, AsyncClient
 

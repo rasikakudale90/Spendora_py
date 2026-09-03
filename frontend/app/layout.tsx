@@ -5,6 +5,7 @@ import Navbar from "@/components/Navbar";
 import { AuthProvider } from "@/context/AuthContext";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { PwaRegister } from "@/components/PwaRegister";
+import { FinancialAssistantWidget } from "@/components/FinancialAssistantWidget";
 import { Toaster } from "sonner";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
@@ -80,6 +81,7 @@ export default function RootLayout({
             <footer className="border-t border-border/50 py-6 text-center text-xs text-muted-foreground transition-colors">
               <p>Spendora V1 • Personal Expense & Budget Tracking • INR (₹)</p>
             </footer>
+            <FinancialAssistantWidget />
             <PwaRegister />
             <Toaster position="top-right" richColors closeButton />
           </AuthProvider>

@@ -140,7 +140,7 @@ export function SafeToSpendCard() {
 
         {/* Refresh Button */}
         <button
-          onClick={fetchForecast}
+          onClick={() => fetchForecast(true)}
           disabled={loading}
           className="self-end sm:self-center inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-background/60 hover:bg-background border border-border/60 text-xs font-semibold text-muted-foreground hover:text-foreground transition-all shadow-sm disabled:opacity-50"
         >

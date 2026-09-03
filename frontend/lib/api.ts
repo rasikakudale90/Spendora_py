@@ -534,6 +534,16 @@ export const api = {
     fetchJson<IncomeSummaryResponse>(
       `/api/v1/incomes/summary${periodMonth ? `?period_month=${periodMonth}` : ""}`
     ),
+
+  // AI Intelligence
+  chatWithAssistant: (data: { message: string; history?: ChatMessage[] }) =>
+    aiApi.chatWithAssistant(data),
+  simulatePurchase: (data: { title: string; amount: string | number; category_id?: string | null }) =>
+    aiApi.simulatePurchase(data),
+  getLeakAnalysis: () => aiApi.getLeakAnalysis(),
+  getSafeToSpend: () => aiApi.getSafeToSpend(),
+  extractTransaction: (data: TransactionExtractionRequest) =>
+    aiApi.extractTransaction(data),
 };
 
 export interface PurchaseSimulationResponse {
@@ -607,6 +617,33 @@ export interface SafeToSpendResponse {
   provider_used: string;
 }
 
+export interface ChatMessage {
+  role: "user" | "assistant" | "system";
+  content: string;
+  timestamp?: string;
+}
+
+export interface FinancialActionIntent {
+  action: "simulate_purchase" | "view_leaks" | "navigate" | "set_budget" | "add_expense" | "scan_receipt" | "none" | string;
+  label: string;
+  payload?: any;
+}
+
+export interface FinancialChatResponse {
+  reply: string;
+  suggested_prompts: string[];
+  action_intent?: FinancialActionIntent | null;
+  context_summary: {
+    total_income: number;
+    total_spent: number;
+    net_savings: number;
+    savings_rate_pct: number;
+    daily_safe_spend: number;
+    days_remaining: number;
+  };
+  provider_used: string;
+}
+
 export const aiApi = {
   simulatePurchase: (data: {
     title: string;
@@ -621,4 +658,50 @@ export const aiApi = {
   getLeakAnalysis: () => fetchJson<LeakAnalysisResponse>("/api/v1/ai/leak-analysis"),
 
   getSafeToSpend: () => fetchJson<SafeToSpendResponse>("/api/v1/ai/safe-to-spend"),
+
+  chatWithAssistant: (data: {
+    message: string;
+    history?: ChatMessage[];
+  }) =>
+    fetchJson<FinancialChatResponse>("/api/v1/ai/chat", {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
+
+  extractTransaction: (data: TransactionExtractionRequest) =>
+    fetchJson<TransactionExtractionResponse>("/api/v1/ai/extract-transaction", {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
 };
+
+export interface ExtractedItem {
+  name: string;
+  amount: string | number;
+  category_name?: string;
+}
+
+export interface TransactionExtractionRequest {
+  text?: string;
+  image_base64?: string;
+  source_type: "sms_text" | "receipt_image";
+}
+
+export interface TransactionExtractionResponse {
+  type: "expense" | "income";
+  title: string;
+  amount: string | number;
+  transaction_date: string;
+  category_id?: string | null;
+  category_name?: string | null;
+  payment_mode: "Cash" | "Card" | "UPI" | "Net Banking" | "Other";
+  raw_reference?: string | null;
+  is_potential_duplicate: boolean;
+  duplicate_warning?: string | null;
+  items: ExtractedItem[];
+  confidence_score: number;
+  extraction_method: string;
+  sanitized_input: string;
+}
+
+
