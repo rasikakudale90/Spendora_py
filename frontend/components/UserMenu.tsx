@@ -88,6 +88,7 @@ export function UserMenu() {
           id="user-menu-button"
         >
           {user.avatar_url ? (
+            // eslint-disable-next-line @next/next/no-img-element
             <img
               src={user.avatar_url}
               alt={user.full_name || user.email}
