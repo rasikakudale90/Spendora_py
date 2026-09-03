@@ -80,6 +80,7 @@ export function FinancialAssistantWidget() {
     };
     window.addEventListener("open-ai-assistant", handleOpenAssistant);
     return () => window.removeEventListener("open-ai-assistant", handleOpenAssistant);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [messages]);
 
   if (!user) return null; // Only available for logged-in users

@@ -236,7 +236,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Feature 3: Smart Safe-to-Spend Real-Time Speedometer Gauge */}
-      <SafeToSpendCard />
+      <SafeToSpendCard summary={summary} />
 
       <KpiCards summary={summary} stats={stats} />
       
