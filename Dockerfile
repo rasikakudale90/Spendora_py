@@ -2,7 +2,6 @@ FROM python:3.12-slim
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
-    PYTHONPATH=/app:/app/backend \
     PORT=8000
 
 WORKDIR /app
@@ -11,14 +10,15 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
-COPY requirements.txt* backend/requirements.tx[t] ./
-RUN if [ -f "requirements.txt" ]; then pip install --no-cache-dir -r requirements.txt; \
-    elif [ -f "backend/requirements.txt" ]; then pip install --no-cache-dir -r backend/requirements.txt; fi
+# Copy backend requirements and install dependencies
+COPY backend/requirements.txt /app/requirements.txt
+RUN pip install --no-cache-dir -r /app/requirements.txt
 
-COPY . .
+# Copy backend source directly into /app
+COPY backend/ /app/
 
-RUN if [ -d "backend" ]; then cp -r backend/* . ; fi
-RUN sed -i 's/\r$//' entrypoint.sh && chmod +x entrypoint.sh
+# Ensure entrypoint has Unix line endings and executable permission
+RUN sed -i 's/\r$//' /app/entrypoint.sh && chmod +x /app/entrypoint.sh
 
 EXPOSE 8000
 
