@@ -228,7 +228,21 @@ Unique constraints (scoped per user):
 | created_at | TIMESTAMPTZ | NOT NULL, default `now()` |
 | updated_at | TIMESTAMPTZ | NOT NULL, default `now()`, on update `now()` |
 
-### 5.8 Category Deletion Rule (enforced in service layer)
+### 5.8 Financial Goals (Reverse Budgeting)
+| Column | Type | Constraints |
+|---|---|---|
+| id | UUID | PK, default `gen_random_uuid()` |
+| user_id | UUID | FK → `users.id` ON DELETE CASCADE, NOT NULL, indexed |
+| title | VARCHAR(100) | NOT NULL |
+| target_amount | NUMERIC(12,2) | NOT NULL, CHECK (target_amount > 0) |
+| current_amount | NUMERIC(12,2) | NOT NULL, default `0.00`, CHECK (current_amount >= 0) |
+| target_date | DATE | NOT NULL |
+| category_id | UUID | FK → `categories.id` NULL (optional linked funding category) |
+| notes | TEXT | NULL |
+| created_at | TIMESTAMPTZ | NOT NULL, default `now()` |
+| updated_at | TIMESTAMPTZ | NOT NULL, default `now()`, on update `now()` |
+
+### 5.9 Category Deletion Rule (enforced in service layer)
 A category with existing expenses belonging to the user cannot be deleted outright. The API rejects deletion with `409 Conflict` unless a `reassign_to_category_id` parameter is supplied to move the user's expenses. No expense may be orphaned. Global starter categories cannot be deleted or renamed by standard users.
 
 ---
@@ -317,14 +331,26 @@ Requires `Authorization: Bearer <token>`. All analytics aggregate exclusively th
 | GET | `/api/v1/dashboard/trend` | Trend bar/line chart over time |
 | GET | `/api/v1/dashboard/comparison` | Month-over-month comparison |
 | GET | `/api/v1/dashboard/top-categories` | Ranked top spending categories |
-| GET | `/api/v1/dashboard/stats` | Average spend, highest expense, transaction count |
+### 7.7 AI Financial Intelligence & Smart Recommendations
+Requires `Authorization: Bearer <token>`. Scoped strictly to authenticated user's isolated financial ledger.
 
-### 7.7 Health
+| Method | Path | Auth | Description |
+|---|---|---|---|
+| POST | `/api/v1/ai/simulate-purchase` | Yes | Simulates purchase impact on cash flow, remaining budget, and savings rate. Returns verdict (`safe`, `caution`, `over_budget`), impact metrics, and AI advice |
+| POST | `/api/v1/ai/scan-receipt` | Yes | Multimodal OCR parsing of receipt image/base64 via Gemini Vision. Returns structured JSON (`title`, `amount`, `date`, `category_id`, `payment_mode`) |
+| GET | `/api/v1/ai/leak-analysis` | Yes | Analyzes micro-spending (<₹150), repeat delivery fees, and active subscriptions with annualized financial drains |
+| GET | `/api/v1/ai/safe-to-spend` | Yes | Dynamic daily burn rate algorithm: computes today's safe spending allowance and adaptive daily budget schedule |
+| GET | `/api/v1/ai/goals` | Yes | List user financial goals with progress % and AI-recommended category budget adjustments |
+| POST | `/api/v1/ai/goals` | Yes | Create a new financial savings target goal |
+| DELETE | `/api/v1/ai/goals/{id}` | Yes | Delete a financial savings target goal |
+| GET | `/api/v1/ai/monthly-wrapped?period=YYYY-MM` | Yes | Generates personalized end-of-month financial narrative, money persona, top milestones, and next month challenges |
+
+### 7.8 Health
 | Method | Path | Description |
 |---|---|---|
 | GET | `/health` | Liveness only — returns `200 OK`, public |
 
-### 7.6 Response Conventions
+### 7.9 Response Conventions
 - All monetary values serialized as strings or fixed-precision numbers to avoid floating-point drift (e.g. `"850.00"`, not `850.0`).
 - Errors follow a consistent shape: `{"detail": "message", "code": "error_code"}`.
 - Pydantic schemas validate all request bodies; validation errors return `422` with field-level detail.
@@ -341,7 +367,7 @@ Requires `Authorization: Bearer <token>`. All analytics aggregate exclusively th
 - **FR-Auth-3 (P0) — Google OAuth 2.0 / OpenID Connect:** Sign in with Google verifies Google `id_token` on backend via Google's token verification library. Automatically creates user or links existing user by verified Google email. Issues identical application JWT Access Token + HttpOnly Refresh Token.
 - **FR-Auth-4 (P0) — Refresh Token Rotation:** Client calls `/api/v1/auth/refresh` automatically before Access Token expiry using the HttpOnly cookie. Backend validates token hash, revokes old refresh token, generates a new refresh token, updates DB hash, and sets new cookie. If a revoked token is presented, triggers security revocation of all active sessions for that user.
 - **FR-Auth-5 (P0) — Secure Logout & Logout All Devices:** Single logout revokes current session refresh token in database and clears the cookie. Logout all devices revokes all refresh tokens belonging to the user.
-- **FR-Auth-6 (P1) — Password Recovery (Forgot/Reset Password):** `/auth/forgot-password` generates a single-use, 15-minute cryptographically secure reset token stored as a hash. `/auth/reset-password` validates token, updates password with BCrypt hash, marks token used, and invalidates existing refresh tokens.
+- **FR-Auth-6 (P1) — Password Recovery (Forgot/Reset Password via 4-Digit OTP with 50s Expiry):** `/auth/forgot-password` generates a single-use, 4-digit numeric OTP valid for exactly 50 seconds stored as a salted SHA-256 hash. `/auth/verify-otp` and `/auth/reset-password` validate OTP hash within 50s, update password with BCrypt hash, mark token used, and invalidate existing refresh tokens.
 - **FR-Auth-7 (P1) — Change Password:** Authenticated user can change password by providing current password and new password.
 - **FR-Auth-8 (P0) — Strict User Data Isolation (Zero Trust):** All expenses, incomes, budgets, and custom categories are strictly private to the user. The backend derives `user_id` exclusively from the validated JWT token claims. Any query or mutation on an entity not owned by the user returns `404 Not Found`.
 
@@ -363,19 +389,27 @@ Requires `Authorization: Bearer <token>`. All analytics aggregate exclusively th
 
 ### 8.5 Dashboard & Analytics
 - **FR-17–FR-21 (P0):** Total spend, recent expenses, category pie/donut, trend chart, budget status.
-- **FR-22 (P0):** Daily/weekly/monthly report views — implemented as the dashboard filtered by period (confirm this interpretation, or scope as a separate screen if not).
+- **FR-22 (P0):** Daily/weekly/monthly report views — implemented as the dashboard filtered by period.
 - **FR-23–FR-25 (P1/P2):** Month-over-month comparison, top categories, averages.
 
 ### 8.6 Budget Management
 - **FR-26–FR-28 (P0/P1):** Set overall + per-category budgets; live remaining balance; status indicator.
 - **Formula:** `Remaining = Monthly Budget − Total Monthly Expenses`.
-- **Near-Limit threshold:** default **80%** of budget consumed, configurable via a settings constant (confirm default before implementation).
+- **Near-Limit threshold:** default **80%** of budget consumed, configurable via a settings constant.
 
 ### 8.7 Data Export
 - **FR-29 (P2, nice-to-have):** CSV/PDF/Excel export. Deferred to Phase 2 if V1 timeline is tight.
 
 ### 8.8 Data Integrity
 - **FR-30 (P0):** No hardcoded/demo data in the finished application — all dashboard values come from real stored data.
+
+### 8.9 AI Financial Intelligence & Smart Recommendations
+- **FR-AI-1 (P0) — "Can I Afford This?" Purchase Decision Simulator:** Takes `title` and `amount` (plus optional `category_id` and `target_date`). Backend pulls user's monthly income, total spent, remaining overall budget, remaining daily budget, and calculates projected month-end balance. Formats structured JSON schema response with verdict (`safe` / `caution` / `over_budget`), budget delta, savings rate impact %, and AI reasoning summary. Includes deterministic local math fallback.
+- **FR-AI-2 (P1) — Smart Receipt & UPI Screenshot Scanner (AI Vision):** Accepts image binary/base64 payload (client-compressed to ≤1MB). Dispatches to Gemini 1.5 Flash Vision API with structured response schema extracting `title`, `amount`, `date`, predicted `category_id`, and `payment_mode` (`Cash`, `Card`, `UPI`, `Net Banking`, `Other`).
+- **FR-AI-3 (P0) — Autonomous "Leak Hunter" & Subscription Audit:** Evaluates recurring transactions over 30/60/90 days (defined as transactions with identical/similar titles occurring at 25-35 day intervals or daily micro-transactions under ₹150). Aggregates monthly and annualized impact, delivering actionable leak reduction tips.
+- **FR-AI-4 (P0) — Dynamic "Safe-to-Spend" Daily Burn Rate Dial:** Algorithmic calculation: `Safe_Today = (Remaining_Monthly_Budget - Projected_Fixed_Bills) / Remaining_Days_In_Month`. Adapts in real-time based on past daily spend velocity. Returns today's allowance, week forecast array, and status flag.
+- **FR-AI-5 (P1) — Goal-Driven "Reverse Budgeting" & Target Savings Engine:** Allows users to create savings targets with `title`, `target_amount`, `current_amount`, and `target_date`. Calculates monthly contribution requirement: `Required_Monthly = (Target_Amount - Current_Amount) / Months_Left`. Analyzes discretionary spending categories and outputs recommended category budget reductions.
+- **FR-AI-6 (P2) — "Spendora Monthly Wrapped" Visual Financial Story:** Monthly aggregation pipeline producing structured story slides: top spending category, total savings, money persona classification (based on savings rate %: `<0% Overspender`, `0-10% Minimalist`, `10-25% Steady Saver`, `>25% Wealth Builder`), biggest transaction, and 3 tailored monthly financial challenges.
 
 ---
 

@@ -293,6 +293,20 @@ Include only if time permits in V1; otherwise, defer to Phase 2 without blocking
 
 Demo/placeholder data may exist temporarily during development but must never remain in the finished application.
 
+### 6.10 AI-Powered Financial Intelligence & Smart Recommendations
+
+Spendora transforms from a passive expense log into an active financial advisor by leveraging intelligent AI reasoning. All AI features are designed to be intuitive, non-intrusive, and 100% focused on helping users make better real-time money decisions without financial jargon.
+
+| ID | Feature | Non-Technical Description | Priority | User Story |
+|---|---|---|---|---|
+| FR-AI-1 | **"Can I Afford This?" Purchase Decision Simulator** | Before making an impulsive or large purchase, the user inputs an item name and price (e.g. *"Smartwatch ₹12,000"*). Spendora calculates remaining cash flow, active budgets, and upcoming bills to provide an instant color-coded verdict: 🟢 **Safe to Buy** (savings intact), 🟡 **Caution** (tells how much to trim from other categories this week), or 🔴 **Delay Purchase** (will cause a budget deficit; suggests best date to buy). | P0 | As a user, I want to test potential purchases before spending money so I never accidentally blow my monthly budget on impulse buys. |
+| FR-AI-2 | **Smart Receipt & UPI Screenshot Scanner (AI Vision)** | User uploads or snaps a picture of a paper bill, restaurant receipt, or UPI payment confirmation screen. Spendora automatically reads the merchant title, total amount, transaction date, and payment method, pre-populating the "Add Expense" form for effortless 1-tap confirmation. | P1 | As a user, I want to snap receipts and payment screenshots so I don't have to manually type expense details every single time. |
+| FR-AI-3 | **Autonomous "Leak Hunter" & Subscription Audit** | Automatically scans past transactions to surface hidden money drains: calculates the annualized cost of daily micro-expenses (e.g. *"Your daily ₹80 snack spend totals ₹29,200 per year"*), aggregates food delivery convenience charges, and lists all active recurring digital subscriptions. | P0 | As a user, I want Spendora to uncover hidden spending leaks and recurring charges so I can cut unnecessary waste without thinking. |
+| FR-AI-4 | **Dynamic "Safe-to-Spend" Daily Burn Rate Dial** | Converts abstract monthly budgets into a single, live daily spending allowance on the dashboard (e.g. *"Today's Safe-to-Spend: ₹750"*). If the user spends less today, the surplus rolls over; if they overspend, tomorrow's daily limits automatically re-balance so the month still ends 100% on budget. | P0 | As a user, I want a single daily spending number so I know exactly how much I can spend each day without doing mental math. |
+| FR-AI-5 | **Goal-Driven "Reverse Budgeting" & Target Savings Engine** | Users set tangible financial goals (e.g. *"Trip to Goa ₹30,000 in 4 months"* or *"Emergency Fund ₹1,00,000"*). Spendora calculates required monthly savings and automatically suggests specific category budget adjustments (e.g. *"Trim Shopping by ₹1,500/mo and Dining by ₹1,000/mo"*) to achieve the target on time. | P1 | As a user, I want to save for specific life goals with custom AI budget plans so I achieve my dreams without falling into debt. |
+| FR-AI-6 | **"Spendora Monthly Wrapped" Visual Financial Story** | On the 1st of every month, Spendora presents a celebratory, interactive slide story highlighting the user's monthly "Money Persona" (e.g. *The Strategic Saver*), top financial wins, category milestones, and 3 custom money challenges for the new month. | P2 | As a user, I want a visual monthly summary of my financial achievements so managing money feels rewarding and motivating. |
+
+
 ---
 
 ## 7. Key User Flows
