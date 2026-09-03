@@ -5,15 +5,16 @@ import { DashboardSkeleton } from "@/components/LoadingSkeleton";
 import Hero3D from "@/components/Hero3D";
 import { KpiCards } from "@/components/dashboard/KpiCards";
 import { DashboardCharts } from "@/components/dashboard/Charts";
-import { api, DashboardSummary, DashboardStats, CategoryBreakdownItem, TrendItem, Expense, DailyBudgetAlert, PeriodType } from "@/lib/api";
+import { api, DashboardSummary, DashboardStats, CategoryBreakdownItem, TrendItem, Expense, DailyBudgetAlert, PeriodType, Category } from "@/lib/api";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Folder, Target, ShieldAlert } from "lucide-react";
+import { Folder, Target, ShieldAlert, Sparkles } from "lucide-react";
 import { CategoryManagerModal } from "@/components/CategoryManagerModal";
 import { BudgetManagerModal } from "@/components/BudgetManagerModal";
 import { DailyLimitAlertModal } from "@/components/DailyLimitAlertModal";
+import { PurchaseSimulatorModal } from "@/components/PurchaseSimulatorModal";
 
 export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
@@ -22,11 +23,13 @@ export default function DashboardPage() {
   const [breakdown, setBreakdown] = useState<CategoryBreakdownItem[]>([]);
   const [trend, setTrend] = useState<TrendItem[]>([]);
   const [recent, setRecent] = useState<Expense[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
 
   // Modals
   const [isCatModalOpen, setIsCatModalOpen] = useState(false);
   const [isBudgetModalOpen, setIsBudgetModalOpen] = useState(false);
   const [budgetModalPeriod, setBudgetModalPeriod] = useState<PeriodType>("monthly");
+  const [isSimulatorOpen, setIsSimulatorOpen] = useState(false);
 
   // Daily alert state
   const [dailyAlert, setDailyAlert] = useState<DailyBudgetAlert | null>(null);
@@ -35,13 +38,14 @@ export default function DashboardPage() {
   const loadDashboard = async () => {
     try {
       setLoading(true);
-      const [sumRes, statRes, breakRes, trendRes, recentRes, dailyBudgetRes] = await Promise.all([
+      const [sumRes, statRes, breakRes, trendRes, recentRes, dailyBudgetRes, catRes] = await Promise.all([
         api.getDashboardSummary(),
         api.getDashboardStats(),
         api.getCategoryBreakdown(),
         api.getTrend(),
         api.getRecentExpenses(5),
-        api.getBudgets(undefined, "daily").catch(() => null)
+        api.getBudgets(undefined, "daily").catch(() => null),
+        api.getCategories().catch(() => []),
       ]);
       
       setSummary(sumRes);
@@ -49,6 +53,7 @@ export default function DashboardPage() {
       setBreakdown(breakRes);
       setTrend(trendRes);
       setRecent(recentRes);
+      setCategories(catRes || []);
 
       // Check if daily overall budget is over limit
       if (dailyBudgetRes?.overall_budget && dailyBudgetRes.overall_budget.status === "over_budget") {
@@ -107,7 +112,15 @@ export default function DashboardPage() {
             Real-time spending analysis and multi-period budget control (Daily, Weekly, Monthly, Yearly)
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
+          <Button
+            variant="outline"
+            onClick={() => setIsSimulatorOpen(true)}
+            className="gap-2 bg-gradient-to-r from-indigo-500/10 to-purple-500/10 border-indigo-500/30 hover:border-indigo-500/60 text-indigo-600 dark:text-indigo-400 font-semibold shadow-sm"
+          >
+            <Sparkles className="w-4 h-4 text-indigo-500" />
+            <span>Can I Afford This?</span>
+          </Button>
           <Button variant="outline" onClick={() => setIsCatModalOpen(true)} className="gap-2">
             <Folder className="w-4 h-4 text-emerald-600 dark:text-emerald-400" /> <span className="hidden sm:inline">Categories</span>
           </Button>
@@ -217,6 +230,11 @@ export default function DashboardPage() {
           setBudgetModalPeriod("daily");
           setIsBudgetModalOpen(true);
         }}
+      />
+      <PurchaseSimulatorModal
+        isOpen={isSimulatorOpen}
+        onClose={() => setIsSimulatorOpen(false)}
+        categories={categories}
       />
     </div>
   );

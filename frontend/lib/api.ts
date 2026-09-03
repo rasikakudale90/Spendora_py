@@ -535,3 +535,37 @@ export const api = {
       `/api/v1/incomes/summary${periodMonth ? `?period_month=${periodMonth}` : ""}`
     ),
 };
+
+export interface PurchaseSimulationResponse {
+  verdict: "safe" | "caution" | "over_budget";
+  verdict_title: string;
+  verdict_summary: string;
+  item_title: string;
+  item_amount: string | number;
+  current_cash_flow: string | number;
+  projected_cash_flow: string | number;
+  current_savings_rate: number;
+  projected_savings_rate: number;
+  current_spent: string | number;
+  projected_spent: string | number;
+  overall_budget?: string | number | null;
+  remaining_overall_budget?: string | number | null;
+  projected_remaining_budget?: string | number | null;
+  daily_safe_spend_before: string | number;
+  daily_safe_spend_after: string | number;
+  ai_analysis: string;
+  actionable_tips: string[];
+  provider_used: string;
+}
+
+export const aiApi = {
+  simulatePurchase: (data: {
+    title: string;
+    amount: string | number;
+    category_id?: string | null;
+  }) =>
+    fetchJson<PurchaseSimulationResponse>("/api/v1/ai/simulate-purchase", {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
+};
