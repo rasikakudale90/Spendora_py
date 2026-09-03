@@ -1,3 +1,4 @@
+from datetime import date
 from decimal import Decimal
 from typing import List, Literal, Optional
 from uuid import UUID
@@ -29,4 +30,38 @@ class PurchaseSimulationResponse(BaseModel):
     daily_safe_spend_after: Decimal
     ai_analysis: str
     actionable_tips: List[str]
+    provider_used: str
+
+
+# ── Feature 2: Leak Hunter & Subscription Audit Schemas ─────────────────────
+
+class SubscriptionItem(BaseModel):
+    title: str
+    average_amount: Decimal
+    occurrence_count: int
+    last_date: date
+    estimated_monthly_cost: Decimal
+    category_name: Optional[str] = "Subscription / Recurring"
+
+
+class MicroSpendingLeak(BaseModel):
+    category_or_label: str
+    transaction_count: int
+    average_amount: Decimal
+    monthly_total: Decimal
+    annual_projected_drain: Decimal
+    example_items: List[str]
+
+
+class LeakAnalysisResponse(BaseModel):
+    total_monthly_leak: Decimal
+    total_annual_projected_leak: Decimal
+    total_monthly_subscriptions: Decimal
+    total_annual_subscriptions: Decimal
+    subscription_count: int
+    micro_leak_count: int
+    detected_subscriptions: List[SubscriptionItem]
+    micro_spending_leaks: List[MicroSpendingLeak]
+    ai_summary: str
+    actionable_savings_tips: List[str]
     provider_used: str

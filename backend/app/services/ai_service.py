@@ -337,8 +337,152 @@ class AIService:
         except Exception as e:
             logger.warning(f"AI Provider call failed ({self.provider}): {e}. Using deterministic fallback.")
 
-        return deterministic_fallback()
+    async def analyze_leaks_and_subscriptions(
+        self,
+        expenses: List[Dict[str, Any]],
+        total_monthly_income: Decimal,
+    ) -> Dict[str, Any]:
+        """
+        Analyze 90 days of expense records to extract recurring subscriptions and micro-spending leaks.
+        """
+        from collections import defaultdict
+        from datetime import date, timedelta
+
+        # 1. Detect Subscriptions (expenses with repeat titles or keywords like netflix, prime, spotify, gym, etc.)
+        sub_keywords = {"netflix", "prime", "spotify", "gym", "hotstar", "youtube", "icloud", "apple", "chatgpt", "membership", "wifi", "broadband", "rent"}
+        title_groups = defaultdict(list)
+        for exp in expenses:
+            normalized_title = exp["title"].strip().lower()
+            title_groups[normalized_title].append(exp)
+
+        detected_subscriptions = []
+        subscription_monthly_total = Decimal("0.00")
+
+        for norm_title, group in title_groups.items():
+            is_sub_keyword = any(k in norm_title for k in sub_keywords)
+            # Repeat occurrences over time or explicit keyword
+            if len(group) >= 2 or (is_sub_keyword and len(group) >= 1):
+                sorted_group = sorted(group, key=lambda x: x["expense_date"], reverse=True)
+                avg_amount = round(
+                    Decimal(str(sum(Decimal(str(e["amount"])) for e in group) / len(group))), 2
+                )
+                latest_exp = sorted_group[0]
+                detected_subscriptions.append({
+                    "title": latest_exp["title"].title(),
+                    "average_amount": avg_amount,
+                    "occurrence_count": len(group),
+                    "last_date": latest_exp["expense_date"],
+                    "estimated_monthly_cost": avg_amount,
+                    "category_name": latest_exp.get("category_name", "Subscription / Recurring"),
+                })
+                subscription_monthly_total += avg_amount
+
+        # 2. Detect Micro-Spending Leaks (amount <= ₹150)
+        micro_expenses = [e for e in expenses if Decimal(str(e["amount"])) <= Decimal("150.00")]
+        cat_micro_groups = defaultdict(list)
+        for me in micro_expenses:
+            cat_name = me.get("category_name") or "Daily Micro-Expenses"
+            cat_micro_groups[cat_name].append(me)
+
+        micro_spending_leaks = []
+        micro_leak_monthly_total = Decimal("0.00")
+
+        for cat_name, items in cat_micro_groups.items():
+            total_cat_amount = sum(Decimal(str(i["amount"])) for i in items)
+            # Estimate monthly occurrence by normalizing past 90 days to 30 days
+            monthly_frequency = max(1, round(len(items) / 3))
+            monthly_cat_drain = round((total_cat_amount / Decimal("3")), 2) if len(items) > 3 else total_cat_amount
+            annual_projection = monthly_cat_drain * Decimal("12")
+            micro_leak_monthly_total += monthly_cat_drain
+
+            sample_titles = list(dict.fromkeys(i["title"] for i in items))[:3]
+            micro_spending_leaks.append({
+                "category_or_label": cat_name,
+                "transaction_count": len(items),
+                "average_amount": round(total_cat_amount / Decimal(str(len(items))), 2),
+                "monthly_total": monthly_cat_drain,
+                "annual_projected_drain": annual_projection,
+                "example_items": sample_titles,
+            })
+
+        total_monthly_leak = subscription_monthly_total + micro_leak_monthly_total
+        total_annual_leak = total_monthly_leak * Decimal("12")
+        total_annual_subscriptions = subscription_monthly_total * Decimal("12")
+
+        # 3. AI Reasoning or Deterministic Summary
+        def deterministic_leak_summary():
+            if not detected_subscriptions and not micro_spending_leaks:
+                return (
+                    "No significant recurring subscription or micro-spending leaks detected in your recent history. Your spending habits are very clean!",
+                    [
+                        "Continue tracking all small cash and UPI payments.",
+                        "Review recurring digital charges every quarter.",
+                        "Maintain a dedicated savings buffer for unexpected expenses.",
+                    ],
+                    "deterministic-financial-engine",
+                )
+            summary = (
+                f"We identified {len(detected_subscriptions)} active subscriptions (₹{subscription_monthly_total:,.2f}/mo) "
+                f"and {len(micro_spending_leaks)} micro-spending categories totaling ₹{micro_leak_monthly_total:,.2f}/mo. "
+                f"Combined, these recurring outflows drain ~₹{total_annual_leak:,.2f} per year."
+            )
+            tips = [
+                f"Auditing and canceling 1-2 unused subscriptions could save up to ₹{(subscription_monthly_total * Decimal('0.3')):,.2f}/month.",
+                f"Daily micro-transactions under ₹150 accumulate to ₹{micro_leak_monthly_total * Decimal('12'):,.2f}/year — consider setting a weekly snack/tea budget.",
+                "Review automated UPI mandates and annual app renewals to avoid zombie charges.",
+            ]
+            return summary, tips, "deterministic-financial-engine"
+
+        ai_summary, savings_tips, provider_name = deterministic_leak_summary()
+
+        # If API key is available, enhance with LLM insights
+        if self.api_key and (detected_subscriptions or micro_spending_leaks):
+            system_prompt = (
+                "You are Spendora's expert financial leak auditor. Analyze the detected recurring subscriptions and micro-spending leaks. "
+                "Output concise, empowering advice in valid JSON format with keys: 'summary' (string, max 2 sentences) and 'tips' (array of 3 actionable string bullet points)."
+            )
+            user_prompt = (
+                f"Detected Subscriptions: {json.dumps(detected_subscriptions, default=str)}\n"
+                f"Micro-Spending Leaks: {json.dumps(micro_spending_leaks, default=str)}\n"
+                f"Total Monthly Leak: ₹{total_monthly_leak:,.2f} (Annual: ₹{total_annual_leak:,.2f})\n"
+                f"Monthly Income: ₹{total_monthly_income:,.2f}\n"
+                f"Provide structured JSON with 'summary' and 'tips'."
+            )
+            try:
+                import httpx
+                async with httpx.AsyncClient(timeout=8.0) as client:
+                    if self.provider == "gemini":
+                        url = f"https://generativelanguage.googleapis.com/v1beta/models/{self.model}:generateContent?key={self.api_key}"
+                        payload = {
+                            "contents": [{"parts": [{"text": f"{system_prompt}\n\n{user_prompt}"}]}],
+                            "generationConfig": {"response_mime_type": "application/json"},
+                        }
+                        resp = await client.post(url, json=payload)
+                        if resp.status_code == 200:
+                            data = resp.json()
+                            raw_text = data["candidates"][0]["content"]["parts"][0]["text"]
+                            parsed = json.loads(raw_text)
+                            ai_summary = parsed.get("summary", ai_summary)
+                            savings_tips = parsed.get("tips", savings_tips)
+                            provider_name = f"google-{self.model}"
+            except Exception as e:
+                logger.warning(f"Leak AI call failed: {e}. Using deterministic fallback.")
+
+        return {
+            "total_monthly_leak": total_monthly_leak,
+            "total_annual_projected_leak": total_annual_leak,
+            "total_monthly_subscriptions": subscription_monthly_total,
+            "total_annual_subscriptions": total_annual_subscriptions,
+            "subscription_count": len(detected_subscriptions),
+            "micro_leak_count": len(micro_spending_leaks),
+            "detected_subscriptions": detected_subscriptions,
+            "micro_spending_leaks": micro_spending_leaks,
+            "ai_summary": ai_summary,
+            "actionable_savings_tips": savings_tips,
+            "provider_used": provider_name,
+        }
 
 
 # Singleton instance
 ai_service = AIService()
+

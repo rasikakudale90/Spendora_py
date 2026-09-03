@@ -558,6 +558,38 @@ export interface PurchaseSimulationResponse {
   provider_used: string;
 }
 
+export interface SubscriptionItem {
+  title: string;
+  average_amount: string | number;
+  occurrence_count: number;
+  last_date: string;
+  estimated_monthly_cost: string | number;
+  category_name?: string;
+}
+
+export interface MicroSpendingLeak {
+  category_or_label: string;
+  transaction_count: number;
+  average_amount: string | number;
+  monthly_total: string | number;
+  annual_projected_drain: string | number;
+  example_items: string[];
+}
+
+export interface LeakAnalysisResponse {
+  total_monthly_leak: string | number;
+  total_annual_projected_leak: string | number;
+  total_monthly_subscriptions: string | number;
+  total_annual_subscriptions: string | number;
+  subscription_count: number;
+  micro_leak_count: number;
+  detected_subscriptions: SubscriptionItem[];
+  micro_spending_leaks: MicroSpendingLeak[];
+  ai_summary: string;
+  actionable_savings_tips: string[];
+  provider_used: string;
+}
+
 export const aiApi = {
   simulatePurchase: (data: {
     title: string;
@@ -568,4 +600,6 @@ export const aiApi = {
       method: "POST",
       body: JSON.stringify(data),
     }),
+
+  getLeakAnalysis: () => fetchJson<LeakAnalysisResponse>("/api/v1/ai/leak-analysis"),
 };

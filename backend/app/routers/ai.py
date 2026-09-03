@@ -78,3 +78,54 @@ async def simulate_purchase(
         category_spent=category_spent,
         category_budget=category_budget,
     )
+
+
+@router.get("/leak-analysis")
+async def get_leak_analysis(
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Scan 90 days of transaction history to identify recurring subscriptions and micro-spending leaks.
+    """
+    from datetime import date, timedelta
+    from app.repositories.expense_repository import ExpenseRepository
+
+    today = date.today()
+    ninety_days_ago = today - timedelta(days=90)
+    start_of_month = date(today.year, today.month, 1)
+    _, total_days_in_month = calendar.monthrange(today.year, today.month)
+    end_of_month = date(today.year, today.month, total_days_in_month)
+
+    expense_repo = ExpenseRepository(db)
+    income_repo = IncomeRepository(db)
+
+    # 1. Fetch past 90 days expenses for pattern matching
+    expenses_seq, _ = await expense_repo.get_paginated(
+        user_id=current_user.id,
+        date_from=ninety_days_ago,
+        date_to=today,
+        page=1,
+        page_size=500,
+    )
+
+    serialized_expenses = []
+    for exp in expenses_seq:
+        serialized_expenses.append({
+            "id": str(exp.id),
+            "title": exp.title,
+            "amount": float(exp.amount),
+            "expense_date": exp.expense_date,
+            "category_name": exp.category.name if exp.category else "Uncategorized",
+        })
+
+    # 2. Total income for current month
+    total_monthly_income = await income_repo.get_total_for_period(
+        current_user.id, start_of_month, end_of_month
+    )
+
+    return await ai_service.analyze_leaks_and_subscriptions(
+        expenses=serialized_expenses,
+        total_monthly_income=total_monthly_income,
+    )
+

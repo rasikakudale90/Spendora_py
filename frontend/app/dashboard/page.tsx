@@ -10,11 +10,12 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Folder, Target, ShieldAlert, Sparkles } from "lucide-react";
+import { Folder, Target, ShieldAlert, Sparkles, Search } from "lucide-react";
 import { CategoryManagerModal } from "@/components/CategoryManagerModal";
 import { BudgetManagerModal } from "@/components/BudgetManagerModal";
 import { DailyLimitAlertModal } from "@/components/DailyLimitAlertModal";
 import { PurchaseSimulatorModal } from "@/components/PurchaseSimulatorModal";
+import { LeakHunterModal } from "@/components/LeakHunterModal";
 
 export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
@@ -30,6 +31,7 @@ export default function DashboardPage() {
   const [isBudgetModalOpen, setIsBudgetModalOpen] = useState(false);
   const [budgetModalPeriod, setBudgetModalPeriod] = useState<PeriodType>("monthly");
   const [isSimulatorOpen, setIsSimulatorOpen] = useState(false);
+  const [isLeakModalOpen, setIsLeakModalOpen] = useState(false);
 
   // Daily alert state
   const [dailyAlert, setDailyAlert] = useState<DailyBudgetAlert | null>(null);
@@ -120,6 +122,14 @@ export default function DashboardPage() {
           >
             <Sparkles className="w-4 h-4 text-indigo-500" />
             <span>Can I Afford This?</span>
+          </Button>
+          <Button
+            variant="outline"
+            onClick={() => setIsLeakModalOpen(true)}
+            className="gap-2 bg-gradient-to-r from-amber-500/10 to-rose-500/10 border-amber-500/30 hover:border-amber-500/60 text-amber-600 dark:text-amber-400 font-semibold shadow-sm"
+          >
+            <Search className="w-4 h-4 text-amber-500" />
+            <span>Leak Hunter</span>
           </Button>
           <Button variant="outline" onClick={() => setIsCatModalOpen(true)} className="gap-2">
             <Folder className="w-4 h-4 text-emerald-600 dark:text-emerald-400" /> <span className="hidden sm:inline">Categories</span>
@@ -235,6 +245,10 @@ export default function DashboardPage() {
         isOpen={isSimulatorOpen}
         onClose={() => setIsSimulatorOpen(false)}
         categories={categories}
+      />
+      <LeakHunterModal
+        isOpen={isLeakModalOpen}
+        onClose={() => setIsLeakModalOpen(false)}
       />
     </div>
   );

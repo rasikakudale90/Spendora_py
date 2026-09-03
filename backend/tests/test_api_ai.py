@@ -60,3 +60,41 @@ async def test_simulate_purchase_lifecycle(client: AsyncClient):
         json={"title": "", "amount": "0.00"},
     )
     assert sim_invalid.status_code == 422
+
+
+@pytest.mark.asyncio
+async def test_leak_analysis_endpoint(client: AsyncClient):
+    # Add recurring subscription and micro expenses
+    cat_resp = await client.get("/api/v1/categories")
+    cat_id = cat_resp.json()[0]["id"]
+
+    await client.post(
+        "/api/v1/expenses",
+        json={
+            "title": "Netflix Premium",
+            "amount": "649.00",
+            "expense_date": date.today().isoformat(),
+            "category_id": cat_id,
+        },
+    )
+    await client.post(
+        "/api/v1/expenses",
+        json={
+            "title": "Chai & Samosa",
+            "amount": "60.00",
+            "expense_date": date.today().isoformat(),
+            "category_id": cat_id,
+        },
+    )
+
+    leak_resp = await client.get("/api/v1/ai/leak-analysis")
+    assert leak_resp.status_code == 200
+    data = leak_resp.json()
+    assert "total_monthly_leak" in data
+    assert "total_annual_projected_leak" in data
+    assert "detected_subscriptions" in data
+    assert "micro_spending_leaks" in data
+    assert len(data["detected_subscriptions"]) >= 1
+    assert any(s["title"] == "Netflix Premium" for s in data["detected_subscriptions"])
+    assert len(data["actionable_savings_tips"]) >= 1
+
