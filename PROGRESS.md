@@ -30,6 +30,12 @@
 | 17 | Postman API Testing Suite & Router Polish | ✅ Done | 2026-08-31 |
 | 18 | Production-Ready Authentication & Strict User Data Isolation | ✅ Done | 2026-08-31 |
 | 19 | 100% Environment-Driven Email System & Zero Cold-Start Keep-Alive | ✅ Done | 2026-09-02 |
+| 20 | 4-Digit OTP Password Reset Flow with 50-Second Expiry | ✅ Done | 2026-09-02 |
+| 21 | AI Feature 1: "Can I Afford This?" Purchase Simulator | ✅ Done | 2026-09-03 |
+| 22 | AI Feature 2: Autonomous "Leak Hunter" & Subscription Audit | ✅ Done | 2026-09-03 |
+| 23 | AI Feature 3: Smart "Safe-to-Spend" Speedometer & Burn Forecaster | ✅ Done | 2026-09-03 |
+| 24 | AI Feature 4: Natural Language Financial Assistant & Chatbot | ✅ Done | 2026-09-03 |
+| 25 | AI Feature 5: Smart Receipt & UPI SMS Parser | ✅ Done | 2026-09-03 |
 
 ---
 
@@ -398,6 +404,34 @@
 - [x] **Dashboard Speedometer Component:** Built `frontend/components/SafeToSpendCard.tsx` positioned prominently above KPI cards, featuring live loading states, error toast reporting, zero-cash depletion warning banner, and collapsible AI tips.
 - [x] **Production Dockerfile & Path Resilience:** Configured root `Dockerfile` and `backend/Dockerfile` with direct `/app/` synchronization and `PYTHONPATH="/app:/app/backend"` to guarantee 100% reliable Render container builds.
 - [x] **Verification:** Verified live on `localhost:3000`/`localhost:8000` and confirmed live health check on Render production.
+
+---
+
+## Phase 24 — AI Feature 4: Natural Language Financial Assistant & Chatbot ✅ Done
+
+**Goal:** Provide an interactive conversational financial assistant connected to real-time telemetry (income, spending, active budgets, top categories, and burn rate).
+
+### Completed Tasks
+- [x] **Conversational Financial Logic:** Implemented `chat_financial_advisor` in `backend/app/services/ai_service.py` aggregating real-time context and supporting Gemini, OpenAI, Claude, Groq, plus a complete deterministic NLP fallback engine for 100% offline accuracy.
+- [x] **Backend Schemas & Endpoint:** Created `FinancialChatRequest` and `FinancialChatResponse` in `backend/app/schemas/ai.py` and mounted `POST /api/v1/ai/chat` in `backend/app/routers/ai.py`.
+- [x] **Floating Glassmorphic Widget:** Built `frontend/components/FinancialAssistantWidget.tsx` with quick starter prompts, rich markdown parsing, typing animations, and smart action triggers (e.g., instant purchase simulations, leak audits, and scanner launches).
+- [x] **Global Layout Integration:** Mounted in `frontend/app/layout.tsx` and wired event triggers in `frontend/app/dashboard/page.tsx`.
+- [x] **Verification:** Automated tests passing in `test_api_ai.py` and clean Next.js build.
+
+---
+
+## Phase 25 — AI Feature 5: Smart Receipt & UPI SMS Parser ✅ Done
+
+**Goal:** Eliminate manual entry friction with high-precision offline Indian bank/UPI SMS extraction, multimodal receipt OCR vision, automatic PII scrubbing, and duplicate guarding.
+
+### Completed Tasks
+- [x] **Extraction Intelligence Engine:** Implemented `extract_transaction`, `sanitize_pii`, and `_parse_receipt_vision` in `backend/app/services/ai_service.py` extracting merchant, amount, category, date, payment mode, and reference with zero false-substring matching.
+- [x] **Automatic Debit vs. Credit Classifier:** Seamlessly categorizes expense debits to Expenses and salary/refund credits to Income.
+- [x] **PII Scrubbing & Duplicate Detection:** Erases account numbers, card digits, balances, and OTPs; checks user history for same-day duplicates.
+- [x] **Backend Schemas & Endpoint:** Created `TransactionExtractionRequest`, `TransactionExtractionResponse`, and mounted `POST /api/v1/ai/extract-transaction` in `backend/app/routers/ai.py`.
+- [x] **Interactive Frontend Scanner:** Built `frontend/components/SmartTransactionScannerModal.tsx` featuring dual tabs (SMS vs. Receipt Image), 1-click clipboard paste, quick test chips, editable review form, and direct Save to Spendora.
+- [x] **App-Wide Triggers:** Added `⚡ Scan / Paste SMS` on `/expenses`, `Scan / Paste` on `/dashboard`, and integrated action intents in the AI assistant.
+- [x] **Verification:** 5/5 passing pytest AI tests (`pytest backend/tests/test_api_ai.py -v`) and 0-error Next.js production build (`npm run build`).
 
 ---
 
