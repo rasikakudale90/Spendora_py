@@ -55,6 +55,19 @@ class Settings(BaseSettings):
     SMTP_FROM_NAME: str = "Spendora"
     SMTP_TLS: bool = True
 
+    # ── AI Intelligence Provider (100% Environment-Driven & Swappable) ──
+    # Supported providers: "gemini", "openai", "anthropic", "groq", "openrouter", "ollama"
+    AI_PROVIDER: str = "gemini"
+    AI_API_KEY: str | None = None
+    AI_MODEL: str | None = None
+    AI_BASE_URL: str | None = None
+
+    # Provider-specific keys (auto-detected if AI_API_KEY is not set directly)
+    GEMINI_API_KEY: str | None = None
+    OPENAI_API_KEY: str | None = None
+    ANTHROPIC_API_KEY: str | None = None
+    GROQ_API_KEY: str | None = None
+
     @field_validator("DATABASE_URL", mode="before")
     @classmethod
     def assemble_db_connection(cls, v: str) -> str:
