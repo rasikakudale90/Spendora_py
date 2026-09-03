@@ -179,6 +179,32 @@ When resuming in the next session for **Phase 8**, execute the following deploym
 - **Backend (Render):**
   - `DATABASE_URL`: `postgresql+asyncpg://<user>:<password>@<supabase-host>:5432/<dbname>`
   - `BUDGET_NEAR_LIMIT_THRESHOLD`: `0.80`
-  - `CORS_ORIGINS`: `https://your-frontend.vercel.app`
+  - `CORS_ORIGINS`: `https://spendora-py.vercel.app`
+  - `JWT_SECRET_KEY`: `<cryptographically-secure-64-char-hex>`
+  - `GOOGLE_CLIENT_ID`: `<google-oauth-client-id>.apps.googleusercontent.com`
+  - `FRONTEND_URL`: `https://spendora-py.vercel.app`
+  - `COOKIE_SECURE`: `true`
+  - `EMAIL_API_URL`: `https://api.resend.com/emails` (or leave blank to fall back to SMTP)
+  - `EMAIL_API_KEY`: `re_<resend-api-key>`
+  - `EMAIL_FROM`: `Spendora <onboarding@resend.dev>` (or custom verified domain)
 - **Frontend (Vercel):**
-  - `NEXT_PUBLIC_API_URL`: `https://your-backend.onrender.com`
+  - `NEXT_PUBLIC_API_URL`: `https://spendora-py.onrender.com`
+  - `NEXT_PUBLIC_GOOGLE_CLIENT_ID`: `<google-oauth-client-id>.apps.googleusercontent.com`
+
+---
+
+## 7. Authentication & Email Provider Architecture
+
+### 7.1 Security & Multi-Tenancy Architecture
+- **Tenant Isolation:** Zero-trust row-level scoping across all repositories and service layers. Every entity query is filtered by `user_id`.
+- **JWT Lifecycles:** 15-minute access tokens signed with HMAC-SHA256 (`HS256`) stored in-memory in the client; 30-day refresh tokens stored in HttpOnly, SameSite cookies with SHA-256 database hashing.
+- **Rotation & Reuse Detection:** Every refresh operation rotates the token pair and updates `refresh_tokens.replaced_by`. If a revoked or already-replaced refresh token is presented, all active sessions for that user family are revoked immediately.
+- **Rate Limiting:** SlowAPI enforces memory-based rate limiting per endpoint (`10/min` on register, `15/min` on login, `5/min` on password recovery).
+
+### 7.2 100% Environment-Driven Email System
+- **Provider-Agnostic Dispatcher:** `EmailService` automatically inspects `EMAIL_API_URL` and `EMAIL_API_KEY`:
+  - **Production (Resend HTTP API):** Dispatches asynchronous HTTPS POST requests to `https://api.resend.com/emails` using `httpx.AsyncClient` with zero outbound SMTP port blocking risk.
+  - **Local Development (Gmail SMTP Fallback):** Falls back to standard TLS SMTP (`smtp.gmail.com:587`) using `email.mime` and `smtplib` run inside `asyncio.to_thread`.
+- **Transactional Templates:** Responsive, dark-glassmorphic HTML emails with emerald branding for Welcome Registration and Password Reset flows.
+- **Keep-Alive Automation:** `.github/workflows/keep-alive.yml` fires a lightweight health check every 10 minutes (`*/10 * * * *`) against `https://spendora-py.onrender.com/health` to eliminate Render free-tier cold starts.
+

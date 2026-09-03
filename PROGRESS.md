@@ -28,6 +28,8 @@
 | 15 | Daily Expense Limit & Over-Budget Pop-up Alert | ✅ Done | 2026-08-29 |
 | 16 | Income Tracking & Cash Flow Analytics | ✅ Done | 2026-08-29 |
 | 17 | Postman API Testing Suite & Router Polish | ✅ Done | 2026-08-31 |
+| 18 | Production-Ready Authentication & Strict User Data Isolation | ✅ Done | 2026-08-31 |
+| 19 | 100% Environment-Driven Email System & Zero Cold-Start Keep-Alive | ✅ Done | 2026-09-02 |
 
 ---
 
@@ -307,6 +309,26 @@
 
 ---
 
+## Phase 19 — 100% Environment-Driven Email System & Zero Cold-Start Keep-Alive ✅ Done
+
+**Goal:** Provide zero-hardcoding, provider-agnostic transactional email dispatch (Resend HTTP REST API & Gmail SMTP fallback), seamless registration redirect UX, and continuous keep-alive pinging.
+
+### Completed Tasks
+- [x] **Registration Flow Polish:** Decoupled user registration from session creation in `backend/app/routers/auth.py` and `frontend/app/register/page.tsx` so account creation redirects to `/login?email=...&registered=true` with a clear emerald banner prompting sign-in
+- [x] **Provider-Agnostic Email Service:** Implemented `backend/app/services/email_service.py` with automatic hybrid dispatch:
+  - If `EMAIL_API_URL` and `EMAIL_API_KEY` are provided (e.g., **Resend** or **SendGrid** in Production), sends via async HTTPS REST API (`httpx.AsyncClient`)
+  - If `EMAIL_API_URL` is omitted (e.g., **Localhost**), seamlessly falls back to standard SMTP (`smtp.gmail.com:587`)
+  - Swapping providers in the future requires 0 code changes—only updating `.env`
+- [x] **Branded Responsive HTML Email Templates:**
+  - **Welcome Registration Email:** Dispatched via FastAPI `BackgroundTasks` on new user registration with quick-start tips and a direct "Sign In to Your Account" action button
+  - **Password Reset Email:** Dispatched on `/forgot-password` with a 1-hour expiration link and fallback plaintext copy
+- [x] **Comprehensive Documentation:** Extensively documented every variable in `backend/.env.example` with line-by-line instructions for Database, Security, Google OAuth, Resend, and SMTP modes
+- [x] **Zero Cold-Start Keep-Alive:** Created `.github/workflows/keep-alive.yml` GitHub Action with a 10-minute cron schedule pinging `https://spendora-py.onrender.com/health` to prevent Render free-tier containers from spinning down
+- [x] **Warmup Loading UX:** Enhanced `frontend/context/AuthContext.tsx` to display a subtle connecting notification if cloud services take >2.5s to respond
+- [x] **Automated Verification:** Verified 100% passing pytest suite and confirmed live Resend API delivery to `rasikakudale90@gmail.com`
+
+---
+
 ## Open Items & Design Decisions
 
 | # | Item | Status | Resolution |
@@ -318,4 +340,6 @@
 | 5 | Income & cash flow tracking | ✅ Resolved | Dedicated `incomes` table + Cash Flow (`Income - Expenses`) analytics |
 | 6 | API testing tooling | ✅ Resolved | Postman Collection v2.1 + Local & Production Environment files |
 | 7 | User Data Isolation & Roles | ✅ Resolved | Zero-trust per-user isolation without RBAC; short-lived access JWT + HttpOnly refresh token rotation |
+| 8 | Transactional Email Provider Architecture | ✅ Resolved | 100% environment-driven hybrid system: Resend HTTP REST API for production, Gmail SMTP for local testing |
+
 
