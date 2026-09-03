@@ -590,6 +590,23 @@ export interface LeakAnalysisResponse {
   provider_used: string;
 }
 
+export interface SafeToSpendResponse {
+  daily_safe_spend: string | number;
+  burn_rate_status: "optimal" | "warning" | "danger";
+  current_burn_rate_per_day: string | number;
+  days_remaining_in_month: number;
+  days_passed: number;
+  total_monthly_income: string | number;
+  total_spent_so_far: string | number;
+  remaining_buffer: string | number;
+  projected_month_end_balance: string | number;
+  projected_zero_cash_day?: number | null;
+  burn_pace_percentage: number;
+  ai_recommendation: string;
+  actionable_tips: string[];
+  provider_used: string;
+}
+
 export const aiApi = {
   simulatePurchase: (data: {
     title: string;
@@ -602,4 +619,6 @@ export const aiApi = {
     }),
 
   getLeakAnalysis: () => fetchJson<LeakAnalysisResponse>("/api/v1/ai/leak-analysis"),
+
+  getSafeToSpend: () => fetchJson<SafeToSpendResponse>("/api/v1/ai/safe-to-spend"),
 };

@@ -482,7 +482,155 @@ class AIService:
             "provider_used": provider_name,
         }
 
+    async def calculate_safe_to_spend(
+        self,
+        total_income: Decimal,
+        total_spent: Decimal,
+        overall_budget: Optional[Decimal],
+        today: Optional[date] = None,
+    ) -> Dict[str, Any]:
+        """
+        Calculate dynamic real-time daily safe burn allowance and month-end trajectory forecast.
+        """
+        from datetime import date
+        import calendar
+
+        if today is None:
+            today = date.today()
+
+        _, total_days_in_month = calendar.monthrange(today.year, today.month)
+        days_passed = max(1, today.day)
+        days_remaining = max(1, total_days_in_month - today.day + 1)
+
+        # Baseline budget limit or income buffer
+        effective_limit = (
+            overall_budget
+            if (overall_budget is not None and overall_budget > 0)
+            else (total_income if total_income > 0 else Decimal("30000.00"))
+        )
+
+        remaining_buffer = max(Decimal("0.00"), effective_limit - total_spent)
+        daily_safe_spend = (remaining_buffer / Decimal(str(days_remaining))).quantize(Decimal("0.01"))
+        current_burn_rate = (total_spent / Decimal(str(days_passed))).quantize(Decimal("0.01"))
+
+        projected_additional_spend = current_burn_rate * Decimal(str(max(0, days_remaining - 1)))
+        projected_total_month_spend = (total_spent + projected_additional_spend).quantize(Decimal("0.01"))
+        projected_month_end_balance = (total_income - projected_total_month_spend).quantize(Decimal("0.01"))
+
+        # Burn pace calculation
+        if daily_safe_spend > 0:
+            burn_pace_pct = round(float((current_burn_rate / daily_safe_spend) * Decimal("100.0")), 1)
+        else:
+            burn_pace_pct = 250.0
+
+        if remaining_buffer <= 0 or burn_pace_pct > 105.0:
+            burn_rate_status = "danger"
+        elif burn_pace_pct > 85.0:
+            burn_rate_status = "warning"
+        else:
+            burn_rate_status = "optimal"
+
+        # Depletion day estimation
+        projected_zero_cash_day = None
+        if current_burn_rate > 0 and projected_total_month_spend > effective_limit and remaining_buffer > 0:
+            days_to_deplete = int(remaining_buffer / current_burn_rate)
+            projected_zero_cash_day = min(total_days_in_month, days_passed + days_to_deplete)
+        elif remaining_buffer <= 0:
+            projected_zero_cash_day = days_passed
+
+        # AI / Deterministic Guidance
+        def deterministic_burn_advice():
+            if burn_rate_status == "optimal":
+                recommendation = (
+                    f"Your spending velocity is optimal! You are currently burning ~₹{current_burn_rate:,.2f}/day "
+                    f"against a safe allowance of ₹{daily_safe_spend:,.2f}/day. "
+                    f"You are projected to finish the month with ₹{projected_month_end_balance:,.2f} in net savings."
+                )
+                tips = [
+                    f"You can safely spend up to ₹{daily_safe_spend:,.2f} today without impacting your monthly targets.",
+                    "Consider routing your surplus savings into your high-yield goals or investments.",
+                    "Maintain this steady pace through the weekend.",
+                ]
+            elif burn_rate_status == "warning":
+                recommendation = (
+                    f"Your spending pace is currently elevated at ₹{current_burn_rate:,.2f}/day ({burn_pace_pct}% of safe limit). "
+                    f"You have ₹{remaining_buffer:,.2f} remaining for the last {days_remaining} days."
+                )
+                tips = [
+                    f"Cap daily non-essential purchases at ₹{daily_safe_spend:,.2f}/day for the rest of the month.",
+                    "Postpone optional recreational shopping until next month's salary cycle.",
+                    "Check for unrecorded cash payments to ensure accurate tracking.",
+                ]
+            else:
+                deplete_text = f"by Day {projected_zero_cash_day}" if projected_zero_cash_day else "soon"
+                recommendation = (
+                    f"High burn rate alert! At your current burn of ₹{current_burn_rate:,.2f}/day, "
+                    f"you risk exhausting your monthly buffer {deplete_text}. Immediate rebalancing is recommended."
+                )
+                tips = [
+                    f"Limit daily expenses strictly to ₹{daily_safe_spend:,.2f}/day to preserve remaining buffer.",
+                    "Enact a 48-hour 'no-spend' freeze on discretionary dining and shopping.",
+                    "Review top spending categories in your dashboard to find quick trimming opportunities.",
+                ]
+            return recommendation, tips, "deterministic-financial-engine"
+
+        ai_recommendation, actionable_tips, provider_name = deterministic_burn_advice()
+
+        # Call AI provider if configured
+        if self.api_key:
+            system_prompt = (
+                "You are Spendora's expert burn-rate advisor. Analyze the real-time daily safe-to-spend metrics. "
+                "Output concise, encouraging advice in valid JSON with keys: 'recommendation' (string, max 2 sentences) and 'tips' (array of 3 actionable string bullet points)."
+            )
+            user_prompt = (
+                f"Status: {burn_rate_status.upper()}\n"
+                f"Daily Safe Limit: ₹{daily_safe_spend:,.2f}/day\n"
+                f"Current Burn Rate: ₹{current_burn_rate:,.2f}/day ({burn_pace_pct}% pace)\n"
+                f"Remaining Days: {days_remaining} (Days Passed: {days_passed})\n"
+                f"Remaining Buffer: ₹{remaining_buffer:,.2f}\n"
+                f"Projected Month-End Balance: ₹{projected_month_end_balance:,.2f}\n"
+                f"Projected Zero Day: {projected_zero_cash_day}\n"
+                f"Provide JSON with 'recommendation' and 'tips'."
+            )
+            try:
+                import httpx
+                async with httpx.AsyncClient(timeout=8.0) as client:
+                    if self.provider == "gemini":
+                        url = f"https://generativelanguage.googleapis.com/v1beta/models/{self.model}:generateContent?key={self.api_key}"
+                        payload = {
+                            "contents": [{"parts": [{"text": f"{system_prompt}\n\n{user_prompt}"}]}],
+                            "generationConfig": {"response_mime_type": "application/json"},
+                        }
+                        resp = await client.post(url, json=payload)
+                        if resp.status_code == 200:
+                            data = resp.json()
+                            raw_text = data["candidates"][0]["content"]["parts"][0]["text"]
+                            parsed = json.loads(raw_text)
+                            ai_recommendation = parsed.get("recommendation", ai_recommendation)
+                            actionable_tips = parsed.get("tips", actionable_tips)
+                            provider_name = f"google-{self.model}"
+            except Exception as e:
+                logger.warning(f"Safe-to-Spend AI call failed: {e}. Using deterministic fallback.")
+
+        return {
+            "daily_safe_spend": daily_safe_spend,
+            "burn_rate_status": burn_rate_status,
+            "current_burn_rate_per_day": current_burn_rate,
+            "days_remaining_in_month": days_remaining,
+            "days_passed": days_passed,
+            "total_monthly_income": total_income,
+            "total_spent_so_far": total_spent,
+            "remaining_buffer": remaining_buffer,
+            "projected_month_end_balance": projected_month_end_balance,
+            "projected_zero_cash_day": projected_zero_cash_day,
+            "burn_pace_percentage": burn_pace_pct,
+            "ai_recommendation": ai_recommendation,
+            "actionable_tips": actionable_tips,
+            "provider_used": provider_name,
+        }
+
 
 # Singleton instance
 ai_service = AIService()
+
 

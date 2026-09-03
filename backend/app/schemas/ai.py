@@ -5,6 +5,8 @@ from uuid import UUID
 from pydantic import BaseModel, Field
 
 
+# ── Feature 1: Purchase Decision Simulator Schemas ──────────────────────────
+
 class PurchaseSimulationRequest(BaseModel):
     title: str = Field(..., min_length=1, max_length=100, description="Name or description of the potential purchase")
     amount: Decimal = Field(..., gt=0, description="Estimated purchase amount in INR")
@@ -64,4 +66,23 @@ class LeakAnalysisResponse(BaseModel):
     micro_spending_leaks: List[MicroSpendingLeak]
     ai_summary: str
     actionable_savings_tips: List[str]
+    provider_used: str
+
+
+# ── Feature 3: Safe-to-Spend Real-Time Gauge & Burn Forecaster ──────────────
+
+class SafeToSpendResponse(BaseModel):
+    daily_safe_spend: Decimal
+    burn_rate_status: Literal["optimal", "warning", "danger"]
+    current_burn_rate_per_day: Decimal
+    days_remaining_in_month: int
+    days_passed: int
+    total_monthly_income: Decimal
+    total_spent_so_far: Decimal
+    remaining_buffer: Decimal
+    projected_month_end_balance: Decimal
+    projected_zero_cash_day: Optional[int] = None
+    burn_pace_percentage: float
+    ai_recommendation: str
+    actionable_tips: List[str]
     provider_used: str

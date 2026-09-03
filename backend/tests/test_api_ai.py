@@ -98,3 +98,20 @@ async def test_leak_analysis_endpoint(client: AsyncClient):
     assert any(s["title"] == "Netflix Premium" for s in data["detected_subscriptions"])
     assert len(data["actionable_savings_tips"]) >= 1
 
+
+@pytest.mark.asyncio
+async def test_safe_to_spend_forecast(client: AsyncClient):
+    # Call safe-to-spend endpoint
+    resp = await client.get("/api/v1/ai/safe-to-spend")
+    assert resp.status_code == 200
+    data = resp.json()
+    assert "daily_safe_spend" in data
+    assert "burn_rate_status" in data
+    assert data["burn_rate_status"] in ["optimal", "warning", "danger"]
+    assert "current_burn_rate_per_day" in data
+    assert "days_remaining_in_month" in data
+    assert "projected_month_end_balance" in data
+    assert "ai_recommendation" in data
+    assert len(data["actionable_tips"]) >= 1
+
+

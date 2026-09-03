@@ -16,6 +16,7 @@ import { BudgetManagerModal } from "@/components/BudgetManagerModal";
 import { DailyLimitAlertModal } from "@/components/DailyLimitAlertModal";
 import { PurchaseSimulatorModal } from "@/components/PurchaseSimulatorModal";
 import { LeakHunterModal } from "@/components/LeakHunterModal";
+import { SafeToSpendCard } from "@/components/SafeToSpendCard";
 
 export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
@@ -188,6 +189,9 @@ export default function DashboardPage() {
         </div>
         <Hero3D />
       </div>
+
+      {/* Feature 3: Smart Safe-to-Spend Real-Time Speedometer Gauge */}
+      <SafeToSpendCard />
 
       <KpiCards summary={summary} stats={stats} />
       

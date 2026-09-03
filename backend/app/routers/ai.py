@@ -129,3 +129,41 @@ async def get_leak_analysis(
         total_monthly_income=total_monthly_income,
     )
 
+
+@router.get("/safe-to-spend")
+async def get_safe_to_spend_forecast(
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Get dynamic real-time daily safe burn allowance and month-end trajectory forecast.
+    """
+    today = date.today()
+    start_of_month = date(today.year, today.month, 1)
+    _, total_days_in_month = calendar.monthrange(today.year, today.month)
+    end_of_month = date(today.year, today.month, total_days_in_month)
+
+    dashboard_repo = DashboardRepository(db)
+    budget_repo = BudgetRepository(db)
+    income_repo = IncomeRepository(db)
+
+    # Total spent & income this month
+    total_spent, _ = await dashboard_repo.get_period_spending_and_count(
+        current_user.id, start_of_month, end_of_month
+    )
+    total_income = await income_repo.get_total_for_period(
+        current_user.id, start_of_month, end_of_month
+    )
+
+    # Overall budget
+    overall_budget_obj = await budget_repo.get_overall(current_user.id, start_of_month)
+    overall_budget = Decimal(str(overall_budget_obj.amount)) if overall_budget_obj else None
+
+    return await ai_service.calculate_safe_to_spend(
+        total_income=total_income,
+        total_spent=total_spent,
+        overall_budget=overall_budget,
+        today=today,
+    )
+
+
