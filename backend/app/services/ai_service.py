@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+import calendar
+from datetime import date, datetime
 import json
 import logging
 from decimal import Decimal
@@ -492,9 +496,6 @@ class AIService:
         """
         Calculate dynamic real-time daily safe burn allowance and month-end trajectory forecast.
         """
-        from datetime import date
-        import calendar
-
         if today is None:
             today = date.today()
 
