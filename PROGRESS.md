@@ -362,6 +362,45 @@
 
 ---
 
+## Phase 21 — AI Feature 1: "Can I Afford This?" Purchase Simulator ✅ Done
+
+**Goal:** Provide an intelligent, provider-agnostic purchase simulation engine that calculates the real-time financial impact of prospective purchases on monthly cash flow, savings rate %, and remaining daily safe burn limits.
+
+### Completed Tasks
+- [x] **Provider-Agnostic Multi-AI Architecture:** Built `backend/app/services/ai_service.py` supporting Google Gemini (`gemini-1.5-flash`), OpenAI (`gpt-4o-mini`), Anthropic Claude (`claude-3-5-sonnet`), and Groq via environment variables with a deterministic mathematical fallback engine ensuring 100% uptime with zero API keys required.
+- [x] **Backend Pydantic Schemas & REST Endpoint:** Created `PurchaseSimulationRequest` and `PurchaseSimulationResponse` in `backend/app/schemas/ai.py` and mounted `POST /api/v1/ai/simulate-purchase` in `backend/app/routers/ai.py`.
+- [x] **Interactive Frontend Simulator Modal:** Built `frontend/components/PurchaseSimulatorModal.tsx` featuring quick-test sample chips, 3-tier color-coded verdict banners (🟢 Safe, 🟡 Caution, 🔴 Over Budget), 3-metric comparison cards (Savings Rate, Net Balance, Daily Burn Allowance), and a direct "Add as Expense" shortcut.
+- [x] **Dashboard Header Action:** Integrated "✨ Can I Afford This?" button on `frontend/app/dashboard/page.tsx`.
+- [x] **Verification:** Verified 100% passing pytest integration tests and zero-error Next.js production build.
+
+---
+
+## Phase 22 — AI Feature 2: Autonomous "Leak Hunter" & Subscription Audit ✅ Done
+
+**Goal:** Scan 90 days of transaction history to automatically uncover recurring subscription drains, accumulate low-ticket micro-spending (<= ₹150), calculate annualized financial drains, and generate actionable reduction checklists.
+
+### Completed Tasks
+- [x] **Pattern Analyzer & Micro-Expense Aggregator:** Implemented `analyze_leaks_and_subscriptions` in `backend/app/services/ai_service.py` identifying repeat digital subscriptions (Netflix, Spotify, Gym, iCloud, Prime) and accumulating micro-spending categories with annualized drain projections (e.g. ₹80/day = ₹28,800/yr).
+- [x] **Backend Schemas & Endpoint:** Created `SubscriptionItem`, `MicroSpendingLeak`, and `LeakAnalysisResponse` schemas and mounted `GET /api/v1/ai/leak-analysis` in `backend/app/routers/ai.py`.
+- [x] **Dual-Tab Leak Hunter Modal:** Built `frontend/components/LeakHunterModal.tsx` displaying Monthly Total Leak (₹/mo), Annualized Drain (₹/yr), Active Subscriptions tab, Micro-Leaks & Fees tab, and AI reduction tips.
+- [x] **Dashboard Action:** Added "🔍 Leak Hunter" button in `frontend/app/dashboard/page.tsx`.
+- [x] **Verification:** Verified with passing pytest test suite and clean Next.js build.
+
+---
+
+## Phase 23 — AI Feature 3: Smart "Safe-to-Spend" Real-Time Speedometer Gauge & Burn Forecaster ✅ Done
+
+**Goal:** Dynamically calculate daily safe burn allowance and project month-end cash flow trajectory directly on the dashboard.
+
+### Completed Tasks
+- [x] **Real-Time Burn Forecaster:** Implemented `calculate_safe_to_spend` in `backend/app/services/ai_service.py` computing Daily Safe Spend (`Remaining Buffer / Remaining Days`), Daily Burn Velocity (`Spent / Days Passed`), Burn Pace % (`optimal` <= 85%, `warning` 85-105%, `danger` > 105%), and month-end savings surplus/deficit projection.
+- [x] **Backend Schemas & Endpoint:** Created `SafeToSpendResponse` and mounted `GET /api/v1/ai/safe-to-spend` with explicit Pydantic `response_model` annotations.
+- [x] **Dashboard Speedometer Component:** Built `frontend/components/SafeToSpendCard.tsx` positioned prominently above KPI cards, featuring live loading states, error toast reporting, zero-cash depletion warning banner, and collapsible AI tips.
+- [x] **Production Dockerfile & Path Resilience:** Configured root `Dockerfile` and `backend/Dockerfile` with direct `/app/` synchronization and `PYTHONPATH="/app:/app/backend"` to guarantee 100% reliable Render container builds.
+- [x] **Verification:** Verified live on `localhost:3000`/`localhost:8000` and confirmed live health check on Render production.
+
+---
+
 ## Open Items & Design Decisions
 
 | # | Item | Status | Resolution |
@@ -375,6 +414,4 @@
 | 7 | User Data Isolation & Roles | ✅ Resolved | Zero-trust per-user isolation without RBAC; short-lived access JWT + HttpOnly refresh token rotation |
 | 8 | Transactional Email Provider Architecture | ✅ Resolved | 100% environment-driven hybrid system: Resend HTTP REST API for production, Gmail SMTP for local testing |
 | 9 | Password Recovery Mechanism | ✅ Resolved | 4-Digit Numeric OTP (1000–9999) with 10-minute expiry, user-salted SHA-256 storage, and 4-box interactive UI |
-
-
-
+| 10 | AI Intelligence Architecture | ✅ Resolved | Provider-agnostic engine (Gemini, OpenAI, Claude, Groq) with deterministic mathematical fallback engine |
