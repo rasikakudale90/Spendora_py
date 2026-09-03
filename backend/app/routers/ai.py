@@ -12,7 +12,12 @@ from app.repositories.budget_repository import BudgetRepository
 from app.repositories.category_repository import CategoryRepository
 from app.repositories.dashboard_repository import DashboardRepository
 from app.repositories.income_repository import IncomeRepository
-from app.schemas.ai import PurchaseSimulationRequest, PurchaseSimulationResponse
+from app.schemas.ai import (
+    PurchaseSimulationRequest,
+    PurchaseSimulationResponse,
+    LeakAnalysisResponse,
+    SafeToSpendResponse,
+)
 from app.services.ai_service import ai_service
 
 router = APIRouter(prefix="/ai", tags=["AI Financial Intelligence"])
@@ -80,7 +85,7 @@ async def simulate_purchase(
     )
 
 
-@router.get("/leak-analysis")
+@router.get("/leak-analysis", response_model=LeakAnalysisResponse)
 async def get_leak_analysis(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
@@ -130,7 +135,7 @@ async def get_leak_analysis(
     )
 
 
-@router.get("/safe-to-spend")
+@router.get("/safe-to-spend", response_model=SafeToSpendResponse)
 async def get_safe_to_spend_forecast(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
