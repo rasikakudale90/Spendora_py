@@ -102,3 +102,41 @@ export const incomeFormSchema = z.object({
 
 export type IncomeFormValues = z.infer<typeof incomeFormSchema>;
 
+export const goalFormSchema = z.object({
+  name: z
+    .string()
+    .min(1, "Goal name is required")
+    .max(100, "Goal name must be at most 100 characters"),
+  target_amount: z
+    .string()
+    .min(1, "Target amount is required")
+    .refine((val) => !isNaN(parseFloat(val)) && parseFloat(val) > 0, {
+      message: "Target amount must be greater than 0",
+    }),
+  current_amount: z
+    .string()
+    .optional()
+    .refine((val) => !val || (!isNaN(parseFloat(val)) && parseFloat(val) >= 0), {
+      message: "Current amount must be 0 or greater",
+    }),
+  target_date: z.string().optional().nullable(),
+  category: z.string().default("Savings"),
+  color: z.string().default("emerald"),
+  notes: z.string().max(1000, "Notes cannot exceed 1000 characters").optional().nullable(),
+});
+
+export type GoalFormValues = z.infer<typeof goalFormSchema>;
+
+export const goalContributeSchema = z.object({
+  amount: z
+    .string()
+    .min(1, "Amount is required")
+    .refine((val) => !isNaN(parseFloat(val)) && parseFloat(val) > 0, {
+      message: "Amount must be greater than 0",
+    }),
+  action: z.enum(["deposit", "withdraw"]).default("deposit"),
+  notes: z.string().max(255).optional().nullable(),
+});
+
+export type GoalContributeValues = z.infer<typeof goalContributeSchema>;
+

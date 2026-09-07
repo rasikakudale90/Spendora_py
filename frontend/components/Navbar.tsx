@@ -12,6 +12,7 @@ import {
   Wallet,
   LogIn,
   UserPlus,
+  Target,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import ThemeToggle from "./ThemeToggle";
@@ -33,6 +34,11 @@ const NAV_ITEMS = [
     name: "Income",
     href: "/income",
     icon: TrendingUp,
+  },
+  {
+    name: "Goals",
+    href: "/goals",
+    icon: Target,
   },
 ];
 

@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 import calendar
-from datetime import date
+from datetime import date, timedelta
 from decimal import Decimal
 from typing import Optional
 from fastapi import APIRouter, Depends
@@ -13,6 +15,7 @@ from app.repositories.category_repository import CategoryRepository
 from app.repositories.dashboard_repository import DashboardRepository
 from app.repositories.expense_repository import ExpenseRepository
 from app.repositories.income_repository import IncomeRepository
+from app.repositories.goal_repository import GoalRepository
 from app.schemas.ai import (
     PurchaseSimulationRequest,
     PurchaseSimulationResponse,
@@ -22,6 +25,8 @@ from app.schemas.ai import (
     FinancialChatResponse,
     TransactionExtractionRequest,
     TransactionExtractionResponse,
+    FinancialHealthResponse,
+    GoalRunwayAnalysisResponse,
 )
 from app.services.ai_service import ai_service
 
@@ -344,6 +349,128 @@ async def extract_transaction_endpoint(
     )
 
     return TransactionExtractionResponse(**result)
+
+
+@router.get("/health-score", response_model=FinancialHealthResponse)
+async def get_financial_health_score(
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Feature 6: AI Financial Health Score & 5-Pillar Radar.
+    Evaluates Savings Discipline, Budget Adherence, Burn Stability, Cash Cushion,
+    and Micro-Leak Control into a composite 0-100 prestige score with actionable boosters.
+    """
+    today = date.today()
+    start_of_month = date(today.year, today.month, 1)
+    _, total_days = calendar.monthrange(today.year, today.month)
+    end_of_month = date(today.year, today.month, total_days)
+    days_passed = max(1, today.day)
+    days_remaining = max(1, total_days - today.day + 1)
+
+    dashboard_repo = DashboardRepository(db)
+    budget_repo = BudgetRepository(db)
+    income_repo = IncomeRepository(db)
+    expense_repo = ExpenseRepository(db)
+
+    # 1. Total spent & income this month
+    total_spent, _ = await dashboard_repo.get_period_spending_and_count(
+        current_user.id, start_of_month, end_of_month
+    )
+    total_income = await income_repo.get_total_for_period(
+        current_user.id, start_of_month, end_of_month
+    )
+
+    # 2. Overall budget & Category adherence
+    category_breakdown = await dashboard_repo.get_category_breakdown(
+        current_user.id, start_of_month, end_of_month
+    )
+    cat_spent_map = {cat_id: amt for cat_id, _, amt in category_breakdown}
+
+    all_budgets = await budget_repo.get_by_period(
+        current_user.id, period_start=start_of_month, period_type="monthly"
+    )
+    overall_budget_obj = next((b for b in all_budgets if b.scope == "overall"), None)
+    overall_budget_amount = overall_budget_obj.amount if overall_budget_obj else None
+
+    category_budgets = [b for b in all_budgets if b.scope == "category" and b.category_id]
+    if category_budgets:
+        adhered_count = sum(
+            1 for b in category_budgets if cat_spent_map.get(b.category_id, Decimal("0.00")) <= b.amount
+        )
+        budget_adherence_pct = (adhered_count / len(category_budgets)) * 100.0
+    else:
+        budget_adherence_pct = 75.0 if overall_budget_amount is None else 100.0
+
+    # 3. Leak monthly total from past 90 days
+    ninety_days_ago = today - timedelta(days=90)
+    expenses_90d, _ = await expense_repo.get_paginated(
+        user_id=current_user.id,
+        date_from=ninety_days_ago,
+        date_to=today,
+        page=1,
+        page_size=250,
+    )
+    serialized_expenses = [
+        {"title": e.title, "amount": e.amount, "expense_date": e.expense_date, "category_name": e.category.name if e.category else "Other"}
+        for e in expenses_90d
+    ]
+    leak_data = await ai_service.analyze_leaks_and_subscriptions(
+        serialized_expenses, total_monthly_income=total_income
+    )
+    leak_monthly = Decimal(str(leak_data.get("total_monthly_leak", "0.00")))
+
+    # 4. Top spending category
+    top_cat_name = category_breakdown[0][1] if category_breakdown else None
+
+    return await ai_service.calculate_financial_health_score(
+        total_income=total_income,
+        total_spent=total_spent,
+        overall_budget=overall_budget_amount,
+        budget_adherence_pct=budget_adherence_pct,
+        leak_monthly_total=leak_monthly,
+        days_remaining_in_month=days_remaining,
+        days_passed_in_month=days_passed,
+        top_spending_category=top_cat_name,
+    )
+
+
+@router.get("/goals-runway", response_model=GoalRunwayAnalysisResponse)
+async def get_goals_runway(
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Feature 7: Smart Goal Runway & Acceleration Intelligence.
+    Aggregates all active user goals and projects completion timelines against live monthly surplus.
+    """
+    today = date.today()
+    start_of_month = date(today.year, today.month, 1)
+    _, total_days = calendar.monthrange(today.year, today.month)
+    end_of_month = date(today.year, today.month, total_days)
+
+    goal_repo = GoalRepository(db)
+    income_repo = IncomeRepository(db)
+    dashboard_repo = DashboardRepository(db)
+
+    goals = await goal_repo.list_goals(current_user.id)
+    total_income = await income_repo.get_total_for_period(current_user.id, start_of_month, end_of_month)
+    total_spent, _ = await dashboard_repo.get_period_spending_and_count(current_user.id, start_of_month, end_of_month)
+    monthly_surplus = max(Decimal("0.00"), total_income - total_spent)
+
+    category_breakdown = await dashboard_repo.get_category_breakdown(
+        current_user.id, start_of_month, end_of_month
+    )
+    top_categories = [
+        {"category_name": name, "amount": amount}
+        for _, name, amount in category_breakdown[:3]
+    ]
+
+    return await ai_service.analyze_goals_runway(
+        goals=list(goals),
+        monthly_surplus=monthly_surplus,
+        top_discretionary_categories=top_categories,
+    )
 
 
 

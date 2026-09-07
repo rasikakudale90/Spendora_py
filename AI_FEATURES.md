@@ -31,3 +31,15 @@ A concise overview of the 5 AI-powered financial intelligence features built int
 ### 5. 🧾 Smart Receipt & UPI SMS Parser
 - **Endpoint:** `POST /api/v1/ai/extract-transaction`
 - **Description:** Eliminates manual data entry by extracting merchant, amount, date, payment mode, and category from raw Indian bank/UPI SMS notifications or paper receipt images. Includes automated PII scrubbing (masks account/card numbers and balances), debit vs. credit auto-classification, and duplicate transaction guarding.
+
+---
+
+### 6. 🎯 AI Financial Health Score & 5-Pillar Radar Scorecard
+- **Endpoint:** `GET /api/v1/ai/health-score`
+- **Description:** Computes a dynamic composite 0–100 FICO-style financial health score across 5 weighted dimensions: Savings Discipline (25%), Budget Adherence (25%), Burn Stability (20%), Cash Flow Cushion (15%), and Leak Control (15%). Visualized on an interactive Recharts spider radar chart with 3 prioritized point-boosting actions (`+8 PTS`). Includes zero-fail client-side mathematical fallback.
+
+---
+
+### 7. 🏆 Smart Goals & AI Savings Runway Engine
+- **Endpoints:** `GET/POST/PATCH/DELETE /api/v1/goals`, `POST /api/v1/goals/{id}/contribute`, `GET /api/v1/ai/goals-runway`
+- **Description:** Enables setting target savings milestones (emergency buffers, travel, gadgets, investments) with target dates and deposit/withdrawal tracking. The AI runway engine evaluates multi-goal funding feasibility against live monthly surplus cash flow (`Income - Expenses`), assigns real-time pacing badges (`On Track`, `Ahead`, `At Risk`, `Behind`), and suggests smart discretionary expense cuts to accelerate goal completion.

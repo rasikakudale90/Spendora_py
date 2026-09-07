@@ -11,6 +11,8 @@ import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Folder, Target, ShieldAlert, Sparkles, Search, Scan } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { FinancialHealthCard } from "@/components/dashboard/FinancialHealthCard";
 import { CategoryManagerModal } from "@/components/CategoryManagerModal";
 import { BudgetManagerModal } from "@/components/BudgetManagerModal";
 import { DailyLimitAlertModal } from "@/components/DailyLimitAlertModal";
@@ -20,6 +22,7 @@ import { SafeToSpendCard } from "@/components/SafeToSpendCard";
 import { SmartTransactionScannerModal } from "@/components/SmartTransactionScannerModal";
 
 export default function DashboardPage() {
+  const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [summary, setSummary] = useState<DashboardSummary | null>(null);
   const [stats, setStats] = useState<DashboardStats | null>(null);
@@ -177,6 +180,9 @@ export default function DashboardPage() {
             <Scan className="w-4 h-4 text-cyan-500" />
             <span>Scan / Paste</span>
           </Button>
+          <Button variant="outline" onClick={() => router.push("/goals")} className="gap-2 bg-gradient-to-r from-emerald-500/10 to-teal-500/10 border-emerald-500/30 hover:border-emerald-500/60 text-emerald-600 dark:text-emerald-400 font-semibold shadow-sm">
+            <Target className="w-4 h-4 text-emerald-500" /> <span>Goals & Runway</span>
+          </Button>
           <Button variant="outline" onClick={() => setIsCatModalOpen(true)} className="gap-2">
             <Folder className="w-4 h-4 text-emerald-600 dark:text-emerald-400" /> <span className="hidden sm:inline">Categories</span>
           </Button>
@@ -234,6 +240,12 @@ export default function DashboardPage() {
         </div>
         <Hero3D />
       </div>
+
+      {/* Feature 6: AI Financial Health Score & 5-Pillar Radar Scorecard */}
+      <FinancialHealthCard
+        monthlyIncome={summary?.total_income}
+        monthlySpent={summary?.total_spent}
+      />
 
       {/* Feature 3: Smart Safe-to-Spend Real-Time Speedometer Gauge */}
       <SafeToSpendCard summary={summary} />

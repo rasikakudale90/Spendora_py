@@ -37,6 +37,7 @@
 | 24 | AI Feature 4: Natural Language Financial Assistant & Chatbot | ✅ Done | 2026-09-03 |
 | 25 | AI Feature 5: Smart Receipt & UPI SMS Parser | ✅ Done | 2026-09-03 |
 | 26 | Production Deployment Hardening & Live AI Verification | ✅ Done | 2026-09-04 |
+| 27 | AI Features 6 & 7: Financial Health Score Radar & Smart Goals Runway | ✅ Done | 2026-09-07 |
 
 ---
 
@@ -452,6 +453,22 @@
 - [x] **Client-Side Zero-Fail Resilient Speedometer:** Enhanced `frontend/components/SafeToSpendCard.tsx` with a deterministic mathematical fallback engine consuming `DashboardSummary`. The card displays live burn rate velocity, safe burn limits, and trajectory projections even during cold starts or deployment updates without showing broken error states.
 - [x] **Live End-to-End Production Verification:** Validated live deployment on Render (`https://spendora-py.onrender.com`) via authenticated tests returning HTTP 200 OK across all 5 AI endpoints (`simulate-purchase`, `leak-analysis`, `safe-to-spend`, `chat`, `extract-transaction`).
 - [x] **Frontend Production Build:** Verified Next.js production bundle with 0 errors and 0 ESLint warnings.
+
+---
+
+## Phase 27 — AI Features 6 & 7: Financial Health Score Radar & Smart Goals Runway ✅ Done
+
+**Goal:** Provide a comprehensive 0–100 FICO-style financial health scorecard with spider radar visualizations, and an intelligent savings goals runway engine linking day-to-day spending cuts directly to dream milestone completion dates.
+
+### Completed Tasks
+- [x] **Goals Database Layer & Migration:** Created `goals` ORM model in `backend/app/models/goal.py` with zero-trust tenancy, check constraints (`target_amount > 0`, `current_amount >= 0`), and Alembic migration `b2c3d4e5f6a7_add_goals_table.py`. Added `goals` relationship to `User` model and exported in `app.models`.
+- [x] **Goals Schemas, Repository, Service & Router:** Built full 5-layer architecture for goals in `backend/app/schemas/goal.py`, `backend/app/repositories/goal_repository.py`, `backend/app/services/goal_service.py`, and mounted `GET`, `POST`, `PATCH`, `DELETE`, and `POST /{id}/contribute` in `backend/app/routers/goals.py` and `api_router.py`.
+- [x] **AI Financial Health Score Engine:** Implemented `calculate_financial_health_score` in `backend/app/services/ai_service.py` evaluating 5 weighted dimensions: Savings Discipline (25%), Budget Adherence (25%), Burn Stability (20%), Cash Cushion (15%), and Leak Control (15%). Generates a composite score (0-100), tier badges (`elite`, `healthy`, `vulnerable`, `critical`), and 3 prioritized score boosters (`+8 PTS`). Added `GET /api/v1/ai/health-score` in `backend/app/routers/ai.py`.
+- [x] **AI Smart Goals Runway Engine:** Implemented `analyze_goals_runway` in `backend/app/services/ai_service.py` evaluating multi-goal funding requirements against live monthly cash surplus, assigning pacing statuses (`on_track`, `ahead`, `at_risk`, `behind`, `completed`), and suggesting discretionary category reduction trade-offs. Added `GET /api/v1/ai/goals-runway` in `backend/app/routers/ai.py`.
+- [x] **Frontend Financial Health Scorecard Widget:** Built `frontend/components/dashboard/FinancialHealthCard.tsx` featuring composite score circular ring, interactive Recharts Spider Radar chart, 5-pillar progress breakdown, prioritized booster action cards, and resilient client-side mathematical fallback. Mounted on `/dashboard`.
+- [x] **Frontend Goals Management System:** Built `frontend/app/goals/page.tsx` with KPI overview strip, multi-goal AI runway alert banner, and interactive goal cards. Built `GoalFormModal.tsx` for create/edit and `GoalContributeModal.tsx` for deposit/withdraw with instant forecast previews. Added Goals link with `Target` icon to `Navbar.tsx`.
+- [x] **Automated Testing:** Added `backend/tests/test_goals.py` (lifecycle and multi-user zero-trust tenancy) and `backend/tests/test_api_health_score.py` (health score and runway calculations). 100% test suite passing (4/4 passed).
+- [x] **Production Build:** Verified Next.js production build (`npm run build`) compiles cleanly with 0 errors and 0 warnings.
 
 ---
 

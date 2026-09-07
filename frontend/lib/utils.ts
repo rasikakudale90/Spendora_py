@@ -17,6 +17,8 @@ export function formatINR(amount: number | string | null | undefined): string {
   }).format(num);
 }
 
+export const formatCurrency = formatINR;
+
 export function formatDate(dateString: string): string {
   if (!dateString) return "";
   const d = new Date(dateString);

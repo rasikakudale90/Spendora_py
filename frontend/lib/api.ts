@@ -673,7 +673,159 @@ export const aiApi = {
       method: "POST",
       body: JSON.stringify(data),
     }),
+
+  getFinancialHealthScore: () => fetchJson<FinancialHealthResponse>("/api/v1/ai/health-score"),
+
+  getGoalsRunwayForecast: () => fetchJson<GoalRunwayAnalysisResponse>("/api/v1/ai/goals-runway"),
 };
+
+export const goalsApi = {
+  getAll: (status?: string) =>
+    fetchJson<GoalListResponse>(`/api/v1/goals${status ? `?status=${encodeURIComponent(status)}` : ""}`),
+  getById: (id: string) => fetchJson<Goal>(`/api/v1/goals/${id}`),
+  create: (data: GoalCreatePayload) =>
+    fetchJson<Goal>("/api/v1/goals", {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
+  update: (id: string, data: GoalUpdatePayload) =>
+    fetchJson<Goal>(`/api/v1/goals/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify(data),
+    }),
+  contribute: (id: string, data: GoalContributePayload) =>
+    fetchJson<Goal>(`/api/v1/goals/${id}/contribute`, {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
+  delete: (id: string) =>
+    fetchJson<void>(`/api/v1/goals/${id}`, {
+      method: "DELETE",
+    }),
+};
+
+// ── Goals Types ──────────────────────────────────────────────────────────────
+export interface GoalRunwayForecast {
+  required_monthly_savings: string | number;
+  projected_completion_date?: string | null;
+  months_remaining?: number | null;
+  days_remaining?: number | null;
+  pacing_status: "on_track" | "ahead" | "at_risk" | "behind" | "completed" | "no_deadline";
+  pacing_message: string;
+  speedup_suggestion?: string | null;
+}
+
+export interface Goal {
+  id: string;
+  user_id: string;
+  name: string;
+  target_amount: string;
+  current_amount: string;
+  remaining_amount: string;
+  progress_percentage: number;
+  target_date?: string | null;
+  category: string;
+  color: string;
+  status: "active" | "completed" | "paused";
+  notes?: string | null;
+  is_completed: boolean;
+  created_at: string;
+  updated_at: string;
+  runway?: GoalRunwayForecast | null;
+}
+
+export interface GoalListResponse {
+  items: Goal[];
+  total_count: number;
+  total_target_amount: string;
+  total_saved_amount: string;
+  total_remaining_amount: string;
+  overall_progress_percentage: number;
+}
+
+export interface GoalCreatePayload {
+  name: string;
+  target_amount: string | number;
+  current_amount?: string | number;
+  target_date?: string | null;
+  category?: string;
+  color?: string;
+  notes?: string | null;
+}
+
+export interface GoalUpdatePayload {
+  name?: string;
+  target_amount?: string | number;
+  current_amount?: string | number;
+  target_date?: string | null;
+  category?: string;
+  color?: string;
+  status?: "active" | "completed" | "paused";
+  notes?: string | null;
+}
+
+export interface GoalContributePayload {
+  amount: string | number;
+  action: "deposit" | "withdraw";
+  notes?: string | null;
+}
+
+// ── Financial Health Score & Runway Types ────────────────────────────────────
+export interface PillarScore {
+  name: string;
+  score: number;
+  weight_pct: number;
+  benchmark_label: string;
+  status: "optimal" | "good" | "fair" | "critical";
+  insight: string;
+}
+
+export interface ScoreBoosterAction {
+  pillar: string;
+  impact_points: number;
+  action_text: string;
+  category_hint?: string | null;
+}
+
+export interface FinancialHealthResponse {
+  composite_score: number;
+  tier: "elite" | "healthy" | "vulnerable" | "critical";
+  tier_title: string;
+  summary: string;
+  pillars: PillarScore[];
+  score_boosters: ScoreBoosterAction[];
+  monthly_income: string | number;
+  monthly_spent: string | number;
+  monthly_net_savings: string | number;
+  savings_rate_pct: number;
+  provider_used: string;
+}
+
+export interface GoalRunwayAnalysisItem {
+  goal_id: string;
+  name: string;
+  target_amount: string | number;
+  current_amount: string | number;
+  remaining_amount: string | number;
+  target_date?: string | null;
+  required_monthly: string | number;
+  projected_completion_date?: string | null;
+  pacing_status: "on_track" | "ahead" | "at_risk" | "behind" | "completed" | "no_deadline";
+  pacing_message: string;
+  speedup_suggestion?: string | null;
+}
+
+export interface GoalRunwayAnalysisResponse {
+  monthly_surplus: string | number;
+  active_goals_count: number;
+  total_monthly_required: string | number;
+  surplus_coverage_pct: number;
+  is_fully_funded: boolean;
+  goals: GoalRunwayAnalysisItem[];
+  ai_runway_summary: string;
+  discretionary_reduction_tip?: string | null;
+  provider_used: string;
+}
 
 export interface ExtractedItem {
   name: string;

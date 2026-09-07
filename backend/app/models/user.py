@@ -118,3 +118,9 @@ class User(Base, TimestampMixin):
         cascade="all, delete-orphan",
         lazy="select",
     )
+    goals: Mapped[List["Goal"]] = relationship(
+        "Goal",
+        back_populates="user",
+        cascade="all, delete-orphan",
+        lazy="select",
+    )

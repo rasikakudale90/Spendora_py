@@ -146,3 +146,63 @@ class TransactionExtractionResponse(BaseModel):
     sanitized_input: str
 
 
+# ── Feature 6: AI Financial Health Score & 5-Pillar Radar Schemas ───────────
+
+class PillarScore(BaseModel):
+    name: str = Field(..., description="Pillar name (e.g. Savings Discipline, Budget Adherence)")
+    score: float = Field(..., ge=0, le=100, description="Score 0 to 100")
+    weight_pct: int = Field(..., description="Weight percentage in composite score (e.g. 25)")
+    benchmark_label: str = Field(..., description="Benchmark target label (e.g. '>= 20% savings rate')")
+    status: Literal["optimal", "good", "fair", "critical"] = Field(..., description="Pillar status tier")
+    insight: str = Field(..., description="Contextual observation about this pillar")
+
+
+class ScoreBoosterAction(BaseModel):
+    pillar: str
+    impact_points: int
+    action_text: str
+    category_hint: Optional[str] = None
+
+
+class FinancialHealthResponse(BaseModel):
+    composite_score: int = Field(..., ge=0, le=100, description="Holistic Financial Health Score (0-100)")
+    tier: Literal["elite", "healthy", "vulnerable", "critical"] = Field(..., description="Health tier category")
+    tier_title: str = Field(..., description="Tier badge label (e.g. 'Elite Wealth Builder', 'Financially Stable')")
+    summary: str = Field(..., description="AI or rule-based executive summary")
+    pillars: List[PillarScore]
+    score_boosters: List[ScoreBoosterAction]
+    monthly_income: Decimal
+    monthly_spent: Decimal
+    monthly_net_savings: Decimal
+    savings_rate_pct: float
+    provider_used: str
+
+
+# ── Feature 7: Smart Goal Runway & Acceleration Intelligence ─────────────────
+
+class GoalRunwayAnalysisItem(BaseModel):
+    goal_id: UUID
+    name: str
+    target_amount: Decimal
+    current_amount: Decimal
+    remaining_amount: Decimal
+    target_date: Optional[date] = None
+    required_monthly: Decimal
+    projected_completion_date: Optional[date] = None
+    pacing_status: Literal["on_track", "ahead", "at_risk", "behind", "completed", "no_deadline"]
+    pacing_message: str
+    speedup_suggestion: Optional[str] = None
+
+
+class GoalRunwayAnalysisResponse(BaseModel):
+    monthly_surplus: Decimal
+    active_goals_count: int
+    total_monthly_required: Decimal
+    surplus_coverage_pct: float
+    is_fully_funded: bool
+    goals: List[GoalRunwayAnalysisItem]
+    ai_runway_summary: str
+    discretionary_reduction_tip: Optional[str] = None
+    provider_used: str
+
+

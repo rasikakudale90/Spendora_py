@@ -9,7 +9,15 @@ from typing import Any, Dict, List, Optional
 import httpx
 
 from app.core.config import settings
-from app.schemas.ai import PurchaseSimulationRequest, PurchaseSimulationResponse
+from app.schemas.ai import (
+    PurchaseSimulationRequest,
+    PurchaseSimulationResponse,
+    PillarScore,
+    ScoreBoosterAction,
+    FinancialHealthResponse,
+    GoalRunwayAnalysisItem,
+    GoalRunwayAnalysisResponse,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -1323,7 +1331,483 @@ class AIService:
         except Exception as e:
             logger.warning(f"Receipt vision parsing failed: {e}. Using fallback.")
 
-        return vision_fallback()
+    # ── Feature 6: AI Financial Health Score & 5-Pillar Radar Engine ────────
+    async def calculate_financial_health_score(
+        self,
+        *,
+        total_income: Decimal,
+        total_spent: Decimal,
+        overall_budget: Optional[Decimal],
+        budget_adherence_pct: float,
+        leak_monthly_total: Decimal,
+        days_remaining_in_month: int,
+        days_passed_in_month: int,
+        top_spending_category: Optional[str] = None,
+    ) -> FinancialHealthResponse:
+        """
+        Calculate a holistic 0-100 Financial Health Score across 5 core pillars:
+        1. Savings Discipline (25%)
+        2. Budget Adherence (25%)
+        3. Burn Stability (20%)
+        4. Cash Flow Cushion & Resilience (15%)
+        5. Micro-Leak & Recurring Drain Control (15%)
+        """
+        net_savings = total_income - total_spent
+        savings_rate = float(net_savings / total_income * 100) if total_income > 0 else 0.0
+
+        # Pillar 1: Savings Discipline (25%)
+        if total_income == 0:
+            if total_spent == 0:
+                p1_score = 65.0
+                p1_status = "fair"
+                p1_insight = "No income or expense data logged this month yet."
+            else:
+                p1_score = 25.0
+                p1_status = "critical"
+                p1_insight = "Expenses recorded with ₹0 income. Log your monthly income to unlock savings analytics."
+        else:
+            if savings_rate >= 30.0:
+                p1_score = 100.0
+                p1_status = "optimal"
+                p1_insight = f"Exceptional {savings_rate:.1f}% savings rate, well above the 20% benchmark."
+            elif savings_rate >= 20.0:
+                p1_score = min(98.0, 85.0 + (savings_rate - 20.0) * 1.3)
+                p1_status = "optimal"
+                p1_insight = f"Healthy {savings_rate:.1f}% savings rate exceeding the 20% benchmark."
+            elif savings_rate >= 10.0:
+                p1_score = 70.0 + (savings_rate - 10.0) * 1.5
+                p1_status = "good"
+                p1_insight = f"Positive {savings_rate:.1f}% savings rate. Try pushing toward the 20% mark."
+            elif savings_rate > 0:
+                p1_score = 50.0 + savings_rate * 2.0
+                p1_status = "fair"
+                p1_insight = f"Narrow savings rate ({savings_rate:.1f}%). Most income is consumed by living costs."
+            else:
+                p1_score = max(10.0, 50.0 + savings_rate * 0.5)
+                p1_status = "critical"
+                p1_insight = f"Negative cash flow ({savings_rate:.1f}%). Outflow exceeds incoming funds this month."
+
+        pillar_1 = PillarScore(
+            name="Savings Discipline",
+            score=round(p1_score, 1),
+            weight_pct=25,
+            benchmark_label="≥ 20% Net Savings Rate",
+            status=p1_status,
+            insight=p1_insight,
+        )
+
+        # Pillar 2: Budget Adherence (25%)
+        if overall_budget and overall_budget > 0:
+            adherence_ratio = float((overall_budget - total_spent) / overall_budget)
+            if total_spent <= overall_budget:
+                p2_score = min(100.0, 75.0 + adherence_ratio * 25.0)
+                p2_status = "optimal" if p2_score >= 85 else "good"
+                p2_insight = f"Spending is within your overall budget (₹{total_spent:,.0f} of ₹{overall_budget:,.0f})."
+            else:
+                over_pct = float((total_spent - overall_budget) / overall_budget * 100)
+                p2_score = max(10.0, 60.0 - over_pct * 0.8)
+                p2_status = "critical" if p2_score < 50 else "fair"
+                p2_insight = f"Budget breached by {over_pct:.1f}%. Immediate spending freeze advised."
+        elif budget_adherence_pct > 0:
+            p2_score = float(budget_adherence_pct)
+            p2_status = "optimal" if p2_score >= 85 else ("good" if p2_score >= 70 else "fair")
+            p2_insight = f"{budget_adherence_pct:.0f}% of active category budgets are within limits."
+        else:
+            p2_score = 70.0
+            p2_status = "fair"
+            p2_insight = "No active budgets configured. Setting category limits improves financial discipline."
+
+        pillar_2 = PillarScore(
+            name="Budget Adherence",
+            score=round(p2_score, 1),
+            weight_pct=25,
+            benchmark_label="100% Budgets Respected",
+            status=p2_status,
+            insight=p2_insight,
+        )
+
+        # Pillar 3: Burn Stability (20%)
+        total_days = max(1, days_passed_in_month + days_remaining_in_month)
+        ideal_daily = (total_income / total_days) if total_income > 0 else (
+            (overall_budget / total_days) if (overall_budget and overall_budget > 0) else Decimal("1000.00")
+        )
+        actual_daily = total_spent / max(1, days_passed_in_month)
+        pace_ratio = float(actual_daily / ideal_daily) if ideal_daily > 0 else 1.0
+
+        if pace_ratio <= 0.85:
+            p3_score = 95.0
+            p3_status = "optimal"
+            p3_insight = f"Safe burn rate (₹{actual_daily:,.0f}/day vs ₹{ideal_daily:,.0f}/day target)."
+        elif pace_ratio <= 1.05:
+            p3_score = 80.0
+            p3_status = "good"
+            p3_insight = f"Balanced daily pace (₹{actual_daily:,.0f}/day close to target)."
+        elif pace_ratio <= 1.30:
+            p3_score = 55.0
+            p3_status = "fair"
+            p3_insight = f"Burn velocity is {int((pace_ratio - 1) * 100)}% faster than target allowance."
+        else:
+            p3_score = max(15.0, 45.0 - (pace_ratio - 1.3) * 30.0)
+            p3_status = "critical"
+            p3_insight = f"Accelerated burn pace ({pace_ratio * 100:.0f}% of target). Risk of month-end deficit."
+
+        pillar_3 = PillarScore(
+            name="Burn Stability",
+            score=round(p3_score, 1),
+            weight_pct=20,
+            benchmark_label="Burn Pace ≤ 85% of Limit",
+            status=p3_status,
+            insight=p3_insight,
+        )
+
+        # Pillar 4: Cash Flow Cushion (15%)
+        cushion_ratio = float(net_savings / max(Decimal("1.00"), total_spent))
+        if net_savings >= 0:
+            if cushion_ratio >= 0.50:
+                p4_score = 100.0
+                p4_status = "optimal"
+                p4_insight = "Excellent cushion; monthly surplus is over 50% of your living costs."
+            elif cushion_ratio >= 0.20:
+                p4_score = 85.0
+                p4_status = "good"
+                p4_insight = "Solid cash buffer; maintaining healthy positive monthly surplus."
+            else:
+                p4_score = 65.0
+                p4_status = "fair"
+                p4_insight = "Thin cash cushion; unplanned costs could flip your cash flow into negative."
+        else:
+            p4_score = max(10.0, 45.0 + cushion_ratio * 25.0)
+            p4_status = "critical"
+            p4_insight = "Cash flow deficit; living costs exceed incoming revenue this month."
+
+        pillar_4 = PillarScore(
+            name="Cash Cushion",
+            score=round(p4_score, 1),
+            weight_pct=15,
+            benchmark_label="Positive Surplus ≥ 20% of Spend",
+            status=p4_status,
+            insight=p4_insight,
+        )
+
+        # Pillar 5: Leak & Micro-Spending Control (15%)
+        leak_ratio = float(leak_monthly_total / max(Decimal("1.00"), total_spent) * 100)
+        if leak_monthly_total == 0:
+            p5_score = 95.0
+            p5_status = "optimal"
+            p5_insight = "Zero recurring subscriptions or micro-spending leaks detected."
+        elif leak_ratio <= 5.0:
+            p5_score = 90.0
+            p5_status = "optimal"
+            p5_insight = f"Minimal leak drain ({leak_ratio:.1f}% of total spend, ₹{leak_monthly_total:,.0f}/mo)."
+        elif leak_ratio <= 12.0:
+            p5_score = 75.0
+            p5_status = "good"
+            p5_insight = f"Moderate recurring leak drain ({leak_ratio:.1f}% of total spend, ₹{leak_monthly_total:,.0f}/mo)."
+        elif leak_ratio <= 25.0:
+            p5_score = 55.0
+            p5_status = "fair"
+            p5_insight = f"Elevated leak drain ({leak_ratio:.1f}% of spend, ₹{leak_monthly_total:,.0f}/mo)."
+        else:
+            p5_score = max(15.0, 40.0 - (leak_ratio - 25.0))
+            p5_status = "critical"
+            p5_insight = f"Heavy leak drain ({leak_ratio:.1f}% of spend). Micro-expenses are silently draining savings."
+
+        pillar_5 = PillarScore(
+            name="Leak Control",
+            score=round(p5_score, 1),
+            weight_pct=15,
+            benchmark_label="Leaks & Subs ≤ 5% of Spend",
+            status=p5_status,
+            insight=p5_insight,
+        )
+
+        pillars = [pillar_1, pillar_2, pillar_3, pillar_4, pillar_5]
+
+        # Composite Score (0-100)
+        composite = (
+            pillar_1.score * 0.25 +
+            pillar_2.score * 0.25 +
+            pillar_3.score * 0.20 +
+            pillar_4.score * 0.15 +
+            pillar_5.score * 0.15
+        )
+        composite_score = int(round(max(0.0, min(100.0, composite))))
+
+        # Tier classification
+        if composite_score >= 90:
+            tier = "elite"
+            tier_title = "Elite Wealth Builder"
+            default_summary = (
+                f"Outstanding financial discipline! With a {composite_score}/100 health score and "
+                f"{savings_rate:.1f}% savings rate, your wealth trajectory is top-tier."
+            )
+        elif composite_score >= 75:
+            tier = "healthy"
+            tier_title = "Financially Stable & Resilient"
+            default_summary = (
+                f"Strong financial foundation with a {composite_score}/100 health score. "
+                f"Your burn velocity is under control and cash flow remains positive."
+            )
+        elif composite_score >= 60:
+            tier = "vulnerable"
+            tier_title = "High Burn / Vulnerable"
+            default_summary = (
+                f"Your finances are under strain with a {composite_score}/100 health score. "
+                "Tightening budget limits and reducing micro-leaks will quickly lift your score."
+            )
+        else:
+            tier = "critical"
+            tier_title = "Cash Flow Deficit Alert"
+            default_summary = (
+                f"Warning: Financial health score is at {composite_score}/100. Current burn pace is exceeding incoming funds. "
+                "Immediate discretionary spending freeze is strongly recommended."
+            )
+
+        # Prioritized Score Boosters
+        boosters: List[ScoreBoosterAction] = []
+        sorted_pillars = sorted(pillars, key=lambda p: p.score)
+
+        for p in sorted_pillars:
+            if len(boosters) >= 3:
+                break
+            if p.name == "Savings Discipline" and p.score < 85:
+                boosters.append(ScoreBoosterAction(
+                    pillar="Savings Discipline",
+                    impact_points=8,
+                    action_text=f"Increase monthly net savings by ₹{max(Decimal('1000'), abs(net_savings) * Decimal('0.15')):,.0f} to approach the 20% benchmark.",
+                    category_hint="Savings",
+                ))
+            elif p.name == "Budget Adherence" and p.score < 85:
+                boosters.append(ScoreBoosterAction(
+                    pillar="Budget Adherence",
+                    impact_points=7,
+                    action_text="Set or adjust category budget limits to prevent unplanned overspending spikes.",
+                    category_hint="Budgets",
+                ))
+            elif p.name == "Leak Control" and p.score < 85:
+                boosters.append(ScoreBoosterAction(
+                    pillar="Leak Control",
+                    impact_points=6,
+                    action_text=f"Audit and cancel unused digital subscriptions to recover ₹{leak_monthly_total:,.0f}/mo.",
+                    category_hint="Subscriptions",
+                ))
+            elif p.name == "Burn Stability" and p.score < 85:
+                boosters.append(ScoreBoosterAction(
+                    pillar="Burn Stability",
+                    impact_points=5,
+                    action_text=f"Pace daily spending on {top_spending_category or 'discretionary purchases'} to stay under ₹{ideal_daily:,.0f}/day.",
+                    category_hint=top_spending_category or "Expenses",
+                ))
+            elif p.name == "Cash Cushion" and p.score < 85:
+                boosters.append(ScoreBoosterAction(
+                    pillar="Cash Cushion",
+                    impact_points=5,
+                    action_text="Direct at least 15% of your incoming income straight into savings before spending.",
+                    category_hint="Emergency Fund",
+                ))
+
+        # Fill default boosters if needed
+        if len(boosters) < 3:
+            boosters.append(ScoreBoosterAction(
+                pillar="Financial Habit",
+                impact_points=4,
+                action_text="Log your transactions daily via SMS scan or quick-entry to keep telemetry precise.",
+                category_hint="Habit",
+            ))
+
+        # Optional LLM refinement (Gemini/Groq/OpenAI) with fast timeout
+        summary_text = default_summary
+        provider_used = "deterministic_engine"
+
+        if self.api_key:
+            try:
+                system_prompt = (
+                    "You are Spendora's Chief Financial Health Analyst. Provide a concise, punchy 2-sentence "
+                    "executive diagnosis for the user's financial health score. Tone: empowering, analytical, actionable."
+                )
+                user_prompt = (
+                    f"Composite Score: {composite_score}/100 ({tier_title})\n"
+                    f"Monthly Income: ₹{total_income:,.0f}, Expenses: ₹{total_spent:,.0f}, Net Savings: ₹{net_savings:,.0f} ({savings_rate:.1f}%)\n"
+                    f"Pillars:\n" + "\n".join(f"- {p.name}: {p.score}/100 ({p.status})" for p in pillars)
+                )
+
+                if self.provider == "gemini":
+                    url = f"https://generativelanguage.googleapis.com/v1beta/models/{self.model}:generateContent?key={self.api_key}"
+                    async with httpx.AsyncClient(timeout=4.0) as client:
+                        resp = await client.post(
+                            url,
+                            json={
+                                "contents": [{"parts": [{"text": f"{system_prompt}\n\n{user_prompt}"}]}],
+                                "generationConfig": {"temperature": 0.3, "maxOutputTokens": 150},
+                            },
+                        )
+                        if resp.status_code == 200:
+                            data = resp.json()
+                            candidate = data.get("candidates", [{}])[0].get("content", {}).get("parts", [{}])[0].get("text")
+                            if candidate and len(candidate.strip()) > 20:
+                                summary_text = candidate.strip()
+                                provider_used = f"google-gemini-{self.model}"
+            except Exception as e:
+                logger.info(f"Health score LLM refinement skipped ({e}). Using deterministic summary.")
+
+        return FinancialHealthResponse(
+            composite_score=composite_score,
+            tier=tier,
+            tier_title=tier_title,
+            summary=summary_text,
+            pillars=pillars,
+            score_boosters=boosters[:3],
+            monthly_income=total_income,
+            monthly_spent=total_spent,
+            monthly_net_savings=net_savings,
+            savings_rate_pct=round(savings_rate, 1),
+            provider_used=provider_used,
+        )
+
+    # ── Feature 7: Smart Goal Runway & Acceleration Intelligence ─────────────
+    async def analyze_goals_runway(
+        self,
+        *,
+        goals: list,
+        monthly_surplus: Decimal,
+        top_discretionary_categories: Optional[List[dict]] = None,
+    ) -> GoalRunwayAnalysisResponse:
+        """
+        Analyze multi-goal funding requirements against the user's live monthly surplus.
+        Computes coverage ratio, gap alerts, and smart discretionary trade-off suggestions.
+        """
+        active_items: List[GoalRunwayAnalysisItem] = []
+        total_monthly_required = Decimal("0.00")
+
+        today = date.today()
+
+        for g in goals:
+            target = Decimal(str(g.target_amount))
+            current = Decimal(str(g.current_amount))
+            remaining = max(Decimal("0.00"), target - current)
+
+            if current >= target or g.status == "completed":
+                active_items.append(GoalRunwayAnalysisItem(
+                    goal_id=g.id,
+                    name=g.name,
+                    target_amount=target,
+                    current_amount=current,
+                    remaining_amount=Decimal("0.00"),
+                    target_date=g.target_date,
+                    required_monthly=Decimal("0.00"),
+                    projected_completion_date=today,
+                    pacing_status="completed",
+                    pacing_message="🎉 Goal completed!",
+                    speedup_suggestion=None,
+                ))
+                continue
+
+            if g.target_date:
+                days_diff = (g.target_date - today).days
+                if days_diff <= 0:
+                    req_m = remaining
+                    status_val = "behind"
+                    msg = "Deadline passed. Allocate surplus to close."
+                    proj_date = None
+                    speedup = f"Allocate ₹{remaining:,.0f} to finalize."
+                else:
+                    months_diff = max(Decimal("0.1"), Decimal(str(round(days_diff / 30.4375, 2))))
+                    req_m = Decimal(str(round(remaining / months_diff, 2)))
+                    total_monthly_required += req_m
+
+                    if monthly_surplus > 0:
+                        proj_date = today + timedelta(days=int(float(remaining / monthly_surplus) * 30.4375))
+                    else:
+                        proj_date = None
+
+                    if monthly_surplus >= req_m * Decimal("1.2"):
+                        status_val = "ahead"
+                        msg = "Ahead of schedule."
+                        speedup = "You have buffer to hit this goal earlier."
+                    elif monthly_surplus >= req_m:
+                        status_val = "on_track"
+                        msg = "On track with required monthly allocation."
+                        speedup = f"Maintain pace to finish by {g.target_date.strftime('%b %d, %Y')}."
+                    else:
+                        status_val = "at_risk"
+                        gap = req_m - monthly_surplus
+                        msg = f"Short by ₹{gap:,.0f}/mo."
+                        speedup = f"Reduce dining or entertainment by ₹{gap:,.0f}/mo."
+            else:
+                req_m = Decimal("0.00")
+                if monthly_surplus > 0:
+                    proj_date = today + timedelta(days=int(float(remaining / monthly_surplus) * 30.4375))
+                    status_val = "no_deadline"
+                    msg = "No deadline; progressing with surplus."
+                    speedup = "Setting a target deadline enables exact monthly pacing."
+                else:
+                    proj_date = None
+                    status_val = "no_deadline"
+                    msg = "Surplus is ₹0.00; needs income or expense cuts."
+                    speedup = "Trim discretionary spending to create savings runway."
+
+            active_items.append(GoalRunwayAnalysisItem(
+                goal_id=g.id,
+                name=g.name,
+                target_amount=target,
+                current_amount=current,
+                remaining_amount=remaining,
+                target_date=g.target_date,
+                required_monthly=req_m,
+                projected_completion_date=proj_date,
+                pacing_status=status_val,
+                pacing_message=msg,
+                speedup_suggestion=speedup,
+            ))
+
+        coverage_pct = (
+            float(monthly_surplus / total_monthly_required * 100)
+            if total_monthly_required > 0
+            else 100.0
+        )
+        is_fully_funded = monthly_surplus >= total_monthly_required
+
+        # Discretionary trade-off tip
+        disc_tip = None
+        if top_discretionary_categories and not is_fully_funded and total_monthly_required > 0:
+            top_cat = top_discretionary_categories[0]
+            cat_name = top_cat.get("category_name", "Dining / Shopping")
+            cat_spent = Decimal(str(top_cat.get("amount", "0.00")))
+            suggested_cut = min(cat_spent * Decimal("0.30"), total_monthly_required - monthly_surplus)
+            if suggested_cut > 100:
+                disc_tip = (
+                    f"Trimming 30% from '{cat_name}' (saving ₹{suggested_cut:,.0f}/mo) would cover "
+                    f"{float(suggested_cut / (total_monthly_required - monthly_surplus) * 100):.0f}% of your goal funding gap."
+                )
+
+        if is_fully_funded:
+            summary_txt = (
+                f"Your monthly net surplus of ₹{monthly_surplus:,.0f} comfortably funds all active goals "
+                f"(₹{total_monthly_required:,.0f}/mo required, {coverage_pct:.0f}% coverage)."
+            )
+        elif monthly_surplus > 0:
+            deficit = total_monthly_required - monthly_surplus
+            summary_txt = (
+                f"Your active goals require ₹{total_monthly_required:,.0f}/mo. At your current surplus of ₹{monthly_surplus:,.0f}/mo, "
+                f"you have a funding gap of ₹{deficit:,.0f}/mo ({coverage_pct:.0f}% coverage)."
+            )
+        else:
+            summary_txt = (
+                f"Your active goals require ₹{total_monthly_required:,.0f}/mo, but your current monthly cash flow is ₹0.00 or negative. "
+                "Cut non-essential expenses to generate positive savings runway."
+            )
+
+        return GoalRunwayAnalysisResponse(
+            monthly_surplus=monthly_surplus,
+            active_goals_count=len([g for g in active_items if g.pacing_status != "completed"]),
+            total_monthly_required=total_monthly_required,
+            surplus_coverage_pct=round(coverage_pct, 1),
+            is_fully_funded=is_fully_funded,
+            goals=active_items,
+            ai_runway_summary=summary_txt,
+            discretionary_reduction_tip=disc_tip,
+            provider_used="deterministic_runway_engine",
+        )
 
 
 # Singleton instance
