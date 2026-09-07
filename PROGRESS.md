@@ -440,6 +440,11 @@
 
 **Goal:** Eliminate deployment breakages on Render and Vercel, resolve container startup runtime exceptions, synchronize all environment requirements, and introduce client-side fallback resilience for uninterrupted UI availability.
 
+### Root Cause Analysis (Render Failure Incident)
+- **The Missing Import (`NameError`):** In `backend/app/services/ai_service.py`, `calculate_safe_to_spend` used `today: Optional[date] = None`. In Python 3.12 (Render's Docker image), class method type hints are evaluated at class creation time. Because `date` was imported locally inside the method body rather than at the top of the file, Python raised `NameError: name 'date' is not defined` and crashed on boot.
+- **The 404 Symptom:** When the new container crashed on startup, Render aborted the deployment and continued serving the previous working container (from Feature 2), which lacked `/api/v1/ai/safe-to-spend`, causing `404 Not Found` in the frontend dashboard.
+- **The Solution:** Added `from __future__ import annotations`, top-level `from datetime import date, datetime`, synchronized root `requirements.txt`, and made Dockerfiles context-agnostic. Added client-side fallback in `SafeToSpendCard.tsx` so the dashboard gauge never fails even during server restarts.
+
 ### Completed Tasks
 - [x] **Python 3.12 Type Annotation Fix:** Resolved `NameError: name 'date' is not defined` inside `calculate_safe_to_spend` by adding `from __future__ import annotations`, top-level `from datetime import date, datetime`, and `import calendar` in `backend/app/services/ai_service.py`.
 - [x] **Root Dependencies Synchronization:** Synced root `requirements.txt` with `backend/requirements.txt` ensuring all auth, security (`pyjwt`, `passlib`, `bcrypt`, `slowapi`), and AI dependencies are installed regardless of build context.
@@ -464,3 +469,4 @@
 | 8 | Transactional Email Provider Architecture | ✅ Resolved | 100% environment-driven hybrid system: Resend HTTP REST API for production, Gmail SMTP for local testing |
 | 9 | Password Recovery Mechanism | ✅ Resolved | 4-Digit Numeric OTP (1000–9999) with 10-minute expiry, user-salted SHA-256 storage, and 4-box interactive UI |
 | 10 | AI Intelligence Architecture | ✅ Resolved | Provider-agnostic engine (Gemini, OpenAI, Claude, Groq) with deterministic mathematical fallback engine |
+| 11 | Production Docker & Python 3.12 Type Evaluation | ✅ Resolved | Mandatory `from __future__ import annotations` and top-level imports; context-agnostic Dockerfile supporting root `.` and `./backend` |
