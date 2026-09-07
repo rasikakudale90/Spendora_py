@@ -16,23 +16,23 @@
 
 ### 1. Backend Architecture (5-Layer Pattern)
 `backend/app/`
-- **`routers/`**: HTTP endpoints (`categories.py`, `expenses.py`, `budgets.py` [GET, POST, PATCH, DELETE], `dashboard.py`, `api_router.py`)
-- **`services/`**: Business logic, multi-period budget threshold computations, category reassignment (`budget_service.py`, `dashboard_service.py`, `category_service.py`, `expense_service.py`)
-- **`repositories/`**: Raw async SQLAlchemy queries, pagination, search, aggregations (`budget_repository.py` with multi-period bounds, `category_repository.py`, `expense_repository.py`)
-- **`schemas/`**: Pydantic v2 schemas (`budget.py` with `period_type` bounds & `BudgetUpdate`, `expense.py` with past-or-today date validation)
-- **`models/`**: SQLAlchemy 2.0 ORM models (`Category`, `Expense`, `Budget` with `period_type`, `period_start`, `period_end`, `PaymentMode`)
+- **`routers/`**: HTTP endpoints (`categories.py`, `expenses.py`, `budgets.py`, `incomes.py`, `goals.py` [CRUD & contribute], `ai.py` [all 7 AI intelligence features], `auth.py`, `dashboard.py`, `api_router.py`)
+- **`services/`**: Business logic, multi-period budget threshold computations, runway forecasting, multi-provider AI engine (`goal_service.py`, `ai_service.py`, `income_service.py`, `budget_service.py`, `dashboard_service.py`, `category_service.py`, `expense_service.py`, `auth_service.py`, `email_service.py`)
+- **`repositories/`**: Raw async SQLAlchemy queries, pagination, search, aggregations (`goal_repository.py`, `income_repository.py`, `budget_repository.py`, `category_repository.py`, `expense_repository.py`, `dashboard_repository.py`, `user_repository.py`)
+- **`schemas/`**: Pydantic v2 schemas (`goal.py`, `ai.py` [7 AI features], `budget.py`, `expense.py`, `income.py`, `auth.py`)
+- **`models/`**: SQLAlchemy 2.0 ORM models (`Category`, `Expense`, `Budget`, `Income`, `Goal`, `User`, `RefreshToken`, `PasswordResetToken`)
 - **`core/`**: Configuration (`config.py` with auto-normalizing `DATABASE_URL` validator) and async engine (`database.py` with `statement_cache_size=0` for Supabase poolers)
 
 ### 2. Frontend Architecture
 `frontend/`
-- **`app/`**: Next.js App Router (`/` Landing redirect, `/dashboard` Full analytics & modals, `/expenses` Filtering & pagination table, `manifest.ts` PWA manifest)
-- **`components/`**: Modular UI components (`Button`, `Card`, `Badge`, `Dialog`, `LoadingSkeleton`, `EmptyState`, `Hero3D`, `ExpenseFormModal`, `BudgetManagerModal` [with Weekly/Monthly/Yearly tabs, Edit & Delete], `CategoryModal`, `PwaRegister` [Install banner & offline toasts])
-- **`lib/`**: Type-safe HTTP client (`api.ts` with full CRUD for expenses, budgets, categories), Zod validation schemas (`schemas.ts`), utils (`utils.ts`)
+- **`app/`**: Next.js App Router (`/` Landing redirect, `/dashboard` Full analytics, SafeToSpend & FinancialHealth scorecards, `/expenses` Filtering & pagination, `/income` Management, `/goals` Savings runway & milestones, `manifest.ts` PWA manifest)
+- **`components/`**: Modular UI components (`FinancialHealthCard` [Spider Radar], `SafeToSpendCard` [Speedometer], `GoalFormModal`, `GoalContributeModal`, `FinancialAssistantWidget` [AI Chat], `SmartTransactionScannerModal` [SMS/Receipt], `PurchaseSimulatorModal`, `LeakHunterModal`, `Button`, `Card`, `Badge`, `Dialog`, `LoadingSkeleton`, `EmptyState`, `Hero3D`, `BudgetManagerModal`, `CategoryModal`, `PwaRegister`)
+- **`lib/`**: Type-safe HTTP client (`api.ts` with full CRUD for expenses, budgets, categories, incomes, goals, and 7 AI endpoints), Zod validation schemas (`schemas.ts`), utils (`utils.ts`)
 - **`public/`**: Progressive Web App assets (`sw.js` Service Worker with offline caching, `manifest.json`, `icons/` standard 192/512px & maskable adaptive icons, vector SVG icons)
 
 ### 3. Database & Migrations
 - **Alembic:** Located in `backend/alembic/`. Migrations read `DATABASE_URL` dynamically from environment.
-  - Migration `d5e1b2f3a4b5_add_budget_period_types.py` added `period_type` (`weekly`, `monthly`, `yearly`), `period_start`, `period_end`, check constraint, and composite unique indexes.
+  - Migration `b2c3d4e5f6a7_add_goals_table.py` added `goals` table with foreign key to `users(id)`, positive amount checks, and status indexes.
 - **Seeding:** Automatically checks and seeds standard starter categories on lifespan startup if empty.
 - **Enums & Formats:** `PaymentMode` (`Cash`, `Card`, `UPI`, `Net Banking`, `Other`). `period_type` (`daily`, `weekly`, `monthly`, `yearly`). `period_start` and `period_end` are ISO date objects. Remaining balances clamped to `>= 0.00`.
 

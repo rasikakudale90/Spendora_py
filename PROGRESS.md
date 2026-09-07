@@ -487,3 +487,4 @@
 | 9 | Password Recovery Mechanism | ✅ Resolved | 4-Digit Numeric OTP (1000–9999) with 10-minute expiry, user-salted SHA-256 storage, and 4-box interactive UI |
 | 10 | AI Intelligence Architecture | ✅ Resolved | Provider-agnostic engine (Gemini, OpenAI, Claude, Groq) with deterministic mathematical fallback engine |
 | 11 | Production Docker & Python 3.12 Type Evaluation | ✅ Resolved | Mandatory `from __future__ import annotations` and top-level imports; context-agnostic Dockerfile supporting root `.` and `./backend` |
+| 12 | Financial Health Scoring & Smart Goals Architecture | ✅ Resolved | 5-weighted pillars (Savings 25%, Budgets 25%, Burn 20%, Cushion 15%, Leaks 15%) + dedicated `goals` table with deposit/withdraw contribution tracking and cash flow surplus runway acceleration |
