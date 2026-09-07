@@ -67,17 +67,20 @@ Spendora uses a **hybrid dual-engine architecture**:
 
 ---
 
-### 4. 💬 Natural Language Financial Assistant & Conversational Chatbot
+### 4. 💬 RAG-Powered Conversational Financial Advisor & Natural Language Assistant
 - **Endpoints:** `POST /api/v1/ai/chat`
-- **Backend Service:** `chat_financial_advisor()` in `backend/app/services/ai_service.py`
+- **Backend Architecture:** In-Database RAG Pipeline (`routers/ai.py`) + `chat_financial_advisor()` (`services/ai_service.py`)
 - **Frontend Component:** `frontend/components/FinancialAssistantWidget.tsx`
 - **Placement:** Floating bottom-right glassmorphic widget mounted globally in `app/layout.tsx`.
-- **Description:** Real-time personal financial advisor connected directly to the user's live telemetry (income, spending, active budgets, top categories, and safe burn rate).
+- **Description:** Context-grounded conversational personal financial advisor powered by an in-database Retrieval-Augmented Generation (RAG) engine that answers custom inquiries regarding the user's specific financial history, merchants, category budgets, goals, and incomes.
 - **Key Capabilities:**
-  - Answers natural language questions (*"How much can I spend this weekend?"*, *"Where is most of my money going?"*, *"Can I afford a ₹4,000 dinner tonight?"*).
-  - Markdown-rendered responses with bold financial metrics, bullet points, and tips.
-  - Suggested contextual quick prompts.
-  - Actionable intents that automatically trigger native modals (e.g. opening Purchase Simulator or SMS Scanner directly from chat).
+  - **Dynamic Entity & Temporal Extraction:** Parses merchant keywords (*Starbucks, Amazon, Swiggy, Uber*), categories (*Groceries, Dining*), temporal bounds (*today, yesterday, this month, last month*), and domain intents (*goals, budgets, income, affordability*).
+  - **Multi-Store In-Database Retrieval (Zero Vector DB cost, 100% Free-Tier):** Directly queries PostgreSQL using tenant-isolated (`current_user.id`) filters across expenses, category budgets, savings goals, and income cash flows.
+  - **Targeted Merchant & Transaction Breakdown:** Answers specific merchant queries (*"How much did I spend on Starbucks this month?"*) with exact transaction counts, total sums, and itemized markdown tables.
+  - **Zero-Match Awareness:** Clearly notifies users when 0 matching expenses exist for a queried item (*"I searched your records for 'Rolex' but found no matching expenses"*) with an option to log it.
+  - **Active Savings Goals & Runway Status:** Automatically details goal progress %, current saved amounts, and remaining runway.
+  - **Budget Breach & Overspending Alerts:** Identifies breached and near-limit budgets in real time with 1-click action triggers.
+  - **Dual-Engine RAG Execution:** Enriches LLM prompts (Gemini, OpenAI, Groq, Claude) with verified ground-truth knowledge while providing a 100% offline-ready deterministic RAG fallback engine.
 
 ---
 

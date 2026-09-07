@@ -26,8 +26,8 @@ import { cn } from "@/lib/utils";
 const STARTER_PROMPTS = [
   { label: "Safe to Spend?", query: "What is my safe daily spending limit for today?" },
   { label: "Top Category", query: "Which category is draining most of my money this month?" },
-  { label: "Savings Rate", query: "How much did I save this month and what is my savings rate?" },
-  { label: "3 Tips to Save", query: "Give me 3 personalized tips to save money right now." },
+  { label: "Savings Goals", query: "What are my active savings goals and progress?" },
+  { label: "Budget Alerts", query: "Did I exceed or come close to any budgets this month?" },
 ];
 
 export function FinancialAssistantWidget() {
@@ -216,15 +216,36 @@ export function FinancialAssistantWidget() {
           // Table row
           if (trimmed.startsWith("|") && trimmed.endsWith("|")) {
             const cells = trimmed.split("|").filter((c) => c.trim().length > 0);
+            if (cells.length === 2) {
+              return (
+                <div key={idx} className="grid grid-cols-2 gap-2 p-1.5 rounded-lg bg-slate-200/50 dark:bg-white/5 text-xs">
+                  {cells.map((cell, cIdx) => (
+                    <span
+                      key={cIdx}
+                      className={cIdx === 0 ? "text-muted-foreground font-medium" : "text-foreground font-bold text-right"}
+                      dangerouslySetInnerHTML={{ __html: formatInline(cell.trim()) }}
+                    />
+                  ))}
+                </div>
+              );
+            }
             return (
-              <div key={idx} className="grid grid-cols-2 gap-2 p-1.5 rounded-lg bg-slate-200/50 dark:bg-white/5 text-xs">
-                {cells.map((cell, cIdx) => (
-                  <span
-                    key={cIdx}
-                    className={cIdx === 0 ? "text-muted-foreground font-medium" : "text-foreground font-bold text-right"}
-                    dangerouslySetInnerHTML={{ __html: formatInline(cell.trim()) }}
-                  />
-                ))}
+              <div key={idx} className="overflow-x-auto my-1">
+                <div
+                  className="grid gap-2 p-1.5 rounded-lg bg-slate-200/50 dark:bg-white/5 text-xs min-w-[280px]"
+                  style={{ gridTemplateColumns: `repeat(${cells.length}, minmax(0, 1fr))` }}
+                >
+                  {cells.map((cell, cIdx) => (
+                    <span
+                      key={cIdx}
+                      className={cn(
+                        "truncate",
+                        cIdx === 0 ? "font-semibold text-foreground" : "text-muted-foreground text-right"
+                      )}
+                      dangerouslySetInnerHTML={{ __html: formatInline(cell.trim()) }}
+                    />
+                  ))}
+                </div>
               </div>
             );
           }

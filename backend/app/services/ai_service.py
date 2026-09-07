@@ -662,7 +662,21 @@ class AIService:
         recent_expenses = context.get("recent_expenses", [])
         active_budgets = context.get("active_budgets", [])
 
-        # ── Deterministic NLP Fallback Engine ──
+        # RAG Retrieved Records & Metadata
+        matched_expenses = context.get("matched_expenses")
+        matched_category = context.get("matched_category")
+        highest_expense = context.get("highest_expense")
+        breached_budgets = context.get("breached_budgets", [])
+        near_limit_budgets = context.get("near_limit_budgets", [])
+        goals = context.get("goals", [])
+        incomes_list = context.get("incomes_list", [])
+        income_sources = context.get("income_sources", {})
+        query_metadata = context.get("query_metadata", {})
+        search_term = query_metadata.get("search_term")
+        temporal_label = query_metadata.get("temporal_label")
+        intents = query_metadata.get("intents", {})
+
+        # ── Deterministic RAG Fallback Engine ──
         def deterministic_chat_response() -> Dict[str, Any]:
             msg_lower = message.strip().lower()
             reply = ""
@@ -670,7 +684,7 @@ class AIService:
             suggested = [
                 "What is my daily safe spending limit?",
                 "Which category is my biggest expense?",
-                "How much have I saved this month?",
+                "What are my active savings goals?",
             ]
 
             # 1. Affordability / Buying simulation intent
@@ -730,8 +744,260 @@ class AIService:
                     "How much did I spend this month?",
                 ]
 
-            # 2. Daily safe burn / Safe-to-spend intent
-            elif any(k in msg_lower for k in ["safe to spend", "daily limit", "burn rate", "safe spend", "per day", "today"]):
+            # 2. Targeted Merchant / Expense Search Query (RAG Result)
+            elif matched_expenses is not None:
+                term = matched_expenses.get("search_term", "query")
+                m_count = matched_expenses.get("count", 0)
+                m_total = Decimal(str(matched_expenses.get("total_amount", 0.0)))
+                m_items = matched_expenses.get("items", [])
+
+                if m_count > 0:
+                    item_rows = "\n".join([
+                        f"| {it.get('expense_date')} | {it.get('title')} | ₹{Decimal(str(it.get('amount', 0))):,.2f} | {it.get('category_name', 'General')} |"
+                        for it in m_items[:10]
+                    ])
+                    reply = (
+                        f"### 🔍 Search Results: **{term.title()}**\n\n"
+                        f"You have spent a total of **₹{m_total:,.2f}** across **{m_count}** transaction(s) for **{term.title()}**.\n\n"
+                        f"| Date | Description | Amount | Category |\n"
+                        f"| :--- | :--- | :--- | :--- |\n"
+                        f"{item_rows}\n\n"
+                        f"💡 *Average per transaction:* ₹{(m_total / Decimal(str(m_count))):,.2f}"
+                    )
+                    action_intent = {
+                        "action": "navigate",
+                        "label": f"View All '{term.title()}' Expenses",
+                        "payload": {"path": "/expenses"},
+                    }
+                else:
+                    reply = (
+                        f"### 🔍 Search Results: **{term.title()}**\n\n"
+                        f"I searched your transaction records for **'{term}'**, but found **no recorded expenses** matching this name.\n\n"
+                        f"- **Filters Checked:** Expense titles and notes.\n"
+                        f"- **Tip:** If you recently made this purchase, you can log it quickly via the **+ Add Expense** button or scan a receipt/SMS."
+                    )
+                    action_intent = {
+                        "action": "navigate",
+                        "label": "Log New Expense",
+                        "payload": {"path": "/expenses"},
+                    }
+
+                suggested = [
+                    "What is my daily safe spending limit?",
+                    "Which category is my biggest expense?",
+                    "Show my recent transactions",
+                ]
+
+            # 3. Targeted Category Drill-Down (RAG Result)
+            elif matched_category is not None:
+                cat_name = matched_category["name"]
+                cat_spent = Decimal(str(matched_category.get("total_spent", 0.0)))
+                cat_count = matched_category.get("count", 0)
+                cat_budget = matched_category.get("budget_amount")
+                cat_items = matched_category.get("items", [])
+
+                budget_info = ""
+                if cat_budget:
+                    b_amt = Decimal(str(cat_budget))
+                    pct_used = ((cat_spent / b_amt) * 100) if b_amt > 0 else 0
+                    if cat_spent > b_amt:
+                        budget_info = f"- **Budget Status:** 🛑 **Over Budget!** (₹{cat_spent:,.2f} of ₹{b_amt:,.2f}, **{pct_used:.1f}%** used — exceeded by ₹{cat_spent - b_amt:,.2f})\n"
+                    else:
+                        budget_info = f"- **Budget Status:** 🟢 On Track (₹{cat_spent:,.2f} of ₹{b_amt:,.2f}, **{pct_used:.1f}%** used — ₹{b_amt - cat_spent:,.2f} remaining)\n"
+                else:
+                    budget_info = "- **Budget Status:** No dedicated budget set for this category.\n"
+
+                items_preview = ""
+                if cat_items:
+                    preview_lines = "\n".join([
+                        f"- **{it.get('title')}:** ₹{Decimal(str(it.get('amount', 0))):,.2f} on {it.get('expense_date')}"
+                        for it in cat_items[:5]
+                    ])
+                    items_preview = f"\n\n**Recent {cat_name} Transactions:**\n{preview_lines}"
+
+                reply = (
+                    f"### 🏷️ Category Spending: **{cat_name}**\n\n"
+                    f"You have spent **₹{cat_spent:,.2f}** on **{cat_name}** across **{cat_count}** transaction(s) this month.\n\n"
+                    f"{budget_info}"
+                    f"- **Share of Total Monthly Spending:** {((cat_spent / total_spent * 100) if total_spent > 0 else 0):.1f}%\n"
+                    f"{items_preview}"
+                )
+                action_intent = {
+                    "action": "navigate",
+                    "label": f"View {cat_name} in Expenses",
+                    "payload": {"path": "/expenses"},
+                }
+                suggested = [
+                    "What is my daily safe spending limit?",
+                    "Did I exceed any budget this month?",
+                    "Where can I cut down expenses?",
+                ]
+
+            # 4. Savings Goals & Runway Inquiry (RAG Result)
+            elif intents.get("is_goal") or any(k in msg_lower for k in ["goal", "goals", "target", "milestone", "runway", "save for", "emergency fund"]):
+                if goals:
+                    goal_rows = "\n".join([
+                        f"| {g.get('name')} | ₹{Decimal(str(g.get('target_amount', 0))):,.2f} | ₹{Decimal(str(g.get('current_amount', 0))):,.2f} | {g.get('progress_pct', 0):.1f}% | ₹{Decimal(str(g.get('remaining', 0))):,.2f} |"
+                        for g in goals
+                    ])
+                    reply = (
+                        f"### 🎯 Active Savings Goals & Milestones\n\n"
+                        f"You currently have **{len(goals)}** active financial goal(s):\n\n"
+                        f"| Goal Name | Target | Saved | Progress | Remaining |\n"
+                        f"| :--- | :--- | :--- | :--- | :--- |\n"
+                        f"{goal_rows}\n\n"
+                        f"- **Monthly Net Savings:** **₹{net_savings:,.2f}** available to allocate towards your milestones.\n"
+                        f"💡 *Tip: Regular contributions help keep your goal timelines on track.*"
+                    )
+                    action_intent = {
+                        "action": "navigate",
+                        "label": "Open Goals & Runway Dashboard",
+                        "payload": {"path": "/goals"},
+                    }
+                else:
+                    reply = (
+                        f"### 🎯 Savings Goals\n\n"
+                        f"You haven't set up any financial goals in Spendora yet.\n\n"
+                        f"Setting clear goals (like an **Emergency Fund**, **Vacation**, or **Tech Upgrade**) allows Spendora AI to calculate your projected runway and recommend discretionary cuts."
+                    )
+                    action_intent = {
+                        "action": "navigate",
+                        "label": "Create Your First Goal",
+                        "payload": {"path": "/goals"},
+                    }
+
+                suggested = [
+                    "How much have I saved this month?",
+                    "What is my daily safe spending limit?",
+                    "Which category is my biggest expense?",
+                ]
+
+            # 5. Budgets & Breach Alerts (RAG Result)
+            elif intents.get("is_budget") or any(k in msg_lower for k in ["budget", "budgets", "limit", "exceed", "breach", "over budget", "threshold", "overspent"]):
+                if breached_budgets:
+                    b_rows = "\n".join([
+                        f"| {b.get('category')} | ₹{Decimal(str(b.get('amount', 0))):,.2f} | ₹{Decimal(str(b.get('spent', 0))):,.2f} | +₹{Decimal(str(b.get('spent', 0))) - Decimal(str(b.get('amount', 0))):,.2f} |"
+                        for b in breached_budgets
+                    ])
+                    reply = (
+                        f"### ⚠️ Budget Breach Alert\n\n"
+                        f"You have exceeded your limit in **{len(breached_budgets)}** budget(s) this month:\n\n"
+                        f"| Category | Limit | Spent | Over By |\n"
+                        f"| :--- | :--- | :--- | :--- |\n"
+                        f"{b_rows}\n\n"
+                        f"💡 *Recommendation: Pause discretionary spending in these categories or increase your budget limits.*"
+                    )
+                    action_intent = {
+                        "action": "set_budget",
+                        "label": "Manage Budgets",
+                        "payload": {},
+                    }
+                elif near_limit_budgets:
+                    b_rows = "\n".join([
+                        f"| {b.get('category')} | ₹{Decimal(str(b.get('amount', 0))):,.2f} | ₹{Decimal(str(b.get('spent', 0))):,.2f} | {b.get('utilization_pct', 0):.1f}% |"
+                        for b in near_limit_budgets
+                    ])
+                    reply = (
+                        f"### 🟡 Near-Limit Budget Warning\n\n"
+                        f"You are approaching your threshold in **{len(near_limit_budgets)}** budget(s) (>80% consumed):\n\n"
+                        f"| Category | Limit | Spent | Utilization |\n"
+                        f"| :--- | :--- | :--- | :--- |\n"
+                        f"{b_rows}\n\n"
+                        f"Your daily safe burn limit is **₹{daily_safe_spend:,.2f}/day** for the next {days_remaining} days."
+                    )
+                    action_intent = {
+                        "action": "set_budget",
+                        "label": "Review Budgets",
+                        "payload": {},
+                    }
+                elif active_budgets:
+                    b_rows = "\n".join([
+                        f"- **{b.get('category')}:** ₹{Decimal(str(b.get('spent', 0))):,.2f} / ₹{Decimal(str(b.get('amount', 0))):,.2f} ({b.get('utilization_pct', 0):.1f}% used)"
+                        for b in active_budgets
+                    ])
+                    reply = (
+                        f"### 🟢 Budget Health: All Budgets On Track\n\n"
+                        f"All of your active budgets are currently within safe thresholds:\n\n"
+                        f"{b_rows}\n\n"
+                        f"Great job staying disciplined with your planned spending!"
+                    )
+                    action_intent = {
+                        "action": "set_budget",
+                        "label": "Open Budget Manager",
+                        "payload": {},
+                    }
+                else:
+                    reply = (
+                        f"### 📋 Active Budgets\n\n"
+                        f"You haven't configured any category or overall budgets for this period yet.\n\n"
+                        f"Setting budgets helps Spendora notify you before overspending happens."
+                    )
+                    action_intent = {
+                        "action": "set_budget",
+                        "label": "Set a Budget Now",
+                        "payload": {},
+                    }
+
+                suggested = [
+                    "What is my daily safe spending limit?",
+                    "Where did most of my money go?",
+                    "Can I afford dinner for ₹1,200?",
+                ]
+
+            # 6. Income & Cash Flow / Earnings (RAG Result)
+            elif intents.get("is_income") or any(k in msg_lower for k in ["income", "salary", "earned", "earning", "cash inflow", "paycheck", "freelance", "savings", "saved", "cash flow", "save"]):
+                source_rows = ""
+                if income_sources:
+                    source_lines = [
+                        f"- **{src}:** ₹{Decimal(str(amt)):,.2f}"
+                        for src, amt in income_sources.items()
+                    ]
+                    source_rows = "\n\n**Income Sources (This Month):**\n" + "\n".join(source_lines)
+
+                reply = (
+                    f"### 💰 Monthly Income & Cash Flow Snapshot\n\n"
+                    f"- **Total Monthly Inflows:** **₹{total_income:,.2f}**\n"
+                    f"- **Total Monthly Outflows:** ₹{total_spent:,.2f}\n"
+                    f"- **Net Cash Flow (Savings):** **₹{net_savings:,.2f}**\n"
+                    f"- **Savings Rate:** **{savings_rate:.1f}%**"
+                    f"{source_rows}\n\n"
+                    f"{'🎉 Excellent! You are maintaining a healthy savings rate above 20%.' if savings_rate >= 20 else '💡 Aiming for a 20% savings rate (₹' + f'{(total_income * Decimal(0.2)):,.2f}) will strengthen your financial safety net.' if total_income > 0 else 'Record your income in the Income tab to track your net savings rate.'}"
+                )
+                action_intent = {
+                    "action": "navigate",
+                    "label": "View Incomes Table",
+                    "payload": {"path": "/income"},
+                }
+                suggested = [
+                    "Where is most of my money going?",
+                    "What is my safe daily limit?",
+                    "What are my savings goals?",
+                ]
+
+            # 7. Highest Single Expense (RAG Result)
+            elif intents.get("is_highest") or any(k in msg_lower for k in ["highest expense", "biggest expense", "largest expense", "maximum expense", "most expensive"]):
+                if highest_expense:
+                    reply = (
+                        f"### 🏷️ Highest Recorded Expense\n\n"
+                        f"Your largest single purchase this month is **{highest_expense.get('title')}** at **₹{Decimal(str(highest_expense.get('amount', 0))):,.2f}** on **{highest_expense.get('expense_date')}** ({highest_expense.get('category_name', 'General')}).\n\n"
+                        f"- **Share of Monthly Total:** {((Decimal(str(highest_expense.get('amount', 0))) / total_spent * 100) if total_spent > 0 else 0):.1f}%\n"
+                    )
+                elif top_categories:
+                    top_one = top_categories[0]
+                    reply = (
+                        f"### 📊 Biggest Outflow Category\n\n"
+                        f"Your highest spending category this month is **{top_one.get('name')}** at **₹{Decimal(str(top_one.get('spent', 0))):,.2f}** ({top_one.get('percentage', 0):.1f}% of all spending)."
+                    )
+                else:
+                    reply = "No expenses recorded for this month yet."
+                suggested = [
+                    "What is my daily safe spending limit?",
+                    "Show my recent transactions",
+                    "Give me 3 tips to save money",
+                ]
+
+            # 8. Daily safe burn / Safe-to-spend intent
+            elif any(k in msg_lower for k in ["safe to spend", "daily limit", "burn rate", "safe spend", "per day"]):
                 reply = (
                     f"### 🎯 Live Daily Safe-to-Spend Allowance\n\n"
                     f"You can safely spend **₹{daily_safe_spend:,.2f}/day** for the remaining **{days_remaining} days** of this month.\n\n"
@@ -748,7 +1014,7 @@ class AIService:
                     "Show my recent transactions",
                 ]
 
-            # 3. Top categories / Where did money go
+            # 9. Top categories / Where did money go
             elif any(k in msg_lower for k in ["top category", "highest", "biggest", "where did my money", "category", "categories", "drain"]):
                 if top_categories:
                     cat_rows = "\n".join([
@@ -770,23 +1036,7 @@ class AIService:
                     "Give me 3 tips to save money",
                 ]
 
-            # 4. Income / Savings / Net cash flow
-            elif any(k in msg_lower for k in ["income", "salary", "earned", "savings", "saved", "cash flow", "save"]):
-                reply = (
-                    f"### 💰 Monthly Income & Cash Flow Snapshot\n\n"
-                    f"- **Total Monthly Income:** ₹{total_income:,.2f}\n"
-                    f"- **Total Monthly Outflows:** ₹{total_spent:,.2f}\n"
-                    f"- **Net Cash Flow (Savings):** **₹{net_savings:,.2f}**\n"
-                    f"- **Savings Rate:** **{savings_rate:.1f}%**\n\n"
-                    f"{'🎉 Excellent! You are maintaining a healthy savings rate above 20%.' if savings_rate >= 20 else '💡 Aiming for a 20% savings rate (₹' + f'{(total_income * Decimal(0.2)):,.2f}) will strengthen your emergency fund.' if total_income > 0 else 'Record your income in the Income tab to track your net savings rate.'}"
-                )
-                suggested = [
-                    "Where is most of my money going?",
-                    "What is my safe daily limit?",
-                    "Check for recurring subscription leaks",
-                ]
-
-            # 5. Spending / Outflows query
+            # 10. Spending / Outflows query
             elif any(k in msg_lower for k in ["spent", "spending", "outflow", "expenses this month", "how much did i spend"]):
                 reply = (
                     f"### 💳 Spending Summary (Current Month)\n\n"
@@ -804,7 +1054,7 @@ class AIService:
                     "Check for subscription leaks",
                 ]
 
-            # 6. Subscription / Leak Hunter query
+            # 11. Subscription / Leak Hunter query
             elif any(k in msg_lower for k in ["leak", "subscription", "recurring", "audit", "netflix", "spotify", "gym"]):
                 reply = (
                     f"### 🔍 Recurring Subscriptions & Leak Audit\n\n"
@@ -822,7 +1072,7 @@ class AIService:
                     "Where did most of my money go?",
                 ]
 
-            # 7. Recent Transactions query
+            # 12. Recent Transactions query
             elif any(k in msg_lower for k in ["recent", "transactions", "latest expense", "last expense", "history"]):
                 if recent_expenses:
                     tx_rows = "\n".join([
@@ -847,7 +1097,7 @@ class AIService:
                     "Which category is my biggest expense?",
                 ]
 
-            # 8. Tips / Advice
+            # 13. Tips / Advice
             elif any(k in msg_lower for k in ["tip", "tips", "advice", "help", "reduce", "cut", "save money", "budgeting"]):
                 top_name = top_categories[0].get("name") if top_categories else "discretionary spending"
                 reply = (
@@ -862,21 +1112,26 @@ class AIService:
                     "How much did I save this month?",
                 ]
 
-            # 9. Default Overview / General greeting
+            # 14. Intelligent Data-Grounded Default (Synthesizes live data instead of generic canned greeting)
             else:
+                top_line = f"- **Top Outflow Category:** {top_categories[0].get('name')} (₹{Decimal(str(top_categories[0].get('spent', 0))):,.2f})\n" if top_categories else ""
+                goal_line = f"- **Active Goal:** {goals[0].get('name')} is at {goals[0].get('progress_pct', 0):.1f}% progress\n" if goals else ""
+                high_line = f"- **Largest Single Purchase:** {highest_expense.get('title')} (₹{Decimal(str(highest_expense.get('amount', 0))):,.2f})\n" if highest_expense else ""
+
                 reply = (
-                    f"👋 **Hello! I am Spendora AI, your personal financial assistant.**\n\n"
-                    f"Here is your live financial snapshot for this month:\n\n"
-                    f"- **Total Income:** ₹{total_income:,.2f}\n"
-                    f"- **Total Spent:** ₹{total_spent:,.2f}\n"
-                    f"- **Net Savings:** ₹{net_savings:,.2f} ({savings_rate:.1f}% savings rate)\n"
-                    f"- **Daily Safe Spending Limit:** **₹{daily_safe_spend:,.2f}/day** ({days_remaining} days left)\n\n"
-                    f"How can I assist you with your money today?"
+                    f"👋 **Hello! Here is your live financial snapshot:**\n\n"
+                    f"- **Monthly Inflow:** ₹{total_income:,.2f} | **Spent:** ₹{total_spent:,.2f}\n"
+                    f"- **Net Cash Flow (Savings):** **₹{net_savings:,.2f}** ({savings_rate:.1f}% savings rate)\n"
+                    f"- **Daily Safe Spending Limit:** **₹{daily_safe_spend:,.2f}/day** ({days_remaining} days left)\n"
+                    f"{top_line}"
+                    f"{goal_line}"
+                    f"{high_line}\n"
+                    f"You can ask me about specific merchants (e.g. *'How much did I spend on Starbucks?'*), category budgets, savings goals, or purchase feasibility!"
                 )
                 suggested = [
                     "What is my daily safe spending limit?",
                     "Which category is my biggest expense?",
-                    "Can I afford dinner for ₹1,500?",
+                    "What are my active savings goals?",
                 ]
 
             return {
@@ -890,23 +1145,30 @@ class AIService:
                     "savings_rate_pct": savings_rate,
                     "daily_safe_spend": float(daily_safe_spend),
                     "days_remaining": days_remaining,
+                    "search_term": search_term,
+                    "matched_count": matched_expenses.get("count", 0) if matched_expenses else None,
                 },
-                "provider_used": "deterministic-financial-engine",
+                "provider_used": "deterministic-rag-engine",
             }
 
-        # If no API key configured, use deterministic NLP assistant immediately
+        # If no API key configured, use deterministic RAG engine immediately
         if not self.api_key:
             return deterministic_chat_response()
 
-        # Build prompt with live context for LLM
+        # Build prompt with RAG-grounded live context for LLM
         system_prompt = (
             "You are Spendora's intelligent, empathetic, and highly analytical AI Financial Assistant. "
-            "You have direct access to the user's live financial data (all currency in INR ₹).\n"
+            "You are powered by a Retrieval-Augmented Generation (RAG) engine with direct access to the user's verified database records (all currency in INR ₹).\n"
             "Guidelines:\n"
             "- Speak naturally, professionally, and concisely in clean Markdown formatting.\n"
-            "- Always use the exact financial numbers provided in the context.\n"
+            "- Always ground your answers in the exact financial facts provided in the 'retrieved_knowledge' and 'financial_telemetry' context.\n"
+            "- If the user asks about a specific merchant, store, item, or transaction, cite the exact total amount spent, transaction count, and list individual purchases with dates, amounts, and category.\n"
+            "- If 0 matching expenses were found for a searched merchant/term, explicitly state that you searched their records and found no matching expenses for that term.\n"
+            "- When asked about savings goals, cite their goal names, target amounts, current saved amounts, and percentage progress.\n"
+            "- When asked about budgets or overspending, cite active budget limits, spent amounts, and whether any category is breached or near limit.\n"
+            "- When asked about income or cash flow, detail their income sources, total earnings, and net cash flow.\n"
             "- When users ask about buying something, evaluate their cash flow and safe daily spend.\n"
-            "- Give practical, encouraging budgeting and wealth-building tips.\n"
+            "- Format lists with Markdown tables, bullet points, and bold figures.\n"
             "- Output your response STRICTLY as a valid JSON object with the following schema:\n"
             "{\n"
             '  "reply": "Markdown formatted string with clear headings, bullet points, and tables if useful",\n'
@@ -916,16 +1178,28 @@ class AIService:
         )
 
         user_context_str = json.dumps({
-            "total_monthly_income": f"₹{total_income:,.2f}",
-            "total_monthly_spent": f"₹{total_spent:,.2f}",
-            "net_monthly_savings": f"₹{net_savings:,.2f}",
-            "savings_rate_percentage": f"{savings_rate:.1f}%",
-            "daily_safe_spend_limit": f"₹{daily_safe_spend:,.2f}/day",
-            "days_remaining_in_month": days_remaining,
-            "overall_monthly_budget": f"₹{Decimal(str(overall_budget)):,.2f}" if overall_budget else "Not Set",
-            "top_spending_categories": top_categories,
-            "recent_expenses": recent_expenses[:5],
-            "active_budgets": active_budgets,
+            "financial_telemetry": {
+                "total_monthly_income": f"₹{total_income:,.2f}",
+                "total_monthly_spent": f"₹{total_spent:,.2f}",
+                "net_monthly_savings": f"₹{net_savings:,.2f}",
+                "savings_rate_percentage": f"{savings_rate:.1f}%",
+                "daily_safe_spend_limit": f"₹{daily_safe_spend:,.2f}/day",
+                "days_remaining_in_month": days_remaining,
+                "overall_monthly_budget": f"₹{Decimal(str(overall_budget)):,.2f}" if overall_budget else "Not Set",
+                "top_spending_categories": top_categories,
+                "recent_expenses": recent_expenses[:5],
+                "highest_single_expense": highest_expense,
+            },
+            "retrieved_knowledge": {
+                "matched_expenses": matched_expenses,
+                "matched_category": matched_category,
+                "active_budgets": active_budgets,
+                "breached_budgets": breached_budgets,
+                "near_limit_budgets": near_limit_budgets,
+                "goals": goals,
+                "income_sources": income_sources,
+                "query_metadata": query_metadata,
+            },
         }, default=str)
 
         conversation_history = []
@@ -933,7 +1207,7 @@ class AIService:
             role = "user" if h.get("role") == "user" else "assistant"
             conversation_history.append({"role": role, "content": h.get("content", "")})
 
-        full_user_content = f"User Financial Telemetry:\n{user_context_str}\n\nUser Question: {message}"
+        full_user_content = f"User Financial Telemetry & Retrieved Knowledge (RAG):\n{user_context_str}\n\nUser Question: {message}"
 
         try:
             async with httpx.AsyncClient(timeout=10.0) as client:

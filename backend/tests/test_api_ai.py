@@ -179,5 +179,96 @@ async def test_extract_transaction_sms_and_duplicate(client: AsyncClient):
     assert "*1234" not in data_credit["sanitized_input"]
 
 
+@pytest.mark.asyncio
+async def test_rag_chat_merchant_search_and_zero_matches(client: AsyncClient):
+    # 1. Fetch starter category
+    cat_resp = await client.get("/api/v1/categories")
+    cat_id = cat_resp.json()[0]["id"]
+
+    # 2. Add specific merchant expenses (Starbucks)
+    await client.post(
+        "/api/v1/expenses",
+        json={
+            "title": "Starbucks Caramel Frappuccino",
+            "amount": "375.00",
+            "expense_date": date.today().isoformat(),
+            "category_id": cat_id,
+        },
+    )
+    await client.post(
+        "/api/v1/expenses",
+        json={
+            "title": "Starbucks Roasted Bagel",
+            "amount": "225.00",
+            "expense_date": date.today().isoformat(),
+            "category_id": cat_id,
+        },
+    )
+
+    # 3. Query RAG Assistant about Starbucks
+    rag_resp = await client.post(
+        "/api/v1/ai/chat",
+        json={"message": "How much did I spend on Starbucks this month?", "history": []},
+    )
+    assert rag_resp.status_code == 200
+    rag_data = rag_resp.json()
+    assert "Starbucks" in rag_data["reply"]
+    assert "600" in rag_data["reply"]
+    assert "2" in rag_data["reply"]
+    assert "transaction" in rag_data["reply"].lower()
+    assert rag_data["action_intent"] is not None
+    assert rag_data["action_intent"]["action"] == "navigate"
+
+    # 4. Query RAG Assistant about a merchant with 0 records (Ferrari)
+    zero_resp = await client.post(
+        "/api/v1/ai/chat",
+        json={"message": "Did I buy anything from Ferrari?", "history": []},
+    )
+    assert zero_resp.status_code == 200
+    zero_data = zero_resp.json()
+    assert "Ferrari" in zero_data["reply"]
+    assert "no recorded expenses" in zero_data["reply"].lower()
+
+
+@pytest.mark.asyncio
+async def test_rag_chat_category_and_goals(client: AsyncClient):
+    # 1. Create a goal
+    goal_resp = await client.post(
+        "/api/v1/goals",
+        json={
+            "name": "Japan Travel Fund",
+            "target_amount": "80000.00",
+            "current_amount": "20000.00",
+            "target_date": "2026-12-31",
+            "category": "Travel",
+        },
+    )
+    assert goal_resp.status_code == 201
+
+    # 2. Query RAG Assistant about active goals
+    goal_chat_resp = await client.post(
+        "/api/v1/ai/chat",
+        json={"message": "What are my active savings goals and milestones?", "history": []},
+    )
+    assert goal_chat_resp.status_code == 200
+    goal_chat_data = goal_chat_resp.json()
+    assert "Japan Travel Fund" in goal_chat_data["reply"]
+    assert "80,000" in goal_chat_data["reply"]
+    assert "20,000" in goal_chat_data["reply"]
+    assert "25.0%" in goal_chat_data["reply"]
+    assert goal_chat_data["action_intent"] is not None
+    assert goal_chat_data["action_intent"]["action"] == "navigate"
+
+    # 3. Query RAG Assistant about budget status
+    budget_chat_resp = await client.post(
+        "/api/v1/ai/chat",
+        json={"message": "Did I exceed any budget this month?", "history": []},
+    )
+    assert budget_chat_resp.status_code == 200
+    budget_chat_data = budget_chat_resp.json()
+    assert "budget" in budget_chat_data["reply"].lower()
+
+
+
 
 

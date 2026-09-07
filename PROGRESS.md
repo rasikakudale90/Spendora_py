@@ -38,6 +38,7 @@
 | 25 | AI Feature 5: Smart Receipt & UPI SMS Parser | ✅ Done | 2026-09-03 |
 | 26 | Production Deployment Hardening & Live AI Verification | ✅ Done | 2026-09-04 |
 | 27 | AI Features 6 & 7: Financial Health Score Radar & Smart Goals Runway | ✅ Done | 2026-09-07 |
+| 28 | In-Database RAG Architecture for AI Financial Assistant | ✅ Done | 2026-09-07 |
 
 ---
 
@@ -469,6 +470,25 @@
 - [x] **Frontend Goals Management System:** Built `frontend/app/goals/page.tsx` with KPI overview strip, multi-goal AI runway alert banner, and interactive goal cards. Built `GoalFormModal.tsx` for create/edit and `GoalContributeModal.tsx` for deposit/withdraw with instant forecast previews. Added Goals link with `Target` icon to `Navbar.tsx`.
 - [x] **Automated Testing:** Added `backend/tests/test_goals.py` (lifecycle and multi-user zero-trust tenancy) and `backend/tests/test_api_health_score.py` (health score and runway calculations). 100% test suite passing (4/4 passed).
 - [x] **Production Build:** Verified Next.js production build (`npm run build`) compiles cleanly with 0 errors and 0 warnings.
+
+---
+
+## Phase 28 — In-Database RAG Architecture for Spendora AI Financial Assistant ✅ Done
+
+**Goal:** Transform Spendora's AI Financial Assistant from answering only canned sample questions to answering all custom natural language inquiries regarding the user's specific financial data (merchants, category budgets, active savings goals, cash flow, and temporal spending) via a zero-cost, 100% free-tier compatible in-database Retrieval-Augmented Generation (RAG) architecture.
+
+### Root Cause Analysis & Solution
+- **The Issue:** The AI chatbot endpoint (`POST /api/v1/ai/chat`) previously only loaded 5 recent expenses and top-level monthly totals into context. If a user asked about a specific merchant (e.g. Starbucks, Amazon), category drill-down, or goals, the LLM lacked the facts to answer, and the deterministic fallback dropped through to a generic greeting: *"👋 Hello! I am Spendora AI... Here is your live financial snapshot"*.
+- **The In-Database RAG Solution:** Built an in-database semantic and fuzzy retrieval engine (`ILIKE`, date bounds, category bindings, and goal relationships) directly querying PostgreSQL with zero latency, zero vector DB subscription costs, and strict tenant isolation (`current_user.id`).
+
+### Completed Tasks
+- [x] **RAG Entity & Intent Analyzer:** Built `_extract_rag_query_metadata` in `backend/app/routers/ai.py` detecting candidate merchant terms, matching user category names, resolving temporal bounds (`today`, `yesterday`, `this week`, `this month`, `last month`, ISO dates), and classifying domain intents (`is_goal`, `is_budget`, `is_income`, `is_afford`, `is_safe_spend`, `is_leak`, `is_highest`).
+- [x] **Multi-Store Targeted In-Database Retrieval:** In `routers/ai.py`, dynamically queries `ExpenseRepository` for search matches and sums, `CategoryRepository` for drill-downs, `BudgetRepository` for breached (`spent > amount`) and near-limit (`spent >= 0.8 * amount`) budgets, `GoalRepository` for active milestone progress % and remaining runway, and `IncomeRepository` for source breakdowns.
+- [x] **Augmented LLM Prompt Engineering:** Structured full RAG facts (`retrieved_knowledge` + `financial_telemetry`) in `backend/app/services/ai_service.py` commanding the model to ground all figures, itemize purchases in markdown tables, and explicitly notify users when 0 matching records exist for a queried item.
+- [x] **Deterministic RAG Fallback Engine:** Upgraded `deterministic_chat_response` in `ai_service.py` with intelligent handlers for merchant search (with itemized date/amount tables or zero-match notices), category budget comparisons, goals progress tables with 1-click navigation to `/goals`, budget breach alerts with 1-click `set_budget` triggers, income source breakdowns, and tailored data-grounded summaries.
+- [x] **Frontend Markdown Table & Starter Prompts Upgrade:** Updated `frontend/components/FinancialAssistantWidget.tsx` with responsive multi-column table styling (`overflow-x-auto` with dynamic grid templates) and refreshed starter prompt chips showcasing Savings Goals and Budget Alerts.
+- [x] **Automated Testing:** Added `test_rag_chat_merchant_search_and_zero_matches` and `test_rag_chat_category_and_goals` in `backend/tests/test_api_ai.py`. All 7 AI tests passing (100% pass rate).
+- [x] **Production Build:** Verified Next.js production build (`npm run build`) compiles cleanly with 0 errors and 0 warnings across all 13 routes.
 
 ---
 
