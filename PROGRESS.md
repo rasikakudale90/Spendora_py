@@ -41,6 +41,7 @@
 | 28 | In-Database RAG Architecture for AI Financial Assistant | ✅ Done | 2026-09-07 |
 | 29 | Safe Web Archiving & Android Foundation (Kotlin + Compose) | ✅ Done | 2026-09-08 |
 | 30 | Android Network Core, Auth & 4-Digit OTP Wizard | ✅ Done | 2026-09-08 |
+| 31 | Core Financials (Dashboard, Expenses, Income) | ✅ Done | 2026-09-08 |
 
 ---
 
@@ -522,6 +523,23 @@
 - [x] **Material 3 UI Components:** Created `SpendoraTextField`, `SpendoraButton`, `SpendoraCard`, and `PasswordStrengthIndicator` in `CommonWidgets.kt`.
 - [x] **Auth Screens:** Built `LoginScreen.kt`, `RegisterScreen.kt`, and the 3-step interactive `OtpForgotPasswordScreen.kt` with 4 discrete auto-advancing OTP boxes, dev quick-fill, and live password criteria checklist.
 - [x] **Navigation Setup:** Configured `Screen.kt` and `AppNavigation.kt` with session-aware `startDestination` and wired into `MainActivity.kt`.
+
+---
+
+## Phase 31 — Core Financial Management (Dashboard, Expenses, Income) ✅ Done
+
+**Goal:** Implement full core financial management on Native Android with Jetpack Compose, including summary KPIs, net cash flow tracking, multi-category and payment mode filtering, paginated expense and income records, interactive Add/Edit bottom sheets, and the main bottom navigation bar.
+
+### Completed Tasks
+- [x] **Data Models & DTOs:** Implemented `ExpenseModels.kt`, `IncomeModels.kt`, and `DashboardModels.kt` mapping FastAPI schemas (`CategoryDto`, `ExpenseDto`, `IncomeDto`, `DashboardSummary`, `PaymentMode`, `DailyBudgetAlert`, `MonthlyIncomeSummary`).
+- [x] **Retrofit API Interfaces:** Created `ExpenseApi.kt`, `IncomeApi.kt`, and `DashboardApi.kt` and mounted in `ApiClient.kt`.
+- [x] **Repository Layer:** Implemented `ExpenseRepository.kt`, `IncomeRepository.kt`, and `DashboardRepository.kt` with coroutines, `Dispatchers.IO`, and error response handling.
+- [x] **ViewModels:** Created `DashboardViewModel.kt`, `ExpenseViewModel.kt`, and `IncomeViewModel.kt` handling state flows, multi-parameter filtering, sorting, and pagination.
+- [x] **Reusable UI & Transaction Cards:** Built `TransactionCards.kt` (`KpiCard`, `ExpenseItemRow`, `IncomeItemRow`, and INR currency formatter `formatInr`), `BottomNavBar.kt`, `ExpenseFormSheet.kt`, and `IncomeFormSheet.kt`.
+- [x] **Dashboard Screen:** Built `DashboardScreen.kt` with User Greeting, Quick Action Buttons (+ Expense, + Income, AI Assistant trigger), 4 KPI summary cards (Income, Spend, Net Cash Flow, Savings Rate %), Category Breakdown, and Recent Expenses with real-time deletion.
+- [x] **Expenses Screen:** Built `ExpensesScreen.kt` with live search, category filter chips, ascending/descending sort toggle, paginated list, FAB modal, and Delete confirmation dialogs.
+- [x] **Income Screen:** Built `IncomeScreen.kt` with monthly income summary banner, source filtering (`Salary`, `Freelance`, `Investment`, `Gift`), paginated list, and Add/Edit modal.
+- [x] **Navigation & Integration:** Configured `AppNavigation.kt` with Material 3 Bottom Navigation Bar and updated `MainActivity.kt`.
 
 ---
 

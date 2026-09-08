@@ -41,6 +41,9 @@ class ApiClient private constructor(context: Context) {
         .build()
 
     val authApi: AuthApi by lazy { retrofit.create(AuthApi::class.java) }
+    val expenseApi: com.spendora.app.data.api.ExpenseApi by lazy { retrofit.create(com.spendora.app.data.api.ExpenseApi::class.java) }
+    val incomeApi: com.spendora.app.data.api.IncomeApi by lazy { retrofit.create(com.spendora.app.data.api.IncomeApi::class.java) }
+    val dashboardApi: com.spendora.app.data.api.DashboardApi by lazy { retrofit.create(com.spendora.app.data.api.DashboardApi::class.java) }
 
     fun <T> createService(serviceClass: Class<T>): T {
         return retrofit.create(serviceClass)
