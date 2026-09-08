@@ -23,10 +23,12 @@ import com.spendora.app.ui.screens.auth.RegisterScreen
 import com.spendora.app.ui.screens.dashboard.DashboardScreen
 import com.spendora.app.ui.screens.expenses.ExpensesScreen
 import com.spendora.app.ui.screens.income.IncomeScreen
+import com.spendora.app.ui.screens.ai.FinancialAssistantScreen
 import com.spendora.app.ui.screens.budgets.BudgetsScreen
 import com.spendora.app.ui.screens.goals.GoalsScreen
 import com.spendora.app.ui.theme.BackgroundDark
 import com.spendora.app.ui.theme.TextPrimary
+import com.spendora.app.ui.viewmodel.AiViewModel
 import com.spendora.app.ui.viewmodel.AuthViewModel
 import com.spendora.app.ui.viewmodel.BudgetViewModel
 import com.spendora.app.ui.viewmodel.DashboardViewModel
@@ -43,7 +45,7 @@ fun AppNavigation(
     incomeViewModel: IncomeViewModel = viewModel(),
     budgetViewModel: BudgetViewModel = viewModel(),
     goalViewModel: GoalViewModel = viewModel(),
-    onOpenAiAssistant: () -> Unit = {}
+    aiViewModel: AiViewModel = viewModel()
 ) {
     val isLoggedIn by authViewModel.isLoggedIn.collectAsState()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
@@ -121,9 +123,10 @@ fun AppNavigation(
                     expenseViewModel = expenseViewModel,
                     incomeViewModel = incomeViewModel,
                     authViewModel = authViewModel,
+                    aiViewModel = aiViewModel,
                     onNavigateToExpenses = { navController.navigate(Screen.Expenses.route) },
                     onNavigateToIncome = { navController.navigate(Screen.Income.route) },
-                    onOpenAiAssistant = onOpenAiAssistant
+                    onOpenAiAssistant = { navController.navigate(Screen.AiAssistant.route) }
                 )
             }
 
@@ -141,6 +144,14 @@ fun AppNavigation(
 
             composable(Screen.Goals.route) {
                 GoalsScreen(viewModel = goalViewModel)
+            }
+
+            // AI Financial Assistant Chat
+            composable(Screen.AiAssistant.route) {
+                FinancialAssistantScreen(
+                    viewModel = aiViewModel,
+                    onNavigateBack = { navController.popBackStack() }
+                )
             }
         }
     }

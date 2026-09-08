@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -18,9 +19,16 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.spendora.app.data.model.PaymentMode
 import com.spendora.app.ui.components.*
+import com.spendora.app.ui.components.ai.FinancialHealthRadar
+import com.spendora.app.ui.components.ai.LeakHunterSheet
+import com.spendora.app.ui.components.ai.PurchaseSimulatorSheet
+import com.spendora.app.ui.components.ai.SafeToSpendGauge
+import com.spendora.app.ui.components.ai.SmartScannerSheet
 import com.spendora.app.ui.theme.*
+import com.spendora.app.ui.viewmodel.AiViewModel
 import com.spendora.app.ui.viewmodel.AuthViewModel
 import com.spendora.app.ui.viewmodel.DashboardViewModel
 import com.spendora.app.ui.viewmodel.ExpenseViewModel
@@ -32,19 +40,26 @@ fun DashboardScreen(
     expenseViewModel: ExpenseViewModel,
     incomeViewModel: IncomeViewModel,
     authViewModel: AuthViewModel,
+    aiViewModel: AiViewModel = viewModel(),
     onNavigateToExpenses: () -> Unit,
     onNavigateToIncome: () -> Unit,
     onOpenAiAssistant: () -> Unit = {}
 ) {
     val dashboardState by dashboardViewModel.uiState.collectAsState()
     val expenseState by expenseViewModel.uiState.collectAsState()
+    val aiState by aiViewModel.uiState.collectAsState()
     val currentUser by authViewModel.currentUser.collectAsState()
 
     var showAddExpenseSheet by remember { mutableStateOf(false) }
     var showAddIncomeSheet by remember { mutableStateOf(false) }
+    var showSimulatorSheet by remember { mutableStateOf(false) }
+    var showLeakSheet by remember { mutableStateOf(false) }
+    var showScannerSheet by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
         dashboardViewModel.loadDashboard()
+        aiViewModel.loadSafeToSpend()
+        aiViewModel.loadFinancialHealth()
     }
 
     Box(
@@ -96,7 +111,7 @@ fun DashboardScreen(
                 }
             }
 
-            // Quick Actions Bar
+            // Quick Actions Bar (Expense, Income, AI Advisor)
             item {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -141,6 +156,68 @@ fun DashboardScreen(
                             tint = TextPrimary,
                             modifier = Modifier.size(20.dp)
                         )
+                    }
+                }
+            }
+
+            // AI Intelligence Quick Access Chips
+            item {
+                LazyRow(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    item {
+                        Surface(
+                            shape = RoundedCornerShape(20.dp),
+                            color = SurfaceDark,
+                            border = androidx.compose.foundation.BorderStroke(1.dp, BorderDark),
+                            modifier = Modifier.clickable { showSimulatorSheet = true }
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(horizontal = 12.dp, vertical = 7.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(Icons.Default.HelpOutline, contentDescription = null, tint = PrimaryIndigoLight, modifier = Modifier.size(14.dp))
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text("Can I Afford This?", fontSize = 11.sp, color = TextPrimary, fontWeight = FontWeight.SemiBold)
+                            }
+                        }
+                    }
+
+                    item {
+                        Surface(
+                            shape = RoundedCornerShape(20.dp),
+                            color = SurfaceDark,
+                            border = androidx.compose.foundation.BorderStroke(1.dp, BorderDark),
+                            modifier = Modifier.clickable { showLeakSheet = true }
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(horizontal = 12.dp, vertical = 7.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(Icons.Default.WaterDrop, contentDescription = null, tint = RoseDanger, modifier = Modifier.size(14.dp))
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text("Leak Hunter", fontSize = 11.sp, color = TextPrimary, fontWeight = FontWeight.SemiBold)
+                            }
+                        }
+                    }
+
+                    item {
+                        Surface(
+                            shape = RoundedCornerShape(20.dp),
+                            color = SurfaceDark,
+                            border = androidx.compose.foundation.BorderStroke(1.dp, BorderDark),
+                            modifier = Modifier.clickable { showScannerSheet = true }
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(horizontal = 12.dp, vertical = 7.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(Icons.Default.DocumentScanner, contentDescription = null, tint = EmeraldSuccess, modifier = Modifier.size(14.dp))
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text("Scan SMS Alert", fontSize = 11.sp, color = TextPrimary, fontWeight = FontWeight.SemiBold)
+                            }
+                        }
                     }
                 }
             }
@@ -209,6 +286,26 @@ fun DashboardScreen(
                             color = TextMuted
                         )
                     }
+                }
+            }
+
+            // AI Feature 3: Safe-to-Spend Real-Time Speedometer Gauge
+            if (aiState.safeToSpend != null) {
+                item {
+                    SafeToSpendGauge(
+                        safeToSpend = aiState.safeToSpend,
+                        onCardClick = onOpenAiAssistant
+                    )
+                }
+            }
+
+            // AI Feature 6: Financial Health 5-Pillar Spider Radar Chart
+            if (aiState.financialHealth != null) {
+                item {
+                    FinancialHealthRadar(
+                        health = aiState.financialHealth,
+                        onCardClick = onOpenAiAssistant
+                    )
                 }
             }
 
@@ -326,6 +423,8 @@ fun DashboardScreen(
                     onSuccess = {
                         showAddExpenseSheet = false
                         dashboardViewModel.loadDashboard()
+                        aiViewModel.loadSafeToSpend()
+                        aiViewModel.loadFinancialHealth()
                     }
                 )
             }
@@ -346,8 +445,58 @@ fun DashboardScreen(
                     onSuccess = {
                         showAddIncomeSheet = false
                         dashboardViewModel.loadDashboard()
+                        aiViewModel.loadSafeToSpend()
+                        aiViewModel.loadFinancialHealth()
                     }
                 )
+            }
+        )
+    }
+
+    if (showSimulatorSheet) {
+        PurchaseSimulatorSheet(
+            aiViewModel = aiViewModel,
+            categories = expenseState.categories,
+            onDismiss = { showSimulatorSheet = false },
+            onAddAsExpense = { itemTitle, itemAmt ->
+                val categories = expenseState.categories
+                val firstCatId = categories.firstOrNull()?.id ?: 1
+                val today = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault()).format(java.util.Date())
+
+                expenseViewModel.saveExpense(
+                    id = null,
+                    title = itemTitle,
+                    amount = itemAmt,
+                    expenseDate = today,
+                    categoryId = firstCatId,
+                    paymentMode = PaymentMode.UPI,
+                    notes = "Added via AI Purchase Simulator",
+                    onSuccess = {
+                        dashboardViewModel.loadDashboard()
+                        aiViewModel.loadSafeToSpend()
+                        aiViewModel.loadFinancialHealth()
+                    }
+                )
+            }
+        )
+    }
+
+    if (showLeakSheet) {
+        LeakHunterSheet(
+            aiViewModel = aiViewModel,
+            onDismiss = { showLeakSheet = false }
+        )
+    }
+
+    if (showScannerSheet) {
+        SmartScannerSheet(
+            aiViewModel = aiViewModel,
+            expenseViewModel = expenseViewModel,
+            onDismiss = {
+                showScannerSheet = false
+                dashboardViewModel.loadDashboard()
+                aiViewModel.loadSafeToSpend()
+                aiViewModel.loadFinancialHealth()
             }
         )
     }
