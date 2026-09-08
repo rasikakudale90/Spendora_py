@@ -40,6 +40,7 @@
 | 27 | AI Features 6 & 7: Financial Health Score Radar & Smart Goals Runway | ✅ Done | 2026-09-07 |
 | 28 | In-Database RAG Architecture for AI Financial Assistant | ✅ Done | 2026-09-07 |
 | 29 | Safe Web Archiving & Android Foundation (Kotlin + Compose) | ✅ Done | 2026-09-08 |
+| 30 | Android Network Core, Auth & 4-Digit OTP Wizard | ✅ Done | 2026-09-08 |
 
 ---
 
@@ -504,6 +505,23 @@
 - [x] **Network Security Configuration:** Created `network_security_config.xml` enabling secure production HTTPS with cleartext support for local dev (`10.0.2.2`, `localhost`).
 - [x] **Spendora Material 3 Dark Theme:** Implemented `Color.kt`, `Type.kt`, and `Theme.kt` with Deep Slate backgrounds (`#0F172A`), Card Slate (`#1E293B`), Emerald Green (`#10B981`), Rose Red (`#F43F5E`), and Indigo Primary (`#6366F1`).
 - [x] **Android Manifest & Entry Activity:** Configured `AndroidManifest.xml` with Internet permissions and created `SpendoraApp.kt` and `MainActivity.kt`.
+
+---
+
+## Phase 30 — Android Network Core, Auth & 4-Digit OTP Wizard ✅ Done
+
+**Goal:** Build production-grade authentication and token lifecycle management for Spendora Android, including secure EncryptedSharedPreferences session caching, OkHttp authentication interceptors with automatic token rotation, and Jetpack Compose screens for Login, Registration, and the interactive 4-Digit OTP password recovery wizard.
+
+### Completed Tasks
+- [x] **Data Models & DTOs:** Created `UserModels.kt` mapping FastAPI Pydantic schemas (`UserDto`, `UserLoginRequest`, `UserRegisterRequest`, `AuthSuccessResponse`, `PasswordResetRequest`, `VerifyOtpRequest`, `PasswordResetConfirm`).
+- [x] **Secure Storage Layer:** Implemented `SessionManager.kt` leveraging `EncryptedSharedPreferences` with AES256-GCM encryption for storing JWT access tokens, refresh tokens, and logged-in user profiles.
+- [x] **OkHttp Interceptor & Authenticator:** Built `AuthInterceptor.kt` injecting `Authorization: Bearer <token>` and `Cookie` headers, and `TokenAuthenticator.kt` automatically intercepting `401 Unauthorized` responses to execute background token rotation via `/api/v1/auth/refresh` and retry requests.
+- [x] **Retrofit API Client:** Configured `ApiClient.kt` targeting Render backend with timeout policies, logging, and `AuthApi` interfaces.
+- [x] **Repository Layer:** Implemented `AuthRepository.kt` with coroutines, `Dispatchers.IO`, and error response parsing.
+- [x] **Auth ViewModel:** Built `AuthViewModel.kt` managing Login/Register states and a live 50-second countdown timer for the OTP flow.
+- [x] **Material 3 UI Components:** Created `SpendoraTextField`, `SpendoraButton`, `SpendoraCard`, and `PasswordStrengthIndicator` in `CommonWidgets.kt`.
+- [x] **Auth Screens:** Built `LoginScreen.kt`, `RegisterScreen.kt`, and the 3-step interactive `OtpForgotPasswordScreen.kt` with 4 discrete auto-advancing OTP boxes, dev quick-fill, and live password criteria checklist.
+- [x] **Navigation Setup:** Configured `Screen.kt` and `AppNavigation.kt` with session-aware `startDestination` and wired into `MainActivity.kt`.
 
 ---
 
