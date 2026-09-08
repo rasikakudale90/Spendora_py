@@ -23,11 +23,15 @@ import com.spendora.app.ui.screens.auth.RegisterScreen
 import com.spendora.app.ui.screens.dashboard.DashboardScreen
 import com.spendora.app.ui.screens.expenses.ExpensesScreen
 import com.spendora.app.ui.screens.income.IncomeScreen
+import com.spendora.app.ui.screens.budgets.BudgetsScreen
+import com.spendora.app.ui.screens.goals.GoalsScreen
 import com.spendora.app.ui.theme.BackgroundDark
 import com.spendora.app.ui.theme.TextPrimary
 import com.spendora.app.ui.viewmodel.AuthViewModel
+import com.spendora.app.ui.viewmodel.BudgetViewModel
 import com.spendora.app.ui.viewmodel.DashboardViewModel
 import com.spendora.app.ui.viewmodel.ExpenseViewModel
+import com.spendora.app.ui.viewmodel.GoalViewModel
 import com.spendora.app.ui.viewmodel.IncomeViewModel
 
 @Composable
@@ -37,6 +41,8 @@ fun AppNavigation(
     dashboardViewModel: DashboardViewModel = viewModel(),
     expenseViewModel: ExpenseViewModel = viewModel(),
     incomeViewModel: IncomeViewModel = viewModel(),
+    budgetViewModel: BudgetViewModel = viewModel(),
+    goalViewModel: GoalViewModel = viewModel(),
     onOpenAiAssistant: () -> Unit = {}
 ) {
     val isLoggedIn by authViewModel.isLoggedIn.collectAsState()
@@ -130,11 +136,11 @@ fun AppNavigation(
             }
 
             composable(Screen.Budgets.route) {
-                PlaceholderScreen(title = "Budgets (Phase 32)")
+                BudgetsScreen(viewModel = budgetViewModel)
             }
 
             composable(Screen.Goals.route) {
-                PlaceholderScreen(title = "Savings Goals (Phase 32)")
+                GoalsScreen(viewModel = goalViewModel)
             }
         }
     }

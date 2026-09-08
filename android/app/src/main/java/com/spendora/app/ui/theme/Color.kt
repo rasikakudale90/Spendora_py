@@ -24,6 +24,7 @@ val RoseDangerLight = Color(0xFFFB7185)
 val RoseBg = Color(0xFF4C0519)
 
 val AmberWarning = Color(0xFFF59E0B)        // Amber/Near-limit
+val AmberWarningLight = Color(0xFFFBBF24)
 val AmberBg = Color(0xFF451A03)
 
 val CyanInfo = Color(0xFF06B6D4)
