@@ -39,6 +39,7 @@
 | 26 | Production Deployment Hardening & Live AI Verification | ✅ Done | 2026-09-04 |
 | 27 | AI Features 6 & 7: Financial Health Score Radar & Smart Goals Runway | ✅ Done | 2026-09-07 |
 | 28 | In-Database RAG Architecture for AI Financial Assistant | ✅ Done | 2026-09-07 |
+| 29 | Safe Web Archiving & Android Foundation (Kotlin + Compose) | ✅ Done | 2026-09-08 |
 
 ---
 
@@ -492,6 +493,20 @@
 
 ---
 
+## Phase 29 — Safe Web Archiving & Android Foundation (Kotlin + Compose) ✅ Done
+
+**Goal:** Safely archive the complete Next.js 14 web frontend without data loss, scaffold a modern 100% Native Android application using Kotlin and Jetpack Compose, configure build environments targeting the live Render backend, and establish Spendora's Dark Material 3 theme design tokens.
+
+### Completed Tasks
+- [x] **Safe Next.js Web Archiving:** Renamed `frontend/` to `frontend_nextjs_archive/` preserving 100% of web pages, components, configs, and build scripts.
+- [x] **Android Project Scaffolding:** Initialized `android/` with standard Gradle wrapper config (`gradle-8.4-bin.zip`), root `build.gradle.kts`, `settings.gradle.kts`, and `app/build.gradle.kts` (AGP 8.2.2 + Kotlin 1.9.22 + Jetpack Compose BOM 2024.02.00).
+- [x] **Render Production Integration:** Set default `BASE_URL = "https://spendora-py.onrender.com"` directly inside `app/build.gradle.kts` via `buildConfigField`.
+- [x] **Network Security Configuration:** Created `network_security_config.xml` enabling secure production HTTPS with cleartext support for local dev (`10.0.2.2`, `localhost`).
+- [x] **Spendora Material 3 Dark Theme:** Implemented `Color.kt`, `Type.kt`, and `Theme.kt` with Deep Slate backgrounds (`#0F172A`), Card Slate (`#1E293B`), Emerald Green (`#10B981`), Rose Red (`#F43F5E`), and Indigo Primary (`#6366F1`).
+- [x] **Android Manifest & Entry Activity:** Configured `AndroidManifest.xml` with Internet permissions and created `SpendoraApp.kt` and `MainActivity.kt`.
+
+---
+
 ## Open Items & Design Decisions
 
 | # | Item | Status | Resolution |
@@ -509,3 +524,5 @@
 | 11 | Production Docker & Python 3.12 Type Evaluation | ✅ Resolved | Mandatory `from __future__ import annotations` and top-level imports; context-agnostic Dockerfile supporting root `.` and `./backend` |
 | 12 | Financial Health Scoring & Smart Goals Architecture | ✅ Resolved | 5-weighted pillars (Savings 25%, Budgets 25%, Burn 20%, Cushion 15%, Leaks 15%) + dedicated `goals` table with deposit/withdraw contribution tracking and cash flow surplus runway acceleration |
 | 13 | In-Database RAG Architecture for Conversational AI | ✅ Resolved | In-database dynamic entity & temporal extraction querying PostgreSQL via ILIKE and relational bounds; 0 vector DB subscription cost, 0ms external latency, zero-trust tenant isolation |
+| 14 | Mobile Frontend Architecture & Web Archiving | ✅ Resolved | Next.js preserved in `frontend_nextjs_archive/`; Native Android built in `android/` with Kotlin + Jetpack Compose + Material 3 + Retrofit targeting `https://spendora-py.onrender.com` |
+

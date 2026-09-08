@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="spendora_dark_bg">#0F172A</color>
+    <color name="spendora_card_bg">#1E293B</color>
+    <color name="spendora_primary">#6366F1</color>
+    <color name="spendora_emerald">#10B981</color>
+    <color name="spendora_rose">#F43F5E</color>
+    <color name="spendora_amber">#F59E0B</color>
+</resources>

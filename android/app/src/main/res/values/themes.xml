@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.Spendora" parent="android:Theme.Material.NoActionBar">
+        <item name="android:statusBarColor">@color/spendora_dark_bg</item>
+        <item name="android:navigationBarColor">@color/spendora_dark_bg</item>
+        <item name="android:windowBackground">@color/spendora_dark_bg</item>
+    </style>
+</resources>
