@@ -1,0 +1,12 @@
+R_DEF: Internal format may change without notice
+local
+color spendora_amber
+color spendora_card_bg
+color spendora_dark_bg
+color spendora_emerald
+color spendora_primary
+color spendora_rose
+string app_name
+string app_tagline
+style Theme.Spendora
+xml network_security_config
