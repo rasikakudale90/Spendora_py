@@ -69,7 +69,7 @@ fun DashboardScreen(
     var showHealthDetailSheet by remember { mutableStateOf(false) }
     var showNotificationsSheet by remember { mutableStateOf(false) }
     var showStatementSheet by remember { mutableStateOf(false) }
-
+    var showOverflowMenu by remember { mutableStateOf(false) }
 
     var selectedAccountIndex by remember { mutableIntStateOf(0) }
     var selectedActivityFilter by remember { mutableStateOf("All") }
@@ -124,29 +124,33 @@ fun DashboardScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(horizontal = 16.dp),
-            contentPadding = PaddingValues(top = 12.dp, bottom = 96.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+            contentPadding = PaddingValues(top = 16.dp, bottom = 96.dp),
+            verticalArrangement = Arrangement.spacedBy(18.dp)
         ) {
-            // Header: Spendora Logo, Overview Title, AI Assistant, Notification Bell & Actions
+            // Header: Spendora Logo, Overview Title, AI Assistant, Notification Bell & 3-Dots Menu
             item {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(top = 4.dp, bottom = 4.dp),
+                        .padding(top = 6.dp, bottom = 6.dp),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Row(
-                        modifier = Modifier.weight(1f, fill = false),
+                        modifier = Modifier.weight(1f),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        SpendoraLogo(size = 38.dp)
-                        Spacer(modifier = Modifier.width(10.dp))
+                        SpendoraLogo(size = 40.dp)
+                        Spacer(modifier = Modifier.width(12.dp))
                         Column {
                             Text(
                                 text = "Spendora",
-                                style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
-                                color = TextPrimary
+                                style = MaterialTheme.typography.titleLarge.copy(
+                                    fontWeight = FontWeight.Bold,
+                                    letterSpacing = (-0.5).sp
+                                ),
+                                color = TextPrimary,
+                                maxLines = 1
                             )
                             Text(
                                 text = "OVERVIEW",
@@ -154,13 +158,14 @@ fun DashboardScreen(
                                     fontWeight = FontWeight.Bold,
                                     letterSpacing = 1.2.sp
                                 ),
-                                color = PrimaryCyanLight
+                                color = PrimaryCyanLight,
+                                maxLines = 1
                             )
                         }
                     }
 
                     Row(
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        horizontalArrangement = Arrangement.spacedBy(10.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         val currentTheme by authViewModel.themeMode.collectAsState()
@@ -179,7 +184,7 @@ fun DashboardScreen(
                                 imageVector = if (isDarkMode) Icons.Default.LightMode else Icons.Default.DarkMode,
                                 contentDescription = "Toggle Theme",
                                 tint = if (isDarkMode) AmberWarningLight else PrimaryCyanLight,
-                                modifier = Modifier.size(17.dp)
+                                modifier = Modifier.size(18.dp)
                             )
                         }
 
@@ -223,48 +228,150 @@ fun DashboardScreen(
                             if (hasAlerts) {
                                 Box(
                                     modifier = Modifier
-                                        .size(7.dp)
+                                        .size(8.dp)
                                         .align(Alignment.TopEnd)
-                                        .offset(x = (-8).dp, y = 8.dp)
+                                        .offset(x = (-6).dp, y = 6.dp)
                                         .clip(CircleShape)
                                         .background(AmberWarningLight)
                                 )
                             }
                         }
 
-                        // Monthly Statement & CSV Export Button
-                        Box(
-                            modifier = Modifier
-                                .size(38.dp)
-                                .clip(CircleShape)
-                                .background(SurfaceElevated)
-                                .border(1.dp, BorderDark, CircleShape)
-                                .clickable { showStatementSheet = true },
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.FileDownload,
-                                contentDescription = "Export Financial Statement & CSV",
-                                tint = PrimaryCyanLight,
-                                modifier = Modifier.size(17.dp)
-                            )
-                        }
+                        // 3-Dots Overflow Menu for Secondary Tools (CSV Export, Leak Audit, Simulator, Sign Out)
+                        Box {
+                            IconButton(
+                                onClick = { showOverflowMenu = !showOverflowMenu },
+                                modifier = Modifier
+                                    .size(38.dp)
+                                    .clip(CircleShape)
+                                    .background(SurfaceElevated)
+                                    .border(1.dp, BorderDark, CircleShape)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.MoreVert,
+                                    contentDescription = "More Options",
+                                    tint = TextPrimary,
+                                    modifier = Modifier.size(19.dp)
+                                )
+                            }
 
-                        IconButton(
-                            onClick = { authViewModel.logout() },
-                            modifier = Modifier
-                                .size(38.dp)
-                                .clip(CircleShape)
-                                .background(SurfaceElevated)
-
-                                .border(1.dp, BorderDark, CircleShape)
-                        ) {
-                            Icon(
-                                imageVector = Icons.AutoMirrored.Filled.Logout,
-                                contentDescription = "Logout",
-                                tint = TextMuted,
-                                modifier = Modifier.size(17.dp)
-                            )
+                            DropdownMenu(
+                                expanded = showOverflowMenu,
+                                onDismissRequest = { showOverflowMenu = false },
+                                modifier = Modifier
+                                    .background(SurfaceElevated)
+                                    .border(1.dp, BorderDark, RoundedCornerShape(14.dp))
+                            ) {
+                                DropdownMenuItem(
+                                    text = {
+                                        Text(
+                                            "Export Statement (CSV/PDF)",
+                                            color = TextPrimary,
+                                            style = MaterialTheme.typography.bodyMedium
+                                        )
+                                    },
+                                    onClick = {
+                                        showOverflowMenu = false
+                                        showStatementSheet = true
+                                    },
+                                    leadingIcon = {
+                                        Icon(
+                                            Icons.Default.FileDownload,
+                                            contentDescription = null,
+                                            tint = PrimaryCyanLight,
+                                            modifier = Modifier.size(18.dp)
+                                        )
+                                    }
+                                )
+                                DropdownMenuItem(
+                                    text = {
+                                        Text(
+                                            "Spending Leak Audit",
+                                            color = TextPrimary,
+                                            style = MaterialTheme.typography.bodyMedium
+                                        )
+                                    },
+                                    onClick = {
+                                        showOverflowMenu = false
+                                        showLeakSheet = true
+                                    },
+                                    leadingIcon = {
+                                        Icon(
+                                            Icons.Default.Search,
+                                            contentDescription = null,
+                                            tint = QuantumViolet,
+                                            modifier = Modifier.size(18.dp)
+                                        )
+                                    }
+                                )
+                                DropdownMenuItem(
+                                    text = {
+                                        Text(
+                                            "Purchase Simulator",
+                                            color = TextPrimary,
+                                            style = MaterialTheme.typography.bodyMedium
+                                        )
+                                    },
+                                    onClick = {
+                                        showOverflowMenu = false
+                                        showSimulatorSheet = true
+                                    },
+                                    leadingIcon = {
+                                        Icon(
+                                            Icons.Default.Calculate,
+                                            contentDescription = null,
+                                            tint = EmeraldSuccessLight,
+                                            modifier = Modifier.size(18.dp)
+                                        )
+                                    }
+                                )
+                                DropdownMenuItem(
+                                    text = {
+                                        Text(
+                                            "Financial Health Radar",
+                                            color = TextPrimary,
+                                            style = MaterialTheme.typography.bodyMedium
+                                        )
+                                    },
+                                    onClick = {
+                                        showOverflowMenu = false
+                                        showHealthDetailSheet = true
+                                    },
+                                    leadingIcon = {
+                                        Icon(
+                                            Icons.Default.Shield,
+                                            contentDescription = null,
+                                            tint = PrimaryCyanLight,
+                                            modifier = Modifier.size(18.dp)
+                                        )
+                                    }
+                                )
+                                HorizontalDivider(
+                                    modifier = Modifier.padding(vertical = 4.dp),
+                                    color = BorderDark
+                                )
+                                DropdownMenuItem(
+                                    text = {
+                                        Text(
+                                            "Sign Out",
+                                            color = RoseDangerLight,
+                                            style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold)
+                                        )
+                                    },
+                                    onClick = {
+                                        showOverflowMenu = false
+                                        authViewModel.logout()
+                                    },
+                                    leadingIcon = {
+                                        Icon(
+                                            Icons.AutoMirrored.Filled.Logout,
+                                            contentDescription = null,
+                                            tint = RoseDangerLight,
+                                            modifier = Modifier.size(18.dp)
+                                        )
+                                    }
+                                )
+                            }
                         }
                     }
                 }
@@ -568,40 +675,44 @@ fun DashboardScreen(
                 }
             }
 
-            // 4 Circular Glass Action Buttons (Send, Deposit, Scan Bill, AI Advisor)
+            // 4 Circular Glass Action Buttons (Expense, Income, Scan Bill, Simulate)
             item {
                 Row(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 2.dp),
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    // Send (Expense)
+                    // Expense
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally,
-                        modifier = Modifier.clickable {
-                            if (expenseState.categories.isEmpty()) {
-                                expenseViewModel.loadCategories()
+                        modifier = Modifier
+                            .weight(1f)
+                            .clickable {
+                                if (expenseState.categories.isEmpty()) {
+                                    expenseViewModel.loadCategories()
+                                }
+                                showAddExpenseSheet = true
                             }
-                            showAddExpenseSheet = true
-                        }
                     ) {
                         Box(
                             modifier = Modifier
-                                .size(54.dp)
+                                .size(56.dp)
                                 .clip(CircleShape)
-                                .background(SurfaceElevated)
-                                .border(1.dp, BorderDark, CircleShape),
+                                .background(PrimaryCyan.copy(alpha = 0.15f))
+                                .border(1.dp, PrimaryCyan.copy(alpha = 0.45f), CircleShape),
                             contentAlignment = Alignment.Center
                         ) {
                             Icon(
                                 imageVector = Icons.Default.ArrowUpward,
-                                contentDescription = "Send",
+                                contentDescription = "Add Expense",
                                 tint = PrimaryCyanLight,
                                 modifier = Modifier.size(24.dp)
                             )
                         }
-                        Spacer(modifier = Modifier.height(6.dp))
+                        Spacer(modifier = Modifier.height(8.dp))
                         Text(
-                            text = "Send",
+                            text = "Expense",
                             style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold),
                             color = TextPrimary
                         )
@@ -610,26 +721,28 @@ fun DashboardScreen(
                     // Deposit (Income)
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally,
-                        modifier = Modifier.clickable { showAddIncomeSheet = true }
+                        modifier = Modifier
+                            .weight(1f)
+                            .clickable { showAddIncomeSheet = true }
                     ) {
                         Box(
                             modifier = Modifier
-                                .size(54.dp)
+                                .size(56.dp)
                                 .clip(CircleShape)
-                                .background(SurfaceElevated)
-                                .border(1.dp, BorderDark, CircleShape),
+                                .background(EmeraldBg)
+                                .border(1.dp, EmeraldSuccess.copy(alpha = 0.45f), CircleShape),
                             contentAlignment = Alignment.Center
                         ) {
                             Icon(
                                 imageVector = Icons.Default.Download,
-                                contentDescription = "Deposit",
+                                contentDescription = "Add Income",
                                 tint = EmeraldSuccessLight,
                                 modifier = Modifier.size(24.dp)
                             )
                         }
-                        Spacer(modifier = Modifier.height(6.dp))
+                        Spacer(modifier = Modifier.height(8.dp))
                         Text(
-                            text = "Deposit",
+                            text = "Income",
                             style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold),
                             color = TextPrimary
                         )
@@ -638,14 +751,16 @@ fun DashboardScreen(
                     // Scan Bill (Smart Scanner)
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally,
-                        modifier = Modifier.clickable { showScannerSheet = true }
+                        modifier = Modifier
+                            .weight(1f)
+                            .clickable { showScannerSheet = true }
                     ) {
                         Box(
                             modifier = Modifier
-                                .size(54.dp)
+                                .size(56.dp)
                                 .clip(CircleShape)
-                                .background(SurfaceElevated)
-                                .border(1.dp, BorderDark, CircleShape),
+                                .background(QuantumViolet.copy(alpha = 0.15f))
+                                .border(1.dp, QuantumViolet.copy(alpha = 0.45f), CircleShape),
                             contentAlignment = Alignment.Center
                         ) {
                             Icon(
@@ -655,7 +770,7 @@ fun DashboardScreen(
                                 modifier = Modifier.size(24.dp)
                             )
                         }
-                        Spacer(modifier = Modifier.height(6.dp))
+                        Spacer(modifier = Modifier.height(8.dp))
                         Text(
                             text = "Scan Bill",
                             style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold),
@@ -663,29 +778,31 @@ fun DashboardScreen(
                         )
                     }
 
-                    // Split / AI Advisor (Smart Simulator)
+                    // Simulate (Purchase Affordability)
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally,
-                        modifier = Modifier.clickable { showSimulatorSheet = true }
+                        modifier = Modifier
+                            .weight(1f)
+                            .clickable { showSimulatorSheet = true }
                     ) {
                         Box(
                             modifier = Modifier
-                                .size(54.dp)
+                                .size(56.dp)
                                 .clip(CircleShape)
                                 .background(SurfaceElevated)
                                 .border(1.dp, BorderDark, CircleShape),
                             contentAlignment = Alignment.Center
                         ) {
                             Icon(
-                                imageVector = Icons.Default.CallSplit,
-                                contentDescription = "Split",
+                                imageVector = Icons.Default.Calculate,
+                                contentDescription = "Simulate Purchase",
                                 tint = PrimaryCyanLight,
                                 modifier = Modifier.size(24.dp)
                             )
                         }
-                        Spacer(modifier = Modifier.height(6.dp))
+                        Spacer(modifier = Modifier.height(8.dp))
                         Text(
-                            text = "Split",
+                            text = "Simulate",
                             style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold),
                             color = TextPrimary
                         )
