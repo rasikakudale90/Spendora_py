@@ -194,7 +194,7 @@ fun SafeToSpendGauge(
                     ) {
                         Text(
                             text = formatInr(safeToSpend.dailySafeSpend),
-                            style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.ExtraBold),
+                            style = TelemetryMetricTextStyle,
                             color = TextPrimary
                         )
                         Text(

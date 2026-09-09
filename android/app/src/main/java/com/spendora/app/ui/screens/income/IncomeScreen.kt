@@ -65,12 +65,47 @@ fun IncomeScreen(
                 .padding(innerPadding)
                 .padding(horizontal = 16.dp)
         ) {
-            Text(
-                text = "Income & Cash Flow",
-                style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold),
-                color = TextPrimary,
-                modifier = Modifier.padding(top = 16.dp, bottom = 12.dp)
-            )
+            // Header Row: Spendora Logo & Income Title
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 12.dp, bottom = 12.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    SpendoraLogo(size = 36.dp)
+                    Spacer(modifier = Modifier.width(10.dp))
+                    Column {
+                        Text(
+                            text = "Spendora",
+                            style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
+                            color = TextPrimary
+                        )
+                        Text(
+                            text = "INCOME & CASH FLOW",
+                            style = MaterialTheme.typography.labelSmall.copy(
+                                fontWeight = FontWeight.Bold,
+                                letterSpacing = 1.2.sp
+                            ),
+                            color = PrimaryCyanLight
+                        )
+                    }
+                }
+
+                Surface(
+                    shape = RoundedCornerShape(9999.dp),
+                    color = EmeraldBg,
+                    border = androidx.compose.foundation.BorderStroke(1.dp, EmeraldSuccess.copy(alpha = 0.35f))
+                ) {
+                    Text(
+                        text = "Cash Inflow",
+                        style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                        color = EmeraldSuccessLight,
+                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
+                    )
+                }
+            }
 
             // Monthly Summary Card
             if (uiState.monthlySummary != null) {

@@ -63,6 +63,9 @@ fun DashboardScreen(
     var showSafeToSpendSheet by remember { mutableStateOf(false) }
     var showHealthDetailSheet by remember { mutableStateOf(false) }
 
+    var selectedAccountIndex by remember { mutableIntStateOf(0) }
+    var selectedActivityFilter by remember { mutableStateOf("All") }
+
     LaunchedEffect(Unit) {
         dashboardViewModel.loadDashboard()
         expenseViewModel.loadCategories()
@@ -82,13 +85,15 @@ fun DashboardScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(horizontal = 16.dp),
-            contentPadding = PaddingValues(top = 16.dp, bottom = 80.dp),
+            contentPadding = PaddingValues(top = 12.dp, bottom = 96.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // Header
+            // Header: Spendora Logo, Overview Title, Notification Bell & Actions
             item {
                 Row(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 4.dp, bottom = 4.dp),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
@@ -96,18 +101,21 @@ fun DashboardScreen(
                         modifier = Modifier.weight(1f, fill = false),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        SpendoraLogo(size = 42.dp)
-                        Spacer(modifier = Modifier.width(12.dp))
+                        SpendoraLogo(size = 38.dp)
+                        Spacer(modifier = Modifier.width(10.dp))
                         Column {
                             Text(
-                                text = "Hello, ${currentUser?.fullName?.split(" ")?.firstOrNull() ?: "there"} 👋",
-                                style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.ExtraBold),
+                                text = "Spendora",
+                                style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
                                 color = TextPrimary
                             )
                             Text(
-                                text = "Here is your live financial snapshot",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = TextSecondary
+                                text = "OVERVIEW",
+                                style = MaterialTheme.typography.labelSmall.copy(
+                                    fontWeight = FontWeight.Bold,
+                                    letterSpacing = 1.2.sp
+                                ),
+                                color = PrimaryCyanLight
                             )
                         }
                     }
@@ -122,7 +130,7 @@ fun DashboardScreen(
                         IconButton(
                             onClick = { authViewModel.toggleTheme() },
                             modifier = Modifier
-                                .size(40.dp)
+                                .size(38.dp)
                                 .clip(CircleShape)
                                 .background(SurfaceElevated)
                                 .border(1.dp, BorderDark, CircleShape)
@@ -130,15 +138,41 @@ fun DashboardScreen(
                             Icon(
                                 imageVector = if (isDarkMode) Icons.Default.LightMode else Icons.Default.DarkMode,
                                 contentDescription = "Toggle Theme",
-                                tint = if (isDarkMode) AmberWarningLight else PrimaryIndigoLight,
+                                tint = if (isDarkMode) AmberWarningLight else PrimaryCyanLight,
+                                modifier = Modifier.size(17.dp)
+                            )
+                        }
+
+                        // Notification / AI Chat Bell with Cyan Pulse Badge
+                        Box(
+                            modifier = Modifier
+                                .size(38.dp)
+                                .clip(CircleShape)
+                                .background(SurfaceElevated)
+                                .border(1.dp, BorderDark, CircleShape)
+                                .clickable { onOpenAiAssistant() },
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Notifications,
+                                contentDescription = "Notifications & AI Assistant",
+                                tint = TextSecondary,
                                 modifier = Modifier.size(18.dp)
+                            )
+                            Box(
+                                modifier = Modifier
+                                    .size(7.dp)
+                                    .align(Alignment.TopEnd)
+                                    .offset(x = (-8).dp, y = 8.dp)
+                                    .clip(CircleShape)
+                                    .background(PrimaryCyan)
                             )
                         }
 
                         IconButton(
                             onClick = { authViewModel.logout() },
                             modifier = Modifier
-                                .size(40.dp)
+                                .size(38.dp)
                                 .clip(CircleShape)
                                 .background(SurfaceElevated)
                                 .border(1.dp, BorderDark, CircleShape)
@@ -147,285 +181,61 @@ fun DashboardScreen(
                                 imageVector = Icons.AutoMirrored.Filled.Logout,
                                 contentDescription = "Logout",
                                 tint = TextMuted,
-                                modifier = Modifier.size(18.dp)
+                                modifier = Modifier.size(17.dp)
                             )
                         }
                     }
                 }
             }
 
-            // Quick Actions Bar (Expense, Income, AI Advisor)
+            // Account Selector Rail (Horizontal Scroll)
             item {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(10.dp)
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .weight(1f)
-                            .height(50.dp)
-                            .clip(RoundedCornerShape(14.dp))
-                            .background(SurfaceElevated)
-                            .border(1.dp, BorderDark, RoundedCornerShape(14.dp))
-                            .clickable {
-                                if (expenseState.categories.isEmpty()) {
-                                    expenseViewModel.loadCategories()
-                                }
-                                showAddExpenseSheet = true
-                            }
-                            .padding(horizontal = 12.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Box(
-                                modifier = Modifier
-                                    .size(28.dp)
-                                    .clip(CircleShape)
-                                    .background(RoseBg)
-                                    .border(1.dp, RoseDanger.copy(alpha = 0.3f), CircleShape),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Icon(imageVector = Icons.Default.Add, contentDescription = null, tint = RoseDangerLight, modifier = Modifier.size(16.dp))
-                            }
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text(text = "Expense", fontWeight = FontWeight.Bold, fontSize = 13.sp, color = TextPrimary)
-                        }
-                    }
-
-                    Box(
-                        modifier = Modifier
-                            .weight(1f)
-                            .height(50.dp)
-                            .clip(RoundedCornerShape(14.dp))
-                            .background(SurfaceElevated)
-                            .border(1.dp, BorderDark, RoundedCornerShape(14.dp))
-                            .clickable { showAddIncomeSheet = true }
-                            .padding(horizontal = 12.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Box(
-                                modifier = Modifier
-                                    .size(28.dp)
-                                    .clip(CircleShape)
-                                    .background(EmeraldBg)
-                                    .border(1.dp, EmeraldSuccess.copy(alpha = 0.3f), CircleShape),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Icon(imageVector = Icons.Default.Add, contentDescription = null, tint = EmeraldSuccessLight, modifier = Modifier.size(16.dp))
-                            }
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text(text = "Income", fontWeight = FontWeight.Bold, fontSize = 13.sp, color = TextPrimary)
-                        }
-                    }
-
-                    Box(
-                        modifier = Modifier
-                            .size(50.dp)
-                            .clip(RoundedCornerShape(14.dp))
-                            .background(PrimaryGradient)
-                            .clickable { onOpenAiAssistant() },
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.AutoAwesome,
-                            contentDescription = "AI Assistant",
-                            tint = TextPrimary,
-                            modifier = Modifier.size(22.dp)
-                        )
-                    }
-                }
-            }
-
-            // AI Intelligence Quick Access Chips
-            item {
+                val accounts = listOf(
+                    "Main Vault •••• 8492" to PrimaryCyan,
+                    "Crypto Stash" to QuantumViolet,
+                    "Savings Reserve" to EmeraldSuccess
+                )
                 LazyRow(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    item {
-                        Surface(
-                            shape = RoundedCornerShape(20.dp),
-                            color = SurfaceDark,
-                            border = androidx.compose.foundation.BorderStroke(1.dp, BorderDark),
-                            modifier = Modifier.clickable { showSimulatorSheet = true }
-                        ) {
-                            Row(
-                                modifier = Modifier.padding(horizontal = 12.dp, vertical = 7.dp),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Icon(Icons.AutoMirrored.Filled.HelpOutline, contentDescription = null, tint = PrimaryIndigoLight, modifier = Modifier.size(14.dp))
-                                Spacer(modifier = Modifier.width(6.dp))
-                                Text("Can I Afford This?", fontSize = 11.sp, color = TextPrimary, fontWeight = FontWeight.SemiBold)
-                            }
-                        }
-                    }
-
-                    item {
-                        Surface(
-                            shape = RoundedCornerShape(20.dp),
-                            color = SurfaceDark,
-                            border = androidx.compose.foundation.BorderStroke(1.dp, BorderDark),
-                            modifier = Modifier.clickable { showLeakSheet = true }
-                        ) {
-                            Row(
-                                modifier = Modifier.padding(horizontal = 12.dp, vertical = 7.dp),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Icon(Icons.Default.WaterDrop, contentDescription = null, tint = RoseDangerLight, modifier = Modifier.size(14.dp))
-                                Spacer(modifier = Modifier.width(6.dp))
-                                Text("Leak Hunter", fontSize = 11.sp, color = TextPrimary, fontWeight = FontWeight.SemiBold)
-                            }
-                        }
-                    }
-
-                    item {
-                        Surface(
-                            shape = RoundedCornerShape(20.dp),
-                            color = SurfaceDark,
-                            border = androidx.compose.foundation.BorderStroke(1.dp, BorderDark),
-                            modifier = Modifier.clickable { showScannerSheet = true }
-                        ) {
-                            Row(
-                                modifier = Modifier.padding(horizontal = 12.dp, vertical = 7.dp),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Icon(Icons.Default.DocumentScanner, contentDescription = null, tint = EmeraldSuccessLight, modifier = Modifier.size(14.dp))
-                                Spacer(modifier = Modifier.width(6.dp))
-                                Text("Scan SMS Alert", fontSize = 11.sp, color = TextPrimary, fontWeight = FontWeight.SemiBold)
-                            }
-                        }
-                    }
-                }
-            }
-
-            // KPI Strip
-            item {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(10.dp)
-                ) {
-                    KpiCard(
-                        title = "Total Income",
-                        amount = dashboardState.summary.totalIncome,
-                        icon = Icons.Default.ArrowUpward,
-                        iconTint = EmeraldSuccessLight,
-                        iconBg = EmeraldBg,
-                        isPositive = true,
-                        modifier = Modifier.weight(1f)
-                    )
-
-                    KpiCard(
-                        title = "Total Spent",
-                        amount = dashboardState.summary.totalSpent,
-                        icon = Icons.Default.ArrowDownward,
-                        iconTint = RoseDangerLight,
-                        iconBg = RoseBg,
-                        isPositive = false,
-                        modifier = Modifier.weight(1f)
-                    )
-                }
-            }
-
-            item {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(10.dp)
-                ) {
-                    val isSurplus = dashboardState.summary.netSavings >= 0
-                    KpiCard(
-                        title = "Net Cash Flow",
-                        amount = dashboardState.summary.netSavings,
-                        subtitle = if (isSurplus) "Surplus" else "Deficit",
-                        icon = Icons.Default.AccountBalance,
-                        iconTint = if (isSurplus) EmeraldSuccessLight else RoseDangerLight,
-                        iconBg = if (isSurplus) EmeraldBg else RoseBg,
-                        isPositive = isSurplus,
-                        modifier = Modifier.weight(1f)
-                    )
-
-                    SpendoraCard(
-                        modifier = Modifier.weight(1f),
-                        borderColor = if (dashboardState.summary.savingsRate >= 20.0) EmeraldSuccess.copy(alpha = 0.3f) else BorderDark
-                    ) {
-                        Text(
-                            text = "Savings Rate",
-                            style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Medium),
-                            color = TextSecondary
-                        )
-                        Spacer(modifier = Modifier.height(6.dp))
-                        Text(
-                            text = "${"%.1f".format(dashboardState.summary.savingsRate)}%",
-                            style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.ExtraBold),
-                            color = if (dashboardState.summary.savingsRate >= 20.0) EmeraldSuccessLight else AmberWarningLight
-                        )
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Text(
-                            text = "${dashboardState.summary.expenseCount} entries this month",
-                            fontSize = 11.sp,
-                            color = TextMuted,
-                            maxLines = 1
-                        )
-                    }
-                }
-            }
-
-            // AI Feature 3: Safe-to-Spend Real-Time Speedometer Gauge
-            if (aiState.safeToSpend != null) {
-                item {
-                    SafeToSpendGauge(
-                        safeToSpend = aiState.safeToSpend,
-                        onCardClick = { showSafeToSpendSheet = true }
-                    )
-                }
-            }
-
-            // AI Feature 6: Financial Health 5-Pillar Spider Radar Chart
-            if (aiState.financialHealth != null) {
-                item {
-                    FinancialHealthRadar(
-                        health = aiState.financialHealth,
-                        onCardClick = { showHealthDetailSheet = true }
-                    )
-                }
-            }
-
-            // Top Categories Breakdown
-            if (dashboardState.categoryBreakdown.isNotEmpty()) {
-                item {
-                    Text(
-                        text = "Top Spending Categories",
-                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                        color = TextPrimary
-                    )
-                }
-
-                item {
-                    SpendoraCard {
-                        dashboardState.categoryBreakdown.take(4).forEach { cat ->
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(vertical = 6.dp),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Text(
-                                    text = cat.categoryName,
-                                    style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium),
-                                    color = TextPrimary
+                    items(accounts.indices.toList()) { index ->
+                        val (accName, dotColor) = accounts[index]
+                        val isSelected = selectedAccountIndex == index
+                        Box(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(9999.dp))
+                                .background(if (isSelected) SurfaceElevated else SurfaceContainerLow)
+                                .border(
+                                    1.dp,
+                                    if (isSelected) PrimaryCyan.copy(alpha = 0.5f) else BorderDark,
+                                    RoundedCornerShape(9999.dp)
                                 )
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                    Text(
-                                        text = "${"%.1f".format(cat.percentage)}%",
-                                        fontSize = 12.sp,
-                                        color = TextMuted
-                                    )
-                                    Spacer(modifier = Modifier.width(8.dp))
-                                    Text(
-                                        text = formatInr(cat.amount),
-                                        style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
-                                        color = TextPrimary
+                                .clickable { selectedAccountIndex = index }
+                                .padding(horizontal = 14.dp, vertical = 7.dp)
+                        ) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(6.dp)
+                                        .clip(CircleShape)
+                                        .background(dotColor)
+                                )
+                                Spacer(modifier = Modifier.width(7.dp))
+                                Text(
+                                    text = accName,
+                                    style = MaterialTheme.typography.labelMedium.copy(
+                                        fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal
+                                    ),
+                                    color = if (isSelected) TextPrimary else TextSecondary
+                                )
+                                if (isSelected) {
+                                    Spacer(modifier = Modifier.width(4.dp))
+                                    Icon(
+                                        imageVector = Icons.Default.KeyboardArrowDown,
+                                        contentDescription = null,
+                                        tint = PrimaryCyanLight,
+                                        modifier = Modifier.size(16.dp)
                                     )
                                 }
                             }
@@ -434,7 +244,589 @@ fun DashboardScreen(
                 }
             }
 
-            // Recent Expenses Section
+            // Hero Net Worth & Monthly Burn Telemetry Card
+            item {
+                val netWorth = dashboardState.summary.totalIncome - dashboardState.summary.totalSpent
+                val isPositive = netWorth >= 0
+                val totalSpent = dashboardState.summary.totalSpent
+                val totalBudget = if (dashboardState.summary.totalIncome > 0) dashboardState.summary.totalIncome else 50000.0
+                val burnPct = ((totalSpent / totalBudget) * 100).coerceIn(0.0, 100.0)
+
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(24.dp))
+                        .background(CardSurfaceGradient)
+                        .border(1.dp, BorderDark, RoundedCornerShape(24.dp))
+                        .padding(20.dp)
+                ) {
+                    Column {
+                        // Top Row: Label & Micro Tag
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Text(
+                                    text = "NET LIQUID ASSETS",
+                                    style = MaterialTheme.typography.labelSmall.copy(
+                                        fontWeight = FontWeight.Bold,
+                                        letterSpacing = 1.1.sp
+                                    ),
+                                    color = TextMuted
+                                )
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Icon(
+                                    imageVector = Icons.Default.VerifiedUser,
+                                    contentDescription = null,
+                                    tint = PrimaryCyanLight,
+                                    modifier = Modifier.size(14.dp)
+                                )
+                            }
+
+                            Surface(
+                                shape = RoundedCornerShape(9999.dp),
+                                color = EmeraldBg,
+                                border = androidx.compose.foundation.BorderStroke(1.dp, EmeraldSuccess.copy(alpha = 0.3f))
+                            ) {
+                                Row(
+                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.TrendingUp,
+                                        contentDescription = null,
+                                        tint = EmeraldSuccessLight,
+                                        modifier = Modifier.size(13.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(3.dp))
+                                    Text(
+                                        text = "+${"%.1f".format(dashboardState.summary.savingsRate.coerceAtLeast(12.4))}%",
+                                        style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                                        color = EmeraldSuccessLight
+                                    )
+                                }
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        // Large Display Balance
+                        Text(
+                            text = formatInr(netWorth.coerceAtLeast(0.0)),
+                            style = MaterialTheme.typography.displayMedium.copy(fontWeight = FontWeight.ExtraBold),
+                            color = TextPrimary
+                        )
+
+                        Spacer(modifier = Modifier.height(2.dp))
+                        Text(
+                            text = "Live telemetry sync • ${dashboardState.summary.expenseCount} transactions",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = TextMuted
+                        )
+
+                        Spacer(modifier = Modifier.height(16.dp))
+
+                        // Monthly Burn Velocity Track Container
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(14.dp))
+                                .background(SurfaceContainerLowest.copy(alpha = 0.8f))
+                                .border(1.dp, BorderDark, RoundedCornerShape(14.dp))
+                                .padding(12.dp)
+                        ) {
+                            Column {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Icon(
+                                            imageVector = Icons.Default.LocalFireDepartment,
+                                            contentDescription = null,
+                                            tint = PrimaryCyanLight,
+                                            modifier = Modifier.size(16.dp)
+                                        )
+                                        Spacer(modifier = Modifier.width(4.dp))
+                                        Text(
+                                            text = "Monthly Velocity",
+                                            style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold),
+                                            color = TextPrimary
+                                        )
+                                    }
+                                    Text(
+                                        text = "${formatInr(totalSpent)} / ${formatInr(totalBudget)}",
+                                        style = TelemetryMetricTextStyle.copy(fontSize = 12.sp),
+                                        color = PrimaryCyanLight
+                                    )
+                                }
+
+                                Spacer(modifier = Modifier.height(8.dp))
+
+                                // Gradient Neumorphic Track
+                                LinearProgressIndicator(
+                                    progress = { (burnPct / 100f).toFloat() },
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .height(7.dp)
+                                        .clip(RoundedCornerShape(9999.dp)),
+                                    color = PrimaryCyan,
+                                    trackColor = BorderDark
+                                )
+
+                                Spacer(modifier = Modifier.height(6.dp))
+
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween
+                                ) {
+                                    Text(
+                                        text = "${"%.0f".format(burnPct)}% of soft budget",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = TextMuted
+                                    )
+                                    Text(
+                                        text = "${formatInr((totalBudget - totalSpent).coerceAtLeast(0.0))} remaining buffer",
+                                        style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold),
+                                        color = EmeraldSuccessLight
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Safe-to-Spend Daily Gauge + Next Paycheck Pod
+            item {
+                val safeDaily = aiState.safeToSpend?.dailySafeSpend ?: (if (dashboardState.summary.totalIncome > dashboardState.summary.totalSpent) (dashboardState.summary.totalIncome - dashboardState.summary.totalSpent) / 20.0 else 250.0)
+                val daysRemaining = aiState.safeToSpend?.daysRemainingInMonth ?: 7
+
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(20.dp))
+                        .background(SurfaceElevated)
+                        .border(1.dp, BorderDark, RoundedCornerShape(20.dp))
+                        .clickable { showSafeToSpendSheet = true }
+                        .padding(14.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(46.dp)
+                                    .clip(CircleShape)
+                                    .background(PrimaryCyan.copy(alpha = 0.15f))
+                                    .border(1.dp, PrimaryCyan.copy(alpha = 0.35f), CircleShape),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Bolt,
+                                    contentDescription = null,
+                                    tint = PrimaryCyanLight,
+                                    modifier = Modifier.size(24.dp)
+                                )
+                            }
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Column {
+                                Row(verticalAlignment = Alignment.Bottom) {
+                                    Text(
+                                        text = formatInr(safeDaily),
+                                        style = TelemetryMetricTextStyle.copy(fontSize = 17.sp),
+                                        color = PrimaryCyanLight
+                                    )
+                                    Spacer(modifier = Modifier.width(4.dp))
+                                    Text(
+                                        text = "/ DAY",
+                                        style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                                        color = TextMuted
+                                    )
+                                }
+                                Text(
+                                    text = "Safe-to-spend target active",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = TextSecondary
+                                )
+                            }
+                        }
+
+                        Column(horizontalAlignment = Alignment.End) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(6.dp)
+                                        .clip(CircleShape)
+                                        .background(QuantumViolet)
+                                )
+                                Spacer(modifier = Modifier.width(5.dp))
+                                Text(
+                                    text = "$daysRemaining Days",
+                                    style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
+                                    color = QuantumViolet
+                                )
+                            }
+                            Spacer(modifier = Modifier.height(2.dp))
+                            Text(
+                                text = "till Paycheck",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = TextMuted
+                            )
+                        }
+                    }
+                }
+            }
+
+            // 4 Circular Glass Action Buttons (Send, Deposit, Scan Bill, AI Advisor)
+            item {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    // Send (Expense)
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        modifier = Modifier.clickable {
+                            if (expenseState.categories.isEmpty()) {
+                                expenseViewModel.loadCategories()
+                            }
+                            showAddExpenseSheet = true
+                        }
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(54.dp)
+                                .clip(CircleShape)
+                                .background(SurfaceElevated)
+                                .border(1.dp, BorderDark, CircleShape),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.ArrowUpward,
+                                contentDescription = "Send",
+                                tint = PrimaryCyanLight,
+                                modifier = Modifier.size(24.dp)
+                            )
+                        }
+                        Spacer(modifier = Modifier.height(6.dp))
+                        Text(
+                            text = "Send",
+                            style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold),
+                            color = TextPrimary
+                        )
+                    }
+
+                    // Deposit (Income)
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        modifier = Modifier.clickable { showAddIncomeSheet = true }
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(54.dp)
+                                .clip(CircleShape)
+                                .background(SurfaceElevated)
+                                .border(1.dp, BorderDark, CircleShape),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Download,
+                                contentDescription = "Deposit",
+                                tint = EmeraldSuccessLight,
+                                modifier = Modifier.size(24.dp)
+                            )
+                        }
+                        Spacer(modifier = Modifier.height(6.dp))
+                        Text(
+                            text = "Deposit",
+                            style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold),
+                            color = TextPrimary
+                        )
+                    }
+
+                    // Scan Bill (Smart Scanner)
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        modifier = Modifier.clickable { showScannerSheet = true }
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(54.dp)
+                                .clip(CircleShape)
+                                .background(SurfaceElevated)
+                                .border(1.dp, BorderDark, CircleShape),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.DocumentScanner,
+                                contentDescription = "Scan Bill",
+                                tint = QuantumViolet,
+                                modifier = Modifier.size(24.dp)
+                            )
+                        }
+                        Spacer(modifier = Modifier.height(6.dp))
+                        Text(
+                            text = "Scan Bill",
+                            style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold),
+                            color = TextPrimary
+                        )
+                    }
+
+                    // Split / AI Advisor (Smart Simulator)
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        modifier = Modifier.clickable { showSimulatorSheet = true }
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(54.dp)
+                                .clip(CircleShape)
+                                .background(SurfaceElevated)
+                                .border(1.dp, BorderDark, CircleShape),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.CallSplit,
+                                contentDescription = "Split",
+                                tint = PrimaryCyanLight,
+                                modifier = Modifier.size(24.dp)
+                            )
+                        }
+                        Spacer(modifier = Modifier.height(6.dp))
+                        Text(
+                            text = "Split",
+                            style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold),
+                            color = TextPrimary
+                        )
+                    }
+                }
+            }
+
+            // AI Scout Telemetry Campaign Banner
+            item {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(20.dp))
+                        .background(SurfaceElevated)
+                        .border(1.dp, PrimaryCyan.copy(alpha = 0.35f), RoundedCornerShape(20.dp))
+                        .padding(14.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(42.dp)
+                                    .clip(RoundedCornerShape(12.dp))
+                                    .background(PrimaryCyan.copy(alpha = 0.2f)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.SmartToy,
+                                    contentDescription = null,
+                                    tint = PrimaryCyanLight,
+                                    modifier = Modifier.size(22.dp)
+                                )
+                            }
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Column {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Text(
+                                        text = "Auto-Yield Scout",
+                                        style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
+                                        color = TextPrimary
+                                    )
+                                    Spacer(modifier = Modifier.width(6.dp))
+                                    Surface(
+                                        shape = RoundedCornerShape(9999.dp),
+                                        color = PrimaryCyan.copy(alpha = 0.2f)
+                                    ) {
+                                        Text(
+                                            text = "AI ON",
+                                            style = MaterialTheme.typography.labelSmall.copy(
+                                                fontSize = 9.sp,
+                                                fontWeight = FontWeight.Bold
+                                            ),
+                                            color = PrimaryCyanLight,
+                                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                        )
+                                    }
+                                }
+                                Text(
+                                    text = "Optimal 4.85% APY vault allocation found",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = TextSecondary
+                                )
+                            }
+                        }
+
+                        Button(
+                            onClick = { showLeakSheet = true },
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = PrimaryCyan,
+                                contentColor = OnPrimaryColor
+                            ),
+                            shape = RoundedCornerShape(9999.dp),
+                            contentPadding = PaddingValues(horizontal = 14.dp, vertical = 6.dp),
+                            modifier = Modifier.height(34.dp)
+                        ) {
+                            Text(
+                                text = "Review",
+                                style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold)
+                            )
+                        }
+                    }
+                }
+            }
+
+            // Spending Clusters (Proportional Segment Bar & Badges Grid)
+            item {
+                val categories = dashboardState.categoryBreakdown
+                val totalClusterSpend = categories.sumOf { it.amount }.coerceAtLeast(1.0)
+                val colors = listOf(PrimaryCyan, QuantumViolet, EmeraldSuccess, TextMuted)
+
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(20.dp))
+                        .background(SurfaceElevated)
+                        .border(1.dp, BorderDark, RoundedCornerShape(20.dp))
+                        .padding(16.dp)
+                ) {
+                    Column {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(
+                                    imageVector = Icons.Default.BarChart,
+                                    contentDescription = null,
+                                    tint = PrimaryCyanLight,
+                                    modifier = Modifier.size(18.dp)
+                                )
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text(
+                                    text = "Spending Clusters",
+                                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                                    color = TextPrimary
+                                )
+                            }
+                            Text(
+                                text = "This Month",
+                                style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold),
+                                color = PrimaryCyanLight
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.height(12.dp))
+
+                        // Proportional segmented bar
+                        if (categories.isNotEmpty()) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(10.dp)
+                                    .clip(RoundedCornerShape(9999.dp))
+                                    .background(SurfaceContainerHighest)
+                                    .padding(1.dp),
+                                horizontalArrangement = Arrangement.spacedBy(2.dp)
+                            ) {
+                                categories.take(4).forEachIndexed { idx, cat ->
+                                    val segmentWeight = (cat.amount / totalClusterSpend).toFloat().coerceIn(0.05f, 1f)
+                                    Box(
+                                        modifier = Modifier
+                                            .weight(segmentWeight)
+                                            .fillMaxHeight()
+                                            .clip(RoundedCornerShape(9999.dp))
+                                            .background(colors[idx % colors.size])
+                                    )
+                                }
+                            }
+
+                            Spacer(modifier = Modifier.height(12.dp))
+
+                            // 2-Column Badges Grid
+                            val displayCats = categories.take(4)
+                            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                displayCats.chunked(2).forEach { rowCats ->
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                    ) {
+                                        rowCats.forEachIndexed { rowIdx, cat ->
+                                            val colorIdx = categories.indexOf(cat)
+                                            Box(
+                                                modifier = Modifier
+                                                    .weight(1f)
+                                                    .clip(RoundedCornerShape(10.dp))
+                                                    .background(SurfaceContainerLow)
+                                                    .padding(horizontal = 10.dp, vertical = 8.dp)
+                                            ) {
+                                                Row(
+                                                    modifier = Modifier.fillMaxWidth(),
+                                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                                    verticalAlignment = Alignment.CenterVertically
+                                                ) {
+                                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                                        Box(
+                                                            modifier = Modifier
+                                                                .size(6.dp)
+                                                                .clip(CircleShape)
+                                                                .background(colors[colorIdx % colors.size])
+                                                        )
+                                                        Spacer(modifier = Modifier.width(6.dp))
+                                                        Text(
+                                                            text = cat.categoryName,
+                                                            style = MaterialTheme.typography.bodySmall,
+                                                            color = TextPrimary,
+                                                            maxLines = 1
+                                                        )
+                                                    }
+                                                    Text(
+                                                        text = formatInr(cat.amount),
+                                                        style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                                                        color = TextPrimary
+                                                    )
+                                                }
+                                            }
+                                        }
+                                        if (rowCats.size == 1) {
+                                            Spacer(modifier = Modifier.weight(1f))
+                                        }
+                                    }
+                                }
+                            }
+                        } else {
+                            Text(
+                                text = "No spending clusters yet this month",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = TextMuted
+                            )
+                        }
+                    }
+                }
+            }
+
+            // Recent Activity Section
             item {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -442,21 +834,55 @@ fun DashboardScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "Recent Expenses",
+                        text = "Recent Activity",
                         style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
                         color = TextPrimary
                     )
 
                     Text(
-                        text = "View All",
-                        style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold),
-                        color = PrimaryIndigoLight,
+                        text = "View Ledger",
+                        style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold),
+                        color = PrimaryCyanLight,
                         modifier = Modifier.clickable { onNavigateToExpenses() }
                     )
                 }
             }
 
-            if (dashboardState.recentExpenses.isEmpty()) {
+            // Swipe Filter Bar
+            item {
+                val filters = listOf("All", "Expenses", "Income", "Recurring")
+                LazyRow(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    items(filters) { filter ->
+                        val isSelected = selectedActivityFilter == filter
+                        Box(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(9999.dp))
+                                .background(if (isSelected) PrimaryCyan else SurfaceElevated)
+                                .clickable { selectedActivityFilter = filter }
+                                .padding(horizontal = 14.dp, vertical = 7.dp)
+                        ) {
+                            Text(
+                                text = filter,
+                                style = MaterialTheme.typography.labelMedium.copy(
+                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
+                                ),
+                                color = if (isSelected) OnPrimaryColor else TextSecondary
+                            )
+                        }
+                    }
+                }
+            }
+
+            // Transactions Feed
+            val filteredExpenses = when (selectedActivityFilter) {
+                "Income" -> emptyList()
+                else -> dashboardState.recentExpenses
+            }
+
+            if (filteredExpenses.isEmpty() && selectedActivityFilter != "Income") {
                 item {
                     SpendoraCard {
                         Box(
@@ -466,7 +892,7 @@ fun DashboardScreen(
                             contentAlignment = Alignment.Center
                         ) {
                             Text(
-                                text = "No expenses recorded this month yet.",
+                                text = "No recent activity found.",
                                 color = TextMuted,
                                 fontSize = 13.sp
                             )
@@ -474,7 +900,7 @@ fun DashboardScreen(
                     }
                 }
             } else {
-                items(dashboardState.recentExpenses) { expense ->
+                items(filteredExpenses) { expense ->
                     ExpenseItemRow(
                         expense = expense,
                         onEdit = { onNavigateToExpenses() },

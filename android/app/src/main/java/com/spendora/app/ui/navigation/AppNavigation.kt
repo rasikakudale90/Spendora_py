@@ -21,6 +21,7 @@ import com.spendora.app.ui.screens.auth.LoginScreen
 import com.spendora.app.ui.screens.auth.OtpForgotPasswordScreen
 import com.spendora.app.ui.screens.auth.RegisterScreen
 import com.spendora.app.ui.screens.splash.SplashScreen
+import com.spendora.app.ui.screens.analytics.AnalyticsScreen
 import com.spendora.app.ui.screens.dashboard.DashboardScreen
 import com.spendora.app.ui.screens.expenses.ExpensesScreen
 import com.spendora.app.ui.screens.income.IncomeScreen
@@ -54,6 +55,7 @@ fun AppNavigation(
 
     val authenticatedRoutes = listOf(
         Screen.Dashboard.route,
+        Screen.Analytics.route,
         Screen.Expenses.route,
         Screen.Income.route,
         Screen.Budgets.route,
@@ -140,6 +142,14 @@ fun AppNavigation(
                     onNavigateToExpenses = { navController.navigate(Screen.Expenses.route) },
                     onNavigateToIncome = { navController.navigate(Screen.Income.route) },
                     onOpenAiAssistant = { navController.navigate(Screen.AiAssistant.route) }
+                )
+            }
+
+            composable(Screen.Analytics.route) {
+                AnalyticsScreen(
+                    dashboardViewModel = dashboardViewModel,
+                    aiViewModel = aiViewModel,
+                    onOpenAiAdvisor = { navController.navigate(Screen.AiAssistant.route) }
                 )
             }
 

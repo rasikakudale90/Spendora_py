@@ -21,11 +21,11 @@ sealed class BottomNavItem(
     val route: String,
     val icon: ImageVector
 ) {
-    object Dashboard : BottomNavItem("Dashboard", Screen.Dashboard.route, Icons.Default.Dashboard)
-    object Expenses : BottomNavItem("Expenses", Screen.Expenses.route, Icons.AutoMirrored.Filled.ReceiptLong)
-    object Income : BottomNavItem("Income", Screen.Income.route, Icons.Default.AccountBalanceWallet)
-    object Budgets : BottomNavItem("Budgets", Screen.Budgets.route, Icons.Default.PieChart)
-    object Goals : BottomNavItem("Goals", Screen.Goals.route, Icons.Default.Flag)
+    object Dashboard : BottomNavItem("Overview", Screen.Dashboard.route, Icons.Default.Dashboard)
+    object Analytics : BottomNavItem("Analytics", Screen.Analytics.route, Icons.Default.QueryStats)
+    object Expenses : BottomNavItem("Ledger", Screen.Expenses.route, Icons.AutoMirrored.Filled.ReceiptLong)
+    object Budgets : BottomNavItem("Budgets", Screen.Budgets.route, Icons.Default.AccountBalanceWallet)
+    object Goals : BottomNavItem("Vault", Screen.Goals.route, Icons.Default.Lock)
 }
 
 @Composable
@@ -35,8 +35,8 @@ fun SpendoraBottomNavBar(
 ) {
     val items = listOf(
         BottomNavItem.Dashboard,
+        BottomNavItem.Analytics,
         BottomNavItem.Expenses,
-        BottomNavItem.Income,
         BottomNavItem.Budgets,
         BottomNavItem.Goals
     )
@@ -57,7 +57,7 @@ fun SpendoraBottomNavBar(
                     Icon(
                         imageVector = item.icon,
                         contentDescription = item.title,
-                        tint = if (isSelected) PrimaryIndigoLight else TextMuted
+                        tint = if (isSelected) PrimaryCyanLight else TextMuted
                     )
                 },
                 label = {
@@ -65,15 +65,15 @@ fun SpendoraBottomNavBar(
                         text = item.title,
                         fontSize = 10.sp,
                         fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                        color = if (isSelected) TextPrimary else TextMuted
+                        color = if (isSelected) PrimaryCyanLight else TextMuted
                     )
                 },
                 colors = NavigationBarItemDefaults.colors(
-                    selectedIconColor = PrimaryIndigoLight,
+                    selectedIconColor = PrimaryCyanLight,
                     unselectedIconColor = TextMuted,
-                    selectedTextColor = TextPrimary,
+                    selectedTextColor = PrimaryCyanLight,
                     unselectedTextColor = TextMuted,
-                    indicatorColor = PrimaryIndigo.copy(alpha = 0.25f)
+                    indicatorColor = PrimaryCyan.copy(alpha = 0.20f)
                 )
             )
         }

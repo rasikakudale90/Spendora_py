@@ -35,6 +35,7 @@ fun SpendoraCard(
     backgroundColor: Color? = null,
     gradientBrush: Brush? = CardSurfaceGradient,
     borderColor: Color = BorderDark,
+    contentPadding: PaddingValues = PaddingValues(20.dp),
     content: @Composable ColumnScope.() -> Unit
 ) {
     val backgroundModifier = when {
@@ -46,12 +47,12 @@ fun SpendoraCard(
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(16.dp))
-            .border(1.dp, borderColor, RoundedCornerShape(16.dp))
+            .clip(RoundedCornerShape(24.dp))
+            .border(1.dp, borderColor, RoundedCornerShape(24.dp))
             .then(backgroundModifier)
     ) {
         Column(
-            modifier = Modifier.padding(16.dp),
+            modifier = Modifier.padding(contentPadding),
             content = content
         )
     }
@@ -66,9 +67,9 @@ fun SpendoraButton(
     isLoading: Boolean = false,
     gradientBrush: Brush? = PrimaryGradient,
     containerColor: Color? = null,
-    contentColor: Color = TextPrimary
+    contentColor: Color = OnPrimaryColor
 ) {
-    val shape = RoundedCornerShape(14.dp)
+    val shape = RoundedCornerShape(16.dp)
 
     val backgroundModifier = if (containerColor != null) {
         Modifier.background(if (enabled) containerColor else containerColor.copy(alpha = 0.5f), shape)
@@ -82,7 +83,7 @@ fun SpendoraButton(
         modifier = modifier
             .fillMaxWidth()
             .height(52.dp)
-            .shadow(if (enabled && !isLoading) 6.dp else 0.dp, shape = shape, spotColor = PrimaryIndigo.copy(alpha = 0.4f))
+            .shadow(if (enabled && !isLoading) 8.dp else 0.dp, shape = shape, spotColor = PrimaryCyan.copy(alpha = 0.35f))
             .clip(shape)
             .then(backgroundModifier)
             .clickable(enabled = enabled && !isLoading, onClick = onClick),
@@ -156,16 +157,16 @@ fun SpendoraTextField(
             keyboardOptions = keyboardOptions,
             keyboardActions = keyboardActions,
             singleLine = singleLine,
-            shape = RoundedCornerShape(12.dp),
+            shape = RoundedCornerShape(16.dp),
             colors = OutlinedTextFieldDefaults.colors(
-                focusedContainerColor = SurfaceDark,
-                unfocusedContainerColor = SurfaceDark,
-                focusedBorderColor = PrimaryIndigoLight,
+                focusedContainerColor = if (SpendoraTheme.colors.isDark) Color(0xFF0A0E16) else SurfaceDark,
+                unfocusedContainerColor = if (SpendoraTheme.colors.isDark) Color(0xFF0A0E16) else SurfaceDark,
+                focusedBorderColor = PrimaryCyan,
                 unfocusedBorderColor = BorderDark,
                 focusedTextColor = TextPrimary,
                 unfocusedTextColor = TextPrimary,
                 errorBorderColor = RoseDanger,
-                cursorColor = PrimaryIndigoLight
+                cursorColor = PrimaryCyan
             )
         )
 

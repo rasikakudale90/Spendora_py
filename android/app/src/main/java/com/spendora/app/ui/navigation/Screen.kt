@@ -11,6 +11,7 @@ sealed class Screen(val route: String) {
 
     // Main App Routes
     object Dashboard : Screen("dashboard")
+    object Analytics : Screen("analytics")
     object Expenses : Screen("expenses")
     object Income : Screen("income")
     object Budgets : Screen("budgets")

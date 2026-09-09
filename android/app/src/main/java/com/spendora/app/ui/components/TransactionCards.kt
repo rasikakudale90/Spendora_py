@@ -40,8 +40,8 @@ fun KpiCard(
     amount: Double,
     subtitle: String? = null,
     icon: ImageVector,
-    iconTint: Color = PrimaryIndigoLight,
-    iconBg: Color = PrimaryIndigo.copy(alpha = 0.2f),
+    iconTint: Color = PrimaryCyanLight,
+    iconBg: Color = PrimaryCyan.copy(alpha = 0.15f),
     modifier: Modifier = Modifier,
     isPositive: Boolean? = null
 ) {
@@ -67,9 +67,8 @@ fun KpiCard(
                 Spacer(modifier = Modifier.height(6.dp))
                 Text(
                     text = formatInr(amount),
-                    style = MaterialTheme.typography.titleLarge.copy(
-                        fontWeight = FontWeight.ExtraBold,
-                        fontSize = if (amount >= 100000) 18.sp else 20.sp
+                    style = TelemetryMetricTextStyle.copy(
+                        fontSize = if (amount >= 100000) 18.sp else 22.sp
                     ),
                     color = when (isPositive) {
                         true -> EmeraldSuccessLight
@@ -83,7 +82,7 @@ fun KpiCard(
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
                         text = subtitle,
-                        fontSize = 11.sp,
+                        style = MaterialTheme.typography.labelSmall,
                         color = TextMuted,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
@@ -208,7 +207,7 @@ fun ExpenseItemRow(
             ) {
                 Text(
                     text = formatInr(expense.amount),
-                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.ExtraBold),
+                    style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold, fontSize = 15.sp),
                     color = TextPrimary,
                     maxLines = 1
                 )
@@ -316,7 +315,7 @@ fun IncomeItemRow(
             ) {
                 Text(
                     text = formatInr(income.amount),
-                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.ExtraBold),
+                    style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold, fontSize = 15.sp),
                     color = EmeraldSuccessLight,
                     maxLines = 1
                 )

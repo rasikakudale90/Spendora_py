@@ -34,7 +34,7 @@ fun GoalCard(
     val animatedProgress by animateFloatAsState(targetValue = pct / 100f, label = "goalProgress")
 
     val accentColor = when (goal.color.lowercase()) {
-        "indigo" -> PrimaryIndigoLight
+        "cyan", "indigo" -> PrimaryCyanLight
         "blue" -> Color(0xFF38BDF8)
         "purple" -> SecondaryVioletLight
         "amber" -> AmberWarningLight
@@ -48,20 +48,20 @@ fun GoalCard(
         "at_risk" -> AmberWarningLight
         "behind" -> RoseDangerLight
         "completed" -> EmeraldSuccessLight
-        else -> PrimaryIndigoLight
+        else -> PrimaryCyanLight
     }
 
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(18.dp))
-            .border(1.dp, BorderDark, RoundedCornerShape(18.dp))
+            .clip(RoundedCornerShape(20.dp))
+            .border(1.dp, BorderDark, RoundedCornerShape(20.dp))
             .background(CardSurfaceGradient)
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp)
+                .padding(18.dp)
         ) {
             // Header Row: Title, Category & Action buttons
             Row(
@@ -155,7 +155,7 @@ fun GoalCard(
                 ) {
                     Text(
                         text = "Saved ${formatInr(goal.currentAmount)}",
-                        style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
+                        style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold, fontSize = 13.sp),
                         color = TextPrimary
                     )
                     Text(
@@ -211,8 +211,7 @@ fun GoalCard(
                             if (goal.runway.requiredMonthlySavings > 0) {
                                 Text(
                                     text = "Req: ${formatInr(goal.runway.requiredMonthlySavings)}/mo",
-                                    fontSize = 11.sp,
-                                    fontWeight = FontWeight.SemiBold,
+                                    style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
                                     color = TextPrimary
                                 )
                             }
@@ -258,14 +257,13 @@ fun GoalCard(
             ) {
                 Text(
                     text = if (goal.remainingAmount > 0) "${formatInr(goal.remainingAmount)} to go" else "Goal Completed! 🎉",
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.SemiBold,
+                    style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold),
                     color = if (goal.remainingAmount > 0) TextMuted else EmeraldSuccessLight
                 )
 
                 Button(
                     onClick = onContribute,
-                    colors = ButtonDefaults.buttonColors(containerColor = PrimaryIndigo),
+                    colors = ButtonDefaults.buttonColors(containerColor = PrimaryCyan, contentColor = OnPrimaryColor),
                     shape = RoundedCornerShape(10.dp),
                     contentPadding = PaddingValues(horizontal = 14.dp, vertical = 6.dp),
                     modifier = Modifier.height(36.dp)
@@ -273,10 +271,11 @@ fun GoalCard(
                     Icon(
                         imageVector = Icons.Default.AccountBalanceWallet,
                         contentDescription = null,
+                        tint = OnPrimaryColor,
                         modifier = Modifier.size(14.dp)
                     )
                     Spacer(modifier = Modifier.width(6.dp))
-                    Text(text = "Deposit / Withdraw", fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+                    Text(text = "Deposit / Withdraw", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = OnPrimaryColor)
                 }
             }
         }

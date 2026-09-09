@@ -17,6 +17,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -63,8 +64,8 @@ fun GoalsScreen(
                     editingGoal = null
                     showFormSheet = true
                 },
-                containerColor = PrimaryIndigo,
-                contentColor = TextPrimary,
+                containerColor = PrimaryCyan,
+                contentColor = Color.Black,
                 shape = CircleShape
             ) {
                 Icon(imageVector = Icons.Default.Add, contentDescription = "Create Goal")
@@ -77,22 +78,45 @@ fun GoalsScreen(
                 .padding(padding)
         ) {
             // Header
-            Column(
+            Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 20.dp, vertical = 12.dp)
+                    .padding(horizontal = 16.dp, vertical = 12.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(
-                    text = "Savings Goals & Runway",
-                    style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold),
-                    color = TextPrimary
-                )
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(
-                    text = "AI-powered runway forecasting and target milestones",
-                    fontSize = 13.sp,
-                    color = TextSecondary
-                )
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    SpendoraLogo(size = 36.dp)
+                    Spacer(modifier = Modifier.width(10.dp))
+                    Column {
+                        Text(
+                            text = "Spendora",
+                            style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
+                            color = TextPrimary
+                        )
+                        Text(
+                            text = "VAULT & SAVINGS GOALS",
+                            style = MaterialTheme.typography.labelSmall.copy(
+                                fontWeight = FontWeight.Bold,
+                                letterSpacing = 1.2.sp
+                            ),
+                            color = PrimaryCyanLight
+                        )
+                    }
+                }
+
+                Surface(
+                    shape = RoundedCornerShape(9999.dp),
+                    color = PrimaryCyan.copy(alpha = 0.15f),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, PrimaryCyan.copy(alpha = 0.35f))
+                ) {
+                    Text(
+                        text = "AI Runway",
+                        style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                        color = PrimaryCyanLight,
+                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
+                    )
+                }
             }
 
             if (uiState.isLoading && uiState.goalsResponse == null) {
@@ -100,12 +124,12 @@ fun GoalsScreen(
                     modifier = Modifier.fillMaxSize(),
                     contentAlignment = Alignment.Center
                 ) {
-                    CircularProgressIndicator(color = PrimaryIndigo)
+                    CircularProgressIndicator(color = PrimaryCyan)
                 }
             } else {
                 LazyColumn(
                     modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(horizontal = 20.dp, vertical = 4.dp),
+                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 4.dp),
                     verticalArrangement = Arrangement.spacedBy(14.dp)
                 ) {
                     // KPI Strip: Total Saved, Target, Overall Progress %
@@ -114,29 +138,30 @@ fun GoalsScreen(
                         item {
                             Surface(
                                 modifier = Modifier.fillMaxWidth(),
-                                shape = RoundedCornerShape(16.dp),
-                                color = SurfaceDark
+                                shape = RoundedCornerShape(20.dp),
+                                color = SurfaceElevated,
+                                border = androidx.compose.foundation.BorderStroke(1.dp, BorderDark)
                             ) {
                                 Row(
                                     modifier = Modifier
                                         .fillMaxWidth()
-                                        .padding(16.dp),
+                                        .padding(18.dp),
                                     horizontalArrangement = Arrangement.SpaceBetween,
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
                                     Column {
-                                        Text(text = "Total Saved", fontSize = 11.sp, color = TextMuted)
-                                        Spacer(modifier = Modifier.height(2.dp))
+                                        Text(text = "TOTAL SAVED", style = MaterialTheme.typography.labelSmall, color = TextMuted)
+                                        Spacer(modifier = Modifier.height(3.dp))
                                         Text(
                                             text = formatInr(response.totalSavedAmount),
                                             style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                                            color = EmeraldSuccess
+                                            color = EmeraldSuccessLight
                                         )
                                     }
 
                                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                        Text(text = "Target Total", fontSize = 11.sp, color = TextMuted)
-                                        Spacer(modifier = Modifier.height(2.dp))
+                                        Text(text = "TARGET TOTAL", style = MaterialTheme.typography.labelSmall, color = TextMuted)
+                                        Spacer(modifier = Modifier.height(3.dp))
                                         Text(
                                             text = formatInr(response.totalTargetAmount),
                                             style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
@@ -145,12 +170,12 @@ fun GoalsScreen(
                                     }
 
                                     Column(horizontalAlignment = Alignment.End) {
-                                        Text(text = "Progress", fontSize = 11.sp, color = TextMuted)
-                                        Spacer(modifier = Modifier.height(2.dp))
+                                        Text(text = "PROGRESS", style = MaterialTheme.typography.labelSmall, color = TextMuted)
+                                        Spacer(modifier = Modifier.height(3.dp))
                                         Text(
                                             text = "${response.overallProgressPercentage.toInt()}%",
                                             style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                                            color = PrimaryIndigoLight
+                                            color = PrimaryCyanLight
                                         )
                                     }
                                 }
@@ -167,15 +192,20 @@ fun GoalsScreen(
                             items(statusFilters) { (filterKey, filterLabel) ->
                                 val isSelected = uiState.selectedStatusFilter == filterKey
                                 Surface(
-                                    shape = RoundedCornerShape(20.dp),
-                                    color = if (isSelected) PrimaryIndigo else SurfaceElevated,
+                                    shape = RoundedCornerShape(9999.dp),
+                                    color = if (isSelected) PrimaryCyan.copy(alpha = 0.2f) else SurfaceElevated,
+                                    border = androidx.compose.foundation.BorderStroke(
+                                        1.dp,
+                                        if (isSelected) PrimaryCyan else BorderDark
+                                    ),
                                     modifier = Modifier.clickable { viewModel.selectStatusFilter(filterKey) }
                                 ) {
                                     Text(
                                         text = filterLabel,
-                                        fontSize = 12.sp,
-                                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                                        color = if (isSelected) TextPrimary else TextMuted,
+                                        style = MaterialTheme.typography.labelMedium.copy(
+                                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium
+                                        ),
+                                        color = if (isSelected) PrimaryCyanLight else TextSecondary,
                                         modifier = Modifier.padding(horizontal = 14.dp, vertical = 7.dp)
                                     )
                                 }

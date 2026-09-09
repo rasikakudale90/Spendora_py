@@ -41,10 +41,10 @@ fun PeriodTabRow(
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(14.dp))
+            .clip(RoundedCornerShape(9999.dp))
             .background(SurfaceElevated)
-            .border(1.dp, BorderDark, RoundedCornerShape(14.dp))
-            .padding(4.dp),
+            .border(1.dp, BorderDark, RoundedCornerShape(9999.dp))
+            .padding(3.dp),
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
         periods.forEach { (key, label) ->
@@ -52,17 +52,17 @@ fun PeriodTabRow(
             Box(
                 modifier = Modifier
                     .weight(1f)
-                    .clip(RoundedCornerShape(10.dp))
-                    .background(if (isSelected) PrimaryIndigo else Color.Transparent)
+                    .clip(RoundedCornerShape(9999.dp))
+                    .background(if (isSelected) PrimaryCyan else Color.Transparent)
                     .clickable { onSelectPeriod(key) }
-                    .padding(vertical = 8.dp),
+                    .padding(vertical = 7.dp),
                 contentAlignment = Alignment.Center
             ) {
                 Text(
                     text = label,
                     fontSize = 12.sp,
                     fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                    color = if (isSelected) TextPrimary else TextMuted
+                    color = if (isSelected) OnPrimaryColor else TextMuted
                 )
             }
         }
@@ -108,18 +108,18 @@ fun BudgetCard(
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(18.dp))
+            .clip(RoundedCornerShape(20.dp))
             .border(
                 width = if (budget.status == "over_budget") 1.5.dp else 1.dp,
                 color = if (budget.status == "over_budget") RoseDanger.copy(alpha = 0.6f) else BorderDark,
-                shape = RoundedCornerShape(18.dp)
+                shape = RoundedCornerShape(20.dp)
             )
             .background(CardSurfaceGradient)
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp)
+                .padding(18.dp)
         ) {
             // Header Row: Title & Actions
             Row(
@@ -135,14 +135,14 @@ fun BudgetCard(
                         modifier = Modifier
                             .size(38.dp)
                             .clip(RoundedCornerShape(10.dp))
-                            .background(if (isOverall) PrimaryIndigo.copy(alpha = 0.2f) else statusBg)
-                            .border(1.dp, if (isOverall) PrimaryIndigoLight.copy(alpha = 0.3f) else statusColor.copy(alpha = 0.3f), RoundedCornerShape(10.dp)),
+                            .background(if (isOverall) PrimaryCyan.copy(alpha = 0.2f) else statusBg)
+                            .border(1.dp, if (isOverall) PrimaryCyanLight.copy(alpha = 0.3f) else statusColor.copy(alpha = 0.3f), RoundedCornerShape(10.dp)),
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
                             imageVector = Icons.Default.PieChart,
                             contentDescription = null,
-                            tint = if (isOverall) PrimaryIndigoLight else statusLightColor,
+                            tint = if (isOverall) PrimaryCyanLight else statusLightColor,
                             modifier = Modifier.size(18.dp)
                         )
                     }
@@ -230,7 +230,7 @@ fun BudgetCard(
                     Spacer(modifier = Modifier.height(2.dp))
                     Text(
                         text = formatInr(budget.spent),
-                        style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
+                        style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold, fontSize = 13.sp),
                         color = if (budget.status == "over_budget") RoseDangerLight else TextPrimary
                     )
                 }
@@ -240,7 +240,7 @@ fun BudgetCard(
                     Spacer(modifier = Modifier.height(2.dp))
                     Text(
                         text = formatInr(budget.remaining),
-                        style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
+                        style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold, fontSize = 13.sp),
                         color = if (budget.remaining > 0) EmeraldSuccessLight else RoseDangerLight
                     )
                 }
@@ -250,7 +250,7 @@ fun BudgetCard(
                     Spacer(modifier = Modifier.height(2.dp))
                     Text(
                         text = formatInr(budget.amount),
-                        style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
+                        style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold, fontSize = 13.sp),
                         color = TextPrimary
                     )
                 }

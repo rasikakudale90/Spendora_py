@@ -7,8 +7,9 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 
 /**
- * Semantic Design Token Palette for Spendora.
- * Supports dynamic Dark Mode (Midnight Obsidian) & Light Mode (Pure Pearl Slate).
+ * Semantic Design Token Palette for Spendora Dark Telemetry.
+ * Aligned with Stitch MCP design system (design.md).
+ * Supports dynamic Dark Mode (OLED Obsidian & Electric Cyan) & Light Mode (Pure Slate).
  */
 @Immutable
 data class SpendoraColors(
@@ -21,6 +22,7 @@ data class SpendoraColors(
     val borderGlow: Color,
     val primary: Color,
     val primaryLight: Color,
+    val onPrimary: Color,
     val secondary: Color,
     val secondaryLight: Color,
     val emerald: Color,
@@ -47,54 +49,56 @@ data class SpendoraColors(
     val isDark: Boolean
 )
 
-// ── Midnight Obsidian Dark Palette ──────────────────────────────────
+// ── Spendora Dark Telemetry Palette (from design.md) ────────────────
 val SpendoraDarkColors = SpendoraColors(
-    background = Color(0xFF070B12),
-    surface = Color(0xFF0F172A),
-    surfaceCard = Color(0xFF131D33),
-    surfaceCardEnd = Color(0xFF0B1324),
-    surfaceElevated = Color(0xFF1E293B),
-    border = Color(0xFF1E2D4A),
-    borderGlow = Color(0xFF334A73),
-    primary = Color(0xFF6366F1),
-    primaryLight = Color(0xFF818CF8),
+    background = Color(0xFF080A0F),
+    surface = Color(0xFF0F131B),
+    surfaceCard = Color(0xFF181C24),
+    surfaceCardEnd = Color(0xFF0E121A),
+    surfaceElevated = Color(0xFF262A33),
+    border = Color(0xFF262E3B),
+    borderGlow = Color(0xFF06B6D4),
+    primary = Color(0xFF06B6D4),
+    primaryLight = Color(0xFF4CD7F6),
+    onPrimary = Color(0xFF080A0F),
     secondary = Color(0xFF8B5CF6),
-    secondaryLight = Color(0xFFA78BFA),
+    secondaryLight = Color(0xFFD0BCFF),
     emerald = Color(0xFF10B981),
-    emeraldLight = Color(0xFF34D399),
+    emeraldLight = Color(0xFF4EDEA3),
     emeraldBg = Color(0x2210B981),
-    rose = Color(0xFFFF4D6D),
-    roseLight = Color(0xFFFF758F),
-    roseBg = Color(0x22FF4D6D),
+    rose = Color(0xFFF43F5E),
+    roseLight = Color(0xFFFFB4AB),
+    roseBg = Color(0x22F43F5E),
     amber = Color(0xFFF59E0B),
     amberLight = Color(0xFFFBBF24),
     amberBg = Color(0x22F59E0B),
     cyan = Color(0xFF06B6D4),
-    cyanLight = Color(0xFF38BDF8),
+    cyanLight = Color(0xFF4CD7F6),
     cyanBg = Color(0x2206B6D4),
-    textPrimary = Color(0xFFFFFFFF),
-    textSecondary = Color(0xFF94A3B8),
-    textMuted = Color(0xFF64748B),
-    textHighlight = Color(0xFF818CF8),
-    primaryGradient = Brush.horizontalGradient(listOf(Color(0xFF6366F1), Color(0xFF8B5CF6))),
-    emeraldGradient = Brush.horizontalGradient(listOf(Color(0xFF059669), Color(0xFF10B981))),
-    roseGradient = Brush.horizontalGradient(listOf(Color(0xFFE11D48), Color(0xFFFF4D6D))),
-    cardGradient = Brush.verticalGradient(listOf(Color(0xFF131D33), Color(0xFF0B1324))),
+    textPrimary = Color(0xFFDFE2EE),
+    textSecondary = Color(0xFFBCC9CD),
+    textMuted = Color(0xFF869397),
+    textHighlight = Color(0xFF4CD7F6),
+    primaryGradient = Brush.horizontalGradient(listOf(Color(0xFF06B6D4), Color(0xFF0891B2))),
+    emeraldGradient = Brush.horizontalGradient(listOf(Color(0xFF10B981), Color(0xFF4EDEA3))),
+    roseGradient = Brush.horizontalGradient(listOf(Color(0xFFF43F5E), Color(0xFFFF758F))),
+    cardGradient = Brush.verticalGradient(listOf(Color(0xFF181C24), Color(0xFF0E121A))),
     glassOverlayGradient = Brush.verticalGradient(listOf(Color(0x1AFFFFFF), Color(0x00FFFFFF))),
     isDark = true
 )
 
 // ── Pure Pearl Slate Light Palette ──────────────────────────────────
 val SpendoraLightColors = SpendoraColors(
-    background = Color(0xFFF8FAFC),
+    background = Color(0xFFF4F6F9),
     surface = Color(0xFFFFFFFF),
     surfaceCard = Color(0xFFFFFFFF),
-    surfaceCardEnd = Color(0xFFF8FAFC),
-    surfaceElevated = Color(0xFFF1F5F9),
-    border = Color(0xFFE2E8F0),
-    borderGlow = Color(0xFFCBD5E1),
-    primary = Color(0xFF4F46E5),
-    primaryLight = Color(0xFF6366F1),
+    surfaceCardEnd = Color(0xFFF1F5F9),
+    surfaceElevated = Color(0xFFE2E8F0),
+    border = Color(0xFFCBD5E1),
+    borderGlow = Color(0xFF06B6D4),
+    primary = Color(0xFF0891B2),
+    primaryLight = Color(0xFF06B6D4),
+    onPrimary = Color(0xFFFFFFFF),
     secondary = Color(0xFF7C3AED),
     secondaryLight = Color(0xFF8B5CF6),
     emerald = Color(0xFF059669),
@@ -106,14 +110,14 @@ val SpendoraLightColors = SpendoraColors(
     amber = Color(0xFFD97706),
     amberLight = Color(0xFFF59E0B),
     amberBg = Color(0x1AD97706),
-    cyan = Color(0xFF0284C7),
-    cyanLight = Color(0xFF0EA5E9),
-    cyanBg = Color(0x1A0284C7),
+    cyan = Color(0xFF0891B2),
+    cyanLight = Color(0xFF06B6D4),
+    cyanBg = Color(0x1A0891B2),
     textPrimary = Color(0xFF0F172A),
     textSecondary = Color(0xFF475569),
-    textMuted = Color(0xFF94A3B8),
-    textHighlight = Color(0xFF4F46E5),
-    primaryGradient = Brush.horizontalGradient(listOf(Color(0xFF4F46E5), Color(0xFF7C3AED))),
+    textMuted = Color(0xFF64748B),
+    textHighlight = Color(0xFF0891B2),
+    primaryGradient = Brush.horizontalGradient(listOf(Color(0xFF0891B2), Color(0xFF06B6D4))),
     emeraldGradient = Brush.horizontalGradient(listOf(Color(0xFF059669), Color(0xFF10B981))),
     roseGradient = Brush.horizontalGradient(listOf(Color(0xFFE11D48), Color(0xFFF43F5E))),
     cardGradient = Brush.verticalGradient(listOf(Color(0xFFFFFFFF), Color(0xFFF8FAFC))),
@@ -166,6 +170,21 @@ val PrimaryIndigoLight: Color
     @Composable
     @ReadOnlyComposable
     get() = SpendoraTheme.colors.primaryLight
+
+val PrimaryCyan: Color
+    @Composable
+    @ReadOnlyComposable
+    get() = SpendoraTheme.colors.primary
+
+val PrimaryCyanLight: Color
+    @Composable
+    @ReadOnlyComposable
+    get() = SpendoraTheme.colors.primaryLight
+
+val OnPrimaryColor: Color
+    @Composable
+    @ReadOnlyComposable
+    get() = SpendoraTheme.colors.onPrimary
 
 val SecondaryViolet: Color
     @Composable
@@ -277,7 +296,27 @@ val CardSurfaceGradient: Brush
     @ReadOnlyComposable
     get() = SpendoraTheme.colors.cardGradient
 
-val GlassOverlayGradient: Brush
+val QuantumViolet: Color
     @Composable
     @ReadOnlyComposable
-    get() = SpendoraTheme.colors.glassOverlayGradient
+    get() = SpendoraTheme.colors.secondary
+
+val QuantumVioletLight: Color
+    @Composable
+    @ReadOnlyComposable
+    get() = SpendoraTheme.colors.secondaryLight
+
+val SurfaceContainerLow: Color
+    @Composable
+    @ReadOnlyComposable
+    get() = if (SpendoraTheme.colors.isDark) Color(0xFF181C24) else Color(0xFFF1F5F9)
+
+val SurfaceContainerLowest: Color
+    @Composable
+    @ReadOnlyComposable
+    get() = if (SpendoraTheme.colors.isDark) Color(0xFF0A0E16) else Color(0xFFE2E8F0)
+
+val SurfaceContainerHighest: Color
+    @Composable
+    @ReadOnlyComposable
+    get() = if (SpendoraTheme.colors.isDark) Color(0xFF31353E) else Color(0xFFCBD5E1)
