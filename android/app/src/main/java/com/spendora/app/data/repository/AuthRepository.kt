@@ -44,6 +44,31 @@ class AuthRepository(context: Context) {
         }
     }
 
+    suspend fun googleAuth(idToken: String): Result<AuthSuccessResponse> = withContext(Dispatchers.IO) {
+        try {
+            val response = authApi.googleAuth(GoogleAuthRequest(credential = idToken))
+            if (response.isSuccessful && response.body() != null) {
+                val authData = response.body()!!
+                
+                val setCookieHeaders = response.headers().values("Set-Cookie")
+                var refreshToken: String? = null
+                for (cookie in setCookieHeaders) {
+                    if (cookie.startsWith("spendora_refresh_token=")) {
+                        refreshToken = cookie.substringAfter("spendora_refresh_token=").substringBefore(";")
+                        break
+                    }
+                }
+                
+                sessionManager.saveAuth(authData.accessToken, authData.user, refreshToken)
+                Result.success(authData)
+            } else {
+                Result.failure(Exception(parseError(response)))
+            }
+        } catch (e: Exception) {
+            Result.failure(Exception(e.localizedMessage ?: "Google sign-in failed"))
+        }
+    }
+
     suspend fun register(fullName: String, email: String, password: String): Result<UserRegisterResponse> = withContext(Dispatchers.IO) {
         try {
             val response = authApi.register(

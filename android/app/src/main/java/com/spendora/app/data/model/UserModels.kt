@@ -27,6 +27,10 @@ data class UserLoginRequest(
     @SerializedName("password") val password: String
 )
 
+data class GoogleAuthRequest(
+    @SerializedName("credential") val credential: String
+)
+
 data class AuthSuccessResponse(
     @SerializedName("user") val user: UserDto,
     @SerializedName("access_token") val accessToken: String,

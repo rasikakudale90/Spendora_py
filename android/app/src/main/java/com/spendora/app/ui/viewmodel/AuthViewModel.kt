@@ -119,6 +119,26 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    fun googleSignIn(idToken: String) {
+        viewModelScope.launch {
+            _loginState.value = _loginState.value.copy(isLoading = true, generalError = null)
+            _registerState.value = _registerState.value.copy(isLoading = true, generalError = null)
+            
+            val result = authRepository.googleAuth(idToken)
+            _loginState.value = _loginState.value.copy(isLoading = false)
+            _registerState.value = _registerState.value.copy(isLoading = false)
+
+            result.onSuccess {
+                _events.emit(AuthUiEvent.ShowToast("Welcome to Spendora, ${it.user.fullName}!"))
+                _events.emit(AuthUiEvent.NavigateToDashboard)
+            }.onFailure {
+                _loginState.value = _loginState.value.copy(generalError = it.message)
+                _registerState.value = _registerState.value.copy(generalError = it.message)
+                _events.emit(AuthUiEvent.ShowToast(it.message ?: "Google Sign-In failed", isError = true))
+            }
+        }
+    }
+
     // Register actions
     fun onRegisterNameChange(name: String) {
         _registerState.value = _registerState.value.copy(fullName = name, nameError = null, generalError = null)

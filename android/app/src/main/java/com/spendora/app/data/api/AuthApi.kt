@@ -18,6 +18,11 @@ interface AuthApi {
         @Body request: UserLoginRequest
     ): Response<AuthSuccessResponse>
 
+    @POST("api/v1/auth/google")
+    suspend fun googleAuth(
+        @Body request: GoogleAuthRequest
+    ): Response<AuthSuccessResponse>
+
     @POST("api/v1/auth/refresh")
     suspend fun refresh(): Response<AuthSuccessResponse>
 
