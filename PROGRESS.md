@@ -53,6 +53,7 @@
 | 40 | Zero-Hardcoding Dynamic Light & Dark Theme Architecture | ✅ Done | 2026-09-09 |
 | 41 | Stitch MCP Design System Extraction & Android Alignment | ✅ Done | 2026-09-09 |
 | 42 | Stitch Screen-by-Screen Visual Parity & Full Android App Assembly | ✅ Done | 2026-09-09 |
+| 43 | Live Notifications Drawer, AI Header Decoupling & Functional Account Rail | ✅ Done | 2026-09-09 |
 
 ---
 
@@ -746,6 +747,25 @@
 - [x] **Build Verification:**
   - `./gradlew assembleDebug` passed in `1m 1s` with 0 compilation errors.
   - Generated output APK at `app/build/outputs/apk/debug/app-debug.apk`.
+
+---
+
+## Phase 43 — Live Notifications Drawer, AI Assistant Header Decoupling & Functional Account Rail ✅ Done
+
+**Goal:** Decouple Notification Bell from AI Assistant, create live `SpendoraNotificationsSheet.kt` drawer, and transform static mockup account pills into real functional payment mode filters.
+
+### Completed Tasks
+- [x] **Header Decoupling:** Added dedicated AI Assistant sparkle button (`Icons.Default.AutoAwesome`) with cyan glow calling `onOpenAiAssistant()`. Wired Notification Bell (`Icons.Default.Notifications`) to open `SpendoraNotificationsSheet`.
+- [x] **Live Notifications Sheet (`SpendoraNotificationsSheet.kt`):** Built bottom sheet rendering live telemetry alerts:
+  - Safe-to-Spend burn velocity warning (High burn rate vs optimal pace).
+  - Active subscription leak detection notices from Leak Hunter.
+  - Net Cash Flow surplus / deficit status.
+  - "All Clear!" empty state when finances are healthy.
+- [x] **Functional Account Selector Rail (`DashboardScreen.kt`):**
+  - Converted static mockup labels into active filters: `All Ledgers`, `UPI & Online`, `Cards & Bank`, `Cash Reserve`.
+  - Tapping an account actively filters `activeAccountExpenses`, dynamically recalculating Net Liquid Assets, monthly burn track, and Recent Activity ledger.
+- [x] **Recent Activity Tab Integration:** Added support for viewing live `incomeState.incomes` when "Income" filter is selected on the dashboard.
+- [x] **Build Verification:** Verified clean Kotlin compilation and packaged APK with `./gradlew assembleDebug` (`BUILD SUCCESSFUL in 1m 26s`, 0 errors).
 
 ---
 
