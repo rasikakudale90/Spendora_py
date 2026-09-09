@@ -21,7 +21,7 @@ android {
 
         // Live Render Backend URL integrated as default
         buildConfigField("String", "BASE_URL", "\"https://spendora-py.onrender.com\"")
-        buildConfigField("String", "GOOGLE_WEB_CLIENT_ID", "\"1046881337432-bkvc5rdkignjlhurgc9grct4ksri9l05.apps.googleusercontent.com\"")
+        buildConfigField("String", "GOOGLE_WEB_CLIENT_ID", "\"1046881337432-ojudf3t9a2l989diouq6250n926q1qkv.apps.googleusercontent.com\"")
     }
 
     buildTypes {
