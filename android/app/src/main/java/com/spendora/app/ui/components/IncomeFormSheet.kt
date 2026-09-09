@@ -22,7 +22,7 @@ import java.util.*
 fun IncomeFormSheet(
     incomeToEdit: IncomeDto? = null,
     onDismiss: () -> Unit,
-    onSave: (id: Int?, title: String, amount: Double, incomeDate: String, source: String, notes: String?) -> Unit
+    onSave: (id: String?, title: String, amount: Double, incomeDate: String, source: String, notes: String?) -> Unit
 ) {
     val dateFormat = remember { SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()) }
     val todayDate = remember { dateFormat.format(Date()) }

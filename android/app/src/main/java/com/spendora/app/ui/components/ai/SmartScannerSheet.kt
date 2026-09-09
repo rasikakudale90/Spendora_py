@@ -245,7 +245,7 @@ fun SmartScannerSheet(
                             onClick = {
                                 val categories = expenseViewModel.uiState.value.categories
                                 val categoryId = categories.find { it.name.equals(result.categoryName, ignoreCase = true) }?.id
-                                    ?: categories.firstOrNull()?.id ?: 1
+                                    ?: categories.firstOrNull()?.id ?: ""
 
                                 val paymentMode = when (result.paymentMode) {
                                     "Card" -> PaymentMode.CARD

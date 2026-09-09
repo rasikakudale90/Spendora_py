@@ -17,7 +17,7 @@ interface ExpenseApi {
     @GET("api/v1/expenses")
     suspend fun getExpenses(
         @Query("search") search: String? = null,
-        @Query("category_id") categoryId: Int? = null,
+        @Query("category_id") categoryId: String? = null,
         @Query("start_date") startDate: String? = null,
         @Query("end_date") endDate: String? = null,
         @Query("payment_mode") paymentMode: String? = null,
@@ -34,12 +34,12 @@ interface ExpenseApi {
 
     @PATCH("api/v1/expenses/{id}")
     suspend fun updateExpense(
-        @Path("id") id: Int,
+        @Path("id") id: String,
         @Body request: ExpenseCreateRequest
     ): Response<ExpenseCreateResponse>
 
     @DELETE("api/v1/expenses/{id}")
     suspend fun deleteExpense(
-        @Path("id") id: Int
+        @Path("id") id: String
     ): Response<GenericMessageResponse>
 }

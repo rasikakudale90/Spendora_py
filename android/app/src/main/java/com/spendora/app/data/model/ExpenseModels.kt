@@ -13,10 +13,10 @@ enum class PaymentMode(val value: String) {
 }
 
 data class CategoryDto(
-    @SerializedName("id") val id: Int,
+    @SerializedName("id") val id: String,
     @SerializedName("name") val name: String,
     @SerializedName("is_default") val isDefault: Boolean = false,
-    @SerializedName("user_id") val userId: Int? = null,
+    @SerializedName("user_id") val userId: String? = null,
     @SerializedName("created_at") val createdAt: String? = null,
     @SerializedName("updated_at") val updatedAt: String? = null
 )
@@ -26,15 +26,15 @@ data class CategoryCreateRequest(
 )
 
 data class ExpenseDto(
-    @SerializedName("id") val id: Int,
+    @SerializedName("id") val id: String,
     @SerializedName("title") val title: String,
     @SerializedName("amount") val amount: Double,
     @SerializedName("expense_date") val expenseDate: String,
-    @SerializedName("category_id") val categoryId: Int,
+    @SerializedName("category_id") val categoryId: String,
     @SerializedName("category_name") val categoryName: String? = null,
     @SerializedName("payment_mode") val paymentMode: PaymentMode = PaymentMode.OTHER,
     @SerializedName("notes") val notes: String? = null,
-    @SerializedName("user_id") val userId: Int? = null,
+    @SerializedName("user_id") val userId: String? = null,
     @SerializedName("created_at") val createdAt: String? = null,
     @SerializedName("updated_at") val updatedAt: String? = null
 )
@@ -43,7 +43,7 @@ data class ExpenseCreateRequest(
     @SerializedName("title") val title: String,
     @SerializedName("amount") val amount: Double,
     @SerializedName("expense_date") val expenseDate: String,
-    @SerializedName("category_id") val categoryId: Int,
+    @SerializedName("category_id") val categoryId: String,
     @SerializedName("payment_mode") val paymentMode: PaymentMode = PaymentMode.OTHER,
     @SerializedName("notes") val notes: String? = null
 )

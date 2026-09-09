@@ -3,13 +3,13 @@ package com.spendora.app.data.model
 import com.google.gson.annotations.SerializedName
 
 data class IncomeDto(
-    @SerializedName("id") val id: Int,
+    @SerializedName("id") val id: String,
     @SerializedName("title") val title: String,
     @SerializedName("amount") val amount: Double,
     @SerializedName("income_date") val incomeDate: String,
     @SerializedName("source") val source: String = "Salary",
     @SerializedName("notes") val notes: String? = null,
-    @SerializedName("user_id") val userId: Int? = null,
+    @SerializedName("user_id") val userId: String? = null,
     @SerializedName("created_at") val createdAt: String? = null,
     @SerializedName("updated_at") val updatedAt: String? = null
 )

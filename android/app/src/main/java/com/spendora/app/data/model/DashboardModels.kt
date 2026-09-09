@@ -16,7 +16,7 @@ data class DashboardSummary(
 )
 
 data class CategorySpendItem(
-    @SerializedName("category_id") val categoryId: Int,
+    @SerializedName("category_id") val categoryId: String? = null,
     @SerializedName("category_name") val categoryName: String,
     @SerializedName("amount") val amount: Double,
     @SerializedName("percentage") val percentage: Double

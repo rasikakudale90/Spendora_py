@@ -28,7 +28,7 @@ fun ExpenseFormSheet(
     expenseToEdit: ExpenseDto? = null,
     categories: List<CategoryDto>,
     onDismiss: () -> Unit,
-    onSave: (id: Int?, title: String, amount: Double, expenseDate: String, categoryId: Int, paymentMode: PaymentMode, notes: String?) -> Unit
+    onSave: (id: String?, title: String, amount: Double, expenseDate: String, categoryId: String, paymentMode: PaymentMode, notes: String?) -> Unit
 ) {
     val dateFormat = remember { SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()) }
     val todayDate = remember { dateFormat.format(Date()) }
@@ -36,7 +36,7 @@ fun ExpenseFormSheet(
     var title by remember { mutableStateOf(expenseToEdit?.title ?: "") }
     var amountText by remember { mutableStateOf(expenseToEdit?.amount?.toString() ?: "") }
     var expenseDate by remember { mutableStateOf(expenseToEdit?.expenseDate ?: todayDate) }
-    var selectedCategoryId by remember { mutableStateOf(expenseToEdit?.categoryId ?: categories.firstOrNull()?.id ?: 1) }
+    var selectedCategoryId by remember { mutableStateOf(expenseToEdit?.categoryId ?: categories.firstOrNull()?.id ?: "") }
     var selectedPaymentMode by remember { mutableStateOf(expenseToEdit?.paymentMode ?: PaymentMode.UPI) }
     var notes by remember { mutableStateOf(expenseToEdit?.notes ?: "") }
 

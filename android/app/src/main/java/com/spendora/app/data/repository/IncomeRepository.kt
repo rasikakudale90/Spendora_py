@@ -71,7 +71,7 @@ class IncomeRepository(context: Context) {
     }
 
     suspend fun updateIncome(
-        id: Int,
+        id: String,
         title: String,
         amount: Double,
         incomeDate: String,
@@ -97,7 +97,7 @@ class IncomeRepository(context: Context) {
         }
     }
 
-    suspend fun deleteIncome(id: Int): Result<Unit> = withContext(Dispatchers.IO) {
+    suspend fun deleteIncome(id: String): Result<Unit> = withContext(Dispatchers.IO) {
         try {
             val response = incomeApi.deleteIncome(id)
             if (response.isSuccessful) {

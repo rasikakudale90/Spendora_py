@@ -41,7 +41,7 @@ class ExpenseRepository(context: Context) {
 
     suspend fun getExpenses(
         search: String? = null,
-        categoryId: Int? = null,
+        categoryId: String? = null,
         startDate: String? = null,
         endDate: String? = null,
         paymentMode: String? = null,
@@ -76,7 +76,7 @@ class ExpenseRepository(context: Context) {
         title: String,
         amount: Double,
         expenseDate: String,
-        categoryId: Int,
+        categoryId: String,
         paymentMode: PaymentMode,
         notes: String? = null
     ): Result<ExpenseCreateResponse> = withContext(Dispatchers.IO) {
@@ -101,11 +101,11 @@ class ExpenseRepository(context: Context) {
     }
 
     suspend fun updateExpense(
-        id: Int,
+        id: String,
         title: String,
         amount: Double,
         expenseDate: String,
-        categoryId: Int,
+        categoryId: String,
         paymentMode: PaymentMode,
         notes: String? = null
     ): Result<ExpenseCreateResponse> = withContext(Dispatchers.IO) {
@@ -129,7 +129,7 @@ class ExpenseRepository(context: Context) {
         }
     }
 
-    suspend fun deleteExpense(id: Int): Result<Unit> = withContext(Dispatchers.IO) {
+    suspend fun deleteExpense(id: String): Result<Unit> = withContext(Dispatchers.IO) {
         try {
             val response = expenseApi.deleteExpense(id)
             if (response.isSuccessful) {

@@ -460,7 +460,7 @@ fun DashboardScreen(
             onDismiss = { showSimulatorSheet = false },
             onAddAsExpense = { itemTitle, itemAmt ->
                 val categories = expenseState.categories
-                val firstCatId = categories.firstOrNull()?.id ?: 1
+                val firstCatId = categories.firstOrNull()?.id ?: ""
                 val today = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault()).format(java.util.Date())
 
                 expenseViewModel.saveExpense(

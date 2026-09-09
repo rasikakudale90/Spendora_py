@@ -20,7 +20,7 @@ data class ExpenseUiState(
     val expenses: List<ExpenseDto> = emptyList(),
     val categories: List<CategoryDto> = emptyList(),
     val searchQuery: String = "",
-    val selectedCategoryId: Int? = null,
+    val selectedCategoryId: String? = null,
     val selectedPaymentMode: PaymentMode? = null,
     val sortOrder: String = "desc",
     val page: Int = 1,
@@ -92,7 +92,7 @@ class ExpenseViewModel(application: Application) : AndroidViewModel(application)
         loadExpenses(page = 1)
     }
 
-    fun onCategoryFilterSelect(categoryId: Int?) {
+    fun onCategoryFilterSelect(categoryId: String?) {
         _uiState.value = _uiState.value.copy(selectedCategoryId = categoryId)
         loadExpenses(page = 1)
     }
@@ -109,11 +109,11 @@ class ExpenseViewModel(application: Application) : AndroidViewModel(application)
     }
 
     fun saveExpense(
-        id: Int? = null,
+        id: String? = null,
         title: String,
         amount: Double,
         expenseDate: String,
-        categoryId: Int,
+        categoryId: String,
         paymentMode: PaymentMode,
         notes: String? = null,
         onSuccess: () -> Unit
@@ -153,7 +153,7 @@ class ExpenseViewModel(application: Application) : AndroidViewModel(application)
         }
     }
 
-    fun deleteExpense(id: Int) {
+    fun deleteExpense(id: String) {
         viewModelScope.launch {
             val result = expenseRepo.deleteExpense(id)
             result.onSuccess {

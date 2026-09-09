@@ -25,13 +25,13 @@ interface IncomeApi {
 
     @PATCH("api/v1/incomes/{id}")
     suspend fun updateIncome(
-        @Path("id") id: Int,
+        @Path("id") id: String,
         @Body request: IncomeCreateRequest
     ): Response<IncomeDto>
 
     @DELETE("api/v1/incomes/{id}")
     suspend fun deleteIncome(
-        @Path("id") id: Int
+        @Path("id") id: String
     ): Response<GenericMessageResponse>
 
     @GET("api/v1/incomes/summary/monthly")

@@ -92,7 +92,7 @@ class IncomeViewModel(application: Application) : AndroidViewModel(application) 
     }
 
     fun saveIncome(
-        id: Int? = null,
+        id: String? = null,
         title: String,
         amount: Double,
         incomeDate: String,
@@ -131,7 +131,7 @@ class IncomeViewModel(application: Application) : AndroidViewModel(application) 
         }
     }
 
-    fun deleteIncome(id: Int) {
+    fun deleteIncome(id: String) {
         viewModelScope.launch {
             val result = incomeRepo.deleteIncome(id)
             result.onSuccess {
