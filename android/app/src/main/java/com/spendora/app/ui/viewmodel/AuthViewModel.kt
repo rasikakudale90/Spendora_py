@@ -64,6 +64,17 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
 
     val isLoggedIn = authRepository.isLoggedIn
     val currentUser = authRepository.currentUser
+    val themeMode = authRepository.themeMode
+
+    fun setThemeMode(mode: String) {
+        authRepository.setThemeMode(mode)
+    }
+
+    fun toggleTheme() {
+        val current = themeMode.value
+        val next = if (current == "dark") "light" else "dark"
+        authRepository.setThemeMode(next)
+    }
 
     private val _loginState = MutableStateFlow(LoginUiState())
     val loginState: StateFlow<LoginUiState> = _loginState.asStateFlow()

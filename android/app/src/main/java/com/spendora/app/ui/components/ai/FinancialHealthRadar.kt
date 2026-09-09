@@ -146,6 +146,11 @@ fun FinancialHealthRadar(
                         modifier = Modifier.size(radarSize),
                         contentAlignment = Alignment.Center
                     ) {
+                        val radarBorderColor = SpendoraTheme.colors.border
+                        val radarIndigoColor = SpendoraTheme.colors.primary
+                        val radarIndigoLightColor = SpendoraTheme.colors.primaryLight
+                        val radarDotColor = SpendoraTheme.colors.textPrimary
+
                         Canvas(modifier = Modifier.fillMaxSize()) {
                             val center = Offset(size.width / 2f, size.height / 2f)
                             val radius = (size.minDimension / 2f) - 8.dp.toPx()
@@ -163,7 +168,7 @@ fun FinancialHealthRadar(
                                     if (i == 0) gridPath.moveTo(x, y) else gridPath.lineTo(x, y)
                                 }
                                 gridPath.close()
-                                drawPath(gridPath, color = BorderDark, style = Stroke(width = 1.dp.toPx()))
+                                drawPath(gridPath, color = radarBorderColor, style = Stroke(width = 1.dp.toPx()))
                             }
 
                             // 2. Draw Axis Spokes
@@ -172,7 +177,7 @@ fun FinancialHealthRadar(
                                 val x = center.x + radius * cos(angle)
                                 val y = center.y + radius * sin(angle)
                                 drawLine(
-                                    color = BorderDark,
+                                    color = radarBorderColor,
                                     start = center,
                                     end = Offset(x, y),
                                     strokeWidth = 1.dp.toPx()
@@ -192,9 +197,9 @@ fun FinancialHealthRadar(
                             dataPath.close()
 
                             // Fill translucent polygon
-                            drawPath(dataPath, color = PrimaryIndigo.copy(alpha = 0.35f))
+                            drawPath(dataPath, color = radarIndigoColor.copy(alpha = 0.35f))
                             // Stroke border
-                            drawPath(dataPath, color = PrimaryIndigoLight, style = Stroke(width = 2.dp.toPx()))
+                            drawPath(dataPath, color = radarIndigoLightColor, style = Stroke(width = 2.dp.toPx()))
 
                             // 4. Draw Vertex Dots
                             for (i in 0 until numSides) {
@@ -203,7 +208,7 @@ fun FinancialHealthRadar(
                                 val angle = (i * angleStep) - (Math.PI / 2.0).toFloat()
                                 val x = center.x + pRadius * cos(angle)
                                 val y = center.y + pRadius * sin(angle)
-                                drawCircle(color = TextPrimary, radius = 3.dp.toPx(), center = Offset(x, y))
+                                drawCircle(color = radarDotColor, radius = 3.dp.toPx(), center = Offset(x, y))
                             }
                         }
                     }

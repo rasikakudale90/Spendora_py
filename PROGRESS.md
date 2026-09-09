@@ -50,6 +50,7 @@
 | 37 | Dedicated AI Feature Sheets & Independent Click Lifecycle | ✅ Done | 2026-09-09 |
 | 38 | Native Android Brand Identity & Adaptive App Launcher Logo | ✅ Done | 2026-09-09 |
 | 39 | Refined S Logo Proportions & Animated Spendora-to-S Launch Sequence | ✅ Done | 2026-09-09 |
+| 40 | Zero-Hardcoding Dynamic Light & Dark Theme Architecture | ✅ Done | 2026-09-09 |
 
 ---
 
@@ -684,6 +685,30 @@
 
 ---
 
+## Phase 40 — Zero-Hardcoding Dynamic Light & Dark Theme Architecture ✅ Done
+
+**Goal:** Implement a comprehensive dynamic Light Mode and Dark Mode system for Spendora Native Android with **strict zero-hardcoding of colors** when switching modes, ensuring all components and canvas graphics resolve tokens dynamically.
+
+### Completed Tasks
+- [x] **Theme Preference & State Management:**
+  - Added `themeMode` StateFlow and preferences persistence (`setThemeMode`, `getThemeMode`) in `SessionManager.kt`.
+  - Exposed `themeMode` in `AuthRepository.kt` and `AuthViewModel.kt` with a one-tap `toggleTheme()` function.
+- [x] **Zero-Hardcoded Semantic Color System (`Color.kt`):**
+  - Defined semantic `SpendoraColors` data class containing dynamic tokens: `background`, `surface`, `surfaceCard`, `surfaceElevated`, `border`, `borderGlow`, `textPrimary`, `textSecondary`, `textMuted`, `primary`, `primaryLight`, `primaryDark`, `accent`, `emerald`, `amber`, `rose`, `cyan`, and `purple`.
+  - Configured `SpendoraDarkColors` (Midnight Obsidian `#070B12`, `#131D33`, `#6366F1`) and `SpendoraLightColors` (Pure Pearl Slate `#F8FAFC`, `#FFFFFF`, `#0F172A`, `#64748B`, `#4F46E5`).
+  - Created dynamic `@Composable get()` delegates on `Color.kt` companion objects for seamless, backwards-compatible, zero-hardcoding theme access across legacy references.
+- [x] **Dynamic Theme Provider (`Theme.kt`):**
+  - Created `LocalSpendoraColors` static composition local and `SpendoraTheme.colors` accessor.
+  - Configured dynamic `DarkColorScheme` and `LightColorScheme` matching Material 3 specifications.
+  - Dynamically updated Android system bars (`isAppearanceLightStatusBars = !isDark` and `isAppearanceLightNavigationBars = !isDark`) based on the active theme mode.
+- [x] **Typography Color Decoupling (`Type.kt`):** Removed static color locks from typography definitions so text color inherits dynamically from semantic tokens.
+- [x] **Interactive Sun ☀️ / Moon 🌙 Toggle (`DashboardScreen.kt`):**
+  - Added a responsive, glassmorphic theme toggle button to the dashboard header row.
+  - Updated custom Compose Canvas draw scopes in `SafeToSpendGauge.kt` and `FinancialHealthRadar.kt` to capture dynamic theme tokens before rendering.
+- [x] **Build Verification:** Successfully built debug APK with `./gradlew assembleDebug` (`BUILD SUCCESSFUL in 1m 52s`, 0 errors).
+
+---
+
 ## Open Items & Design Decisions
 
 | # | Item | Status | Resolution |
@@ -705,5 +730,6 @@
 | 15 | Android Model IDs & PostgreSQL UUID Compatibility | ✅ Resolved | All model entity IDs (`id`, `user_id`, `category_id`) typed strictly as `String` across DTOs and database calls to support standard UUIDs without `NumberFormatException` |
 | 16 | Google OAuth Android Architecture | ✅ Resolved | Credential Manager with `googleid` library, Web Client ID defined via `buildConfigField`, and debug SHA-1 registered in Google Cloud Console |
 | 17 | Android UI/UX & Canvas Responsiveness | ✅ Resolved | Midnight Obsidian theme `#070B12`, `BoxWithConstraints` scaling for AI gauges, `imePadding` on all form sheets, and clean INR formatting |
+| 18 | Zero-Hardcoded Light & Dark Theme Token Architecture | ✅ Resolved | `LocalSpendoraColors` + `SpendoraTheme.colors` dynamic composition local tokens persisted via `SessionManager.kt` with live header toggle |
 
 

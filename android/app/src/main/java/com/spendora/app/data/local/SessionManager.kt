@@ -36,6 +36,18 @@ class SessionManager(context: Context) {
     private val _currentUser = MutableStateFlow(getUser())
     val currentUser: StateFlow<UserDto?> = _currentUser.asStateFlow()
 
+    private val _themeMode = MutableStateFlow(getThemeMode())
+    val themeMode: StateFlow<String> = _themeMode.asStateFlow()
+
+    fun setThemeMode(mode: String) {
+        prefs.edit().putString(KEY_THEME_MODE, mode).apply()
+        _themeMode.value = mode
+    }
+
+    fun getThemeMode(): String {
+        return prefs.getString(KEY_THEME_MODE, "dark") ?: "dark"
+    }
+
     fun saveAuth(accessToken: String, user: UserDto, refreshToken: String? = null) {
         prefs.edit().apply {
             putString(KEY_ACCESS_TOKEN, accessToken)
@@ -82,6 +94,7 @@ class SessionManager(context: Context) {
         private const val KEY_ACCESS_TOKEN = "access_token"
         private const val KEY_REFRESH_TOKEN = "refresh_token"
         private const val KEY_USER = "current_user"
+        private const val KEY_THEME_MODE = "theme_mode"
 
         @Volatile
         private var INSTANCE: SessionManager? = null

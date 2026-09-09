@@ -112,20 +112,44 @@ fun DashboardScreen(
                         }
                     }
 
-                    IconButton(
-                        onClick = { authViewModel.logout() },
-                        modifier = Modifier
-                            .size(40.dp)
-                            .clip(CircleShape)
-                            .background(SurfaceElevated)
-                            .border(1.dp, BorderDark, CircleShape)
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.Logout,
-                            contentDescription = "Logout",
-                            tint = TextMuted,
-                            modifier = Modifier.size(18.dp)
-                        )
+                        val currentTheme by authViewModel.themeMode.collectAsState()
+                        val isDarkMode = currentTheme == "dark"
+
+                        IconButton(
+                            onClick = { authViewModel.toggleTheme() },
+                            modifier = Modifier
+                                .size(40.dp)
+                                .clip(CircleShape)
+                                .background(SurfaceElevated)
+                                .border(1.dp, BorderDark, CircleShape)
+                        ) {
+                            Icon(
+                                imageVector = if (isDarkMode) Icons.Default.LightMode else Icons.Default.DarkMode,
+                                contentDescription = "Toggle Theme",
+                                tint = if (isDarkMode) AmberWarningLight else PrimaryIndigoLight,
+                                modifier = Modifier.size(18.dp)
+                            )
+                        }
+
+                        IconButton(
+                            onClick = { authViewModel.logout() },
+                            modifier = Modifier
+                                .size(40.dp)
+                                .clip(CircleShape)
+                                .background(SurfaceElevated)
+                                .border(1.dp, BorderDark, CircleShape)
+                        ) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.Logout,
+                                contentDescription = "Logout",
+                                tint = TextMuted,
+                                modifier = Modifier.size(18.dp)
+                            )
+                        }
                     }
                 }
             }

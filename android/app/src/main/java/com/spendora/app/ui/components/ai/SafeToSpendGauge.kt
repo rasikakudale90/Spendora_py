@@ -148,6 +148,8 @@ fun SafeToSpendGauge(
                 contentAlignment = Alignment.BottomCenter
             ) {
                 val gaugeWidth = maxWidth.coerceAtMost(260.dp)
+                val trackColor = SpendoraTheme.colors.surfaceElevated
+                val emeraldColor = SpendoraTheme.colors.emerald
 
                 Box(
                     modifier = Modifier.size(width = gaugeWidth, height = 130.dp),
@@ -160,7 +162,7 @@ fun SafeToSpendGauge(
 
                         // Track Arc (180 degrees from 180 to 360)
                         drawArc(
-                            color = SurfaceElevated,
+                            color = trackColor,
                             startAngle = 180f,
                             sweepAngle = 180f,
                             useCenter = false,
@@ -174,7 +176,7 @@ fun SafeToSpendGauge(
                         if (sweepAngle > 0f) {
                             drawArc(
                                 brush = Brush.horizontalGradient(
-                                    colors = listOf(EmeraldSuccess, statusColor)
+                                    colors = listOf(emeraldColor, statusColor)
                                 ),
                                 startAngle = 180f,
                                 sweepAngle = sweepAngle,

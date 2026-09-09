@@ -17,6 +17,11 @@ class AuthRepository(context: Context) {
 
     val isLoggedIn = sessionManager.isLoggedIn
     val currentUser = sessionManager.currentUser
+    val themeMode = sessionManager.themeMode
+
+    fun setThemeMode(mode: String) {
+        sessionManager.setThemeMode(mode)
+    }
 
     suspend fun login(email: String, password: String): Result<AuthSuccessResponse> = withContext(Dispatchers.IO) {
         try {
