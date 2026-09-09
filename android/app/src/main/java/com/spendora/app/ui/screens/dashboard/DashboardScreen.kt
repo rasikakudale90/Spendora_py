@@ -32,12 +32,15 @@ import com.spendora.app.ui.components.ai.PurchaseSimulatorSheet
 import com.spendora.app.ui.components.ai.SafeToSpendDetailSheet
 import com.spendora.app.ui.components.ai.SafeToSpendGauge
 import com.spendora.app.ui.components.ai.SmartScannerSheet
+import com.spendora.app.ui.screens.reports.StatementExportSheet
 import com.spendora.app.ui.theme.*
 import com.spendora.app.ui.viewmodel.AiViewModel
 import com.spendora.app.ui.viewmodel.AuthViewModel
 import com.spendora.app.ui.viewmodel.DashboardViewModel
 import com.spendora.app.ui.viewmodel.ExpenseViewModel
 import com.spendora.app.ui.viewmodel.IncomeViewModel
+import com.spendora.app.ui.viewmodel.ReportViewModel
+
 
 @Composable
 fun DashboardScreen(
@@ -46,6 +49,7 @@ fun DashboardScreen(
     incomeViewModel: IncomeViewModel,
     authViewModel: AuthViewModel,
     aiViewModel: AiViewModel = viewModel(),
+    reportViewModel: ReportViewModel = viewModel(),
     onNavigateToExpenses: () -> Unit,
     onNavigateToIncome: () -> Unit,
     onOpenAiAssistant: () -> Unit = {}
@@ -64,6 +68,8 @@ fun DashboardScreen(
     var showSafeToSpendSheet by remember { mutableStateOf(false) }
     var showHealthDetailSheet by remember { mutableStateOf(false) }
     var showNotificationsSheet by remember { mutableStateOf(false) }
+    var showStatementSheet by remember { mutableStateOf(false) }
+
 
     var selectedAccountIndex by remember { mutableIntStateOf(0) }
     var selectedActivityFilter by remember { mutableStateOf("All") }
@@ -226,12 +232,31 @@ fun DashboardScreen(
                             }
                         }
 
+                        // Monthly Statement & CSV Export Button
+                        Box(
+                            modifier = Modifier
+                                .size(38.dp)
+                                .clip(CircleShape)
+                                .background(SurfaceElevated)
+                                .border(1.dp, BorderDark, CircleShape)
+                                .clickable { showStatementSheet = true },
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.FileDownload,
+                                contentDescription = "Export Financial Statement & CSV",
+                                tint = PrimaryCyanLight,
+                                modifier = Modifier.size(17.dp)
+                            )
+                        }
+
                         IconButton(
                             onClick = { authViewModel.logout() },
                             modifier = Modifier
                                 .size(38.dp)
                                 .clip(CircleShape)
                                 .background(SurfaceElevated)
+
                                 .border(1.dp, BorderDark, CircleShape)
                         ) {
                             Icon(
@@ -1116,4 +1141,12 @@ fun DashboardScreen(
             onDismiss = { showNotificationsSheet = false }
         )
     }
+
+    if (showStatementSheet) {
+        StatementExportSheet(
+            viewModel = reportViewModel,
+            onDismiss = { showStatementSheet = false }
+        )
+    }
 }
+

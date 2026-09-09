@@ -82,6 +82,10 @@ dependencies {
     implementation("androidx.credentials:credentials-play-services-auth:1.3.0")
     implementation("com.google.android.libraries.identity.googleid:googleid:1.1.1")
 
+    // Biometric Authentication
+    implementation("androidx.biometric:biometric:1.2.0-alpha05")
+
+
     // Navigation & Lifecycle ViewModel in Compose
     implementation("androidx.navigation:navigation-compose:2.7.7")
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.7.0")

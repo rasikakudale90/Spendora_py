@@ -18,10 +18,20 @@ class AuthRepository(context: Context) {
     val isLoggedIn = sessionManager.isLoggedIn
     val currentUser = sessionManager.currentUser
     val themeMode = sessionManager.themeMode
+    val isBiometricEnabledFlow = sessionManager.isBiometricEnabledFlow
 
     fun setThemeMode(mode: String) {
         sessionManager.setThemeMode(mode)
     }
+
+    fun setBiometricEnabled(enabled: Boolean) {
+        sessionManager.setBiometricEnabled(enabled)
+    }
+
+    fun isBiometricEnabled(): Boolean {
+        return sessionManager.isBiometricEnabled()
+    }
+
 
     suspend fun login(email: String, password: String): Result<AuthSuccessResponse> = withContext(Dispatchers.IO) {
         try {

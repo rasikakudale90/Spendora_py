@@ -65,6 +65,7 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
     val isLoggedIn = authRepository.isLoggedIn
     val currentUser = authRepository.currentUser
     val themeMode = authRepository.themeMode
+    val isBiometricEnabledFlow = authRepository.isBiometricEnabledFlow
 
     fun setThemeMode(mode: String) {
         authRepository.setThemeMode(mode)
@@ -75,6 +76,16 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
         val next = if (current == "dark") "light" else "dark"
         authRepository.setThemeMode(next)
     }
+
+    fun setBiometricEnabled(enabled: Boolean) {
+        authRepository.setBiometricEnabled(enabled)
+    }
+
+    fun toggleBiometric() {
+        val current = isBiometricEnabledFlow.value
+        authRepository.setBiometricEnabled(!current)
+    }
+
 
     private val _loginState = MutableStateFlow(LoginUiState())
     val loginState: StateFlow<LoginUiState> = _loginState.asStateFlow()

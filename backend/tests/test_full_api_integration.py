@@ -93,9 +93,9 @@ async def test_full_api_flow(client: AsyncClient):
     stats_resp = await ac.get("/api/v1/dashboard/stats")
     assert stats_resp.status_code == 200
 
-    # 8. Try deleting Category with expenses (should fail 409)
+    # 8. Try deleting System Category (should fail 403 Forbidden)
     del_cat_resp = await ac.delete(f"/api/v1/categories/{food_cat['id']}")
-    assert del_cat_resp.status_code == 409
+    assert del_cat_resp.status_code == 403
 
     # 9. Reassign and Delete Category
     # Create a temporary custom category to test safe deletion
@@ -118,12 +118,17 @@ async def test_full_api_flow(client: AsyncClient):
     assert temp_exp_resp.status_code == 201
     temp_exp_id = temp_exp_resp.json()["id"]
 
+    # Try deleting custom category without reassignment (should fail 409 Conflict)
+    del_conflict_resp = await ac.delete(f"/api/v1/categories/{temp_cat['id']}")
+    assert del_conflict_resp.status_code == 409
+
     # Delete Temp Category with reassignment to Transport
     reassign_del_resp = await ac.delete(
         f"/api/v1/categories/{temp_cat['id']}",
         params={"reassign_to": transport_cat["id"]},
     )
     assert reassign_del_resp.status_code == 200
+
 
     # Verify the expense was moved to Transport
     moved_exp = await ac.get(f"/api/v1/expenses/{temp_exp_id}")
