@@ -25,9 +25,11 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.spendora.app.data.model.PaymentMode
 import com.spendora.app.ui.components.*
+import com.spendora.app.ui.components.ai.FinancialHealthDetailSheet
 import com.spendora.app.ui.components.ai.FinancialHealthRadar
 import com.spendora.app.ui.components.ai.LeakHunterSheet
 import com.spendora.app.ui.components.ai.PurchaseSimulatorSheet
+import com.spendora.app.ui.components.ai.SafeToSpendDetailSheet
 import com.spendora.app.ui.components.ai.SafeToSpendGauge
 import com.spendora.app.ui.components.ai.SmartScannerSheet
 import com.spendora.app.ui.theme.*
@@ -58,6 +60,8 @@ fun DashboardScreen(
     var showSimulatorSheet by remember { mutableStateOf(false) }
     var showLeakSheet by remember { mutableStateOf(false) }
     var showScannerSheet by remember { mutableStateOf(false) }
+    var showSafeToSpendSheet by remember { mutableStateOf(false) }
+    var showHealthDetailSheet by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
         dashboardViewModel.loadDashboard()
@@ -340,7 +344,7 @@ fun DashboardScreen(
                 item {
                     SafeToSpendGauge(
                         safeToSpend = aiState.safeToSpend,
-                        onCardClick = onOpenAiAssistant
+                        onCardClick = { showSafeToSpendSheet = true }
                     )
                 }
             }
@@ -350,7 +354,7 @@ fun DashboardScreen(
                 item {
                     FinancialHealthRadar(
                         health = aiState.financialHealth,
-                        onCardClick = onOpenAiAssistant
+                        onCardClick = { showHealthDetailSheet = true }
                     )
                 }
             }
@@ -544,6 +548,20 @@ fun DashboardScreen(
                 aiViewModel.loadSafeToSpend()
                 aiViewModel.loadFinancialHealth()
             }
+        )
+    }
+
+    if (showSafeToSpendSheet) {
+        SafeToSpendDetailSheet(
+            aiViewModel = aiViewModel,
+            onDismiss = { showSafeToSpendSheet = false }
+        )
+    }
+
+    if (showHealthDetailSheet) {
+        FinancialHealthDetailSheet(
+            aiViewModel = aiViewModel,
+            onDismiss = { showHealthDetailSheet = false }
         )
     }
 }

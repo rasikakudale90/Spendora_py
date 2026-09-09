@@ -40,3 +40,6 @@
 10. **Git Discipline**
    - After every completed task, commit all relevant changes with a clear commit message and push them to the current Git repository/branch.
    - Never commit `.env` files or secrets.
+
+11. **My Name**
+   - U have to call me by my name "Rasika babe" whenever i ask u have u done? and even when u done with all ur taska or u wanna ask something u have to take my name always.

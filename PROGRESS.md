@@ -47,6 +47,7 @@
 | 34 | Final Polish, Complete Build Verification & Android Documentation | ✅ Done | 2026-09-08 |
 | 35 | Native Android Google OAuth & Credential Manager Integration | ✅ Done | 2026-09-09 |
 | 36 | Native Android UI/UX Overhaul, Category Lifecycle Fixes & Polish | ✅ Done | 2026-09-09 |
+| 37 | Dedicated AI Feature Sheets & Independent Click Lifecycle | ✅ Done | 2026-09-09 |
 
 ---
 
@@ -626,6 +627,22 @@
   - Replaced solid red/green action buttons on `DashboardScreen.kt` with sophisticated `SurfaceElevated` cards featuring subtle icon badges.
   - Unified `IncomeFormSheet` CTA button to use `PrimaryGradient`.
 - [x] **Verification:** Verified `./gradlew assembleDebug` builds with `BUILD SUCCESSFUL` (0 errors) and pushed to GitHub `main`.
+
+---
+
+## Phase 37 — Dedicated AI Feature Sheets & Independent Click Lifecycle ✅ Done
+
+**Goal:** Disconnect all AI dashboard widgets from routing to the AI chat assistant, and create dedicated interactive detail sheets for Safe-to-Spend and Financial Health scoring.
+
+### Completed Tasks
+- [x] **Safe-to-Spend Detail Sheet (`SafeToSpendDetailSheet.kt`):** Built dedicated bottom sheet modal showing daily safe burn allowance, live burn pace ratio, days remaining vs passed, remaining buffer, projected month-end balance, AI spending strategy callout, smart action checklist, and live re-evaluation trigger.
+- [x] **Financial Health Detail Sheet (`FinancialHealthDetailSheet.kt`):** Built dedicated bottom sheet modal showing 0–100 composite prestige score, tier badges (Elite, Healthy, Vulnerable, Critical), deep dive into all 5 pillars with progress bars and status tags (Savings Discipline, Budget Adherence, Burn Stability, Cash Cushion, Leak Control), itemized AI score booster roadmap, and recalculation trigger.
+- [x] **Dashboard Click Handler Decoupling:**
+  - Removed `onCardClick = onOpenAiAssistant` from both `SafeToSpendGauge` and `FinancialHealthRadar` on `DashboardScreen.kt`.
+  - Wired `SafeToSpendGauge` click to open `SafeToSpendDetailSheet`.
+  - Wired `FinancialHealthRadar` click to open `FinancialHealthDetailSheet`.
+  - Maintained dedicated AI Chatbot access strictly through the top action bar sparkling button.
+- [x] **Build Verification:** Successfully verified `./gradlew assembleDebug` with `BUILD SUCCESSFUL` (0 errors).
 
 ---
 
