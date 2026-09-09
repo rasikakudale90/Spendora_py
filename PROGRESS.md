@@ -42,6 +42,11 @@
 | 29 | Safe Web Archiving & Android Foundation (Kotlin + Compose) | ✅ Done | 2026-09-08 |
 | 30 | Android Network Core, Auth & 4-Digit OTP Wizard | ✅ Done | 2026-09-08 |
 | 31 | Core Financials (Dashboard, Expenses, Income) | ✅ Done | 2026-09-08 |
+| 32 | Multi-Period Budgets & Smart Savings Goals Runway | ✅ Done | 2026-09-08 |
+| 33 | Full 7-Feature Spendora AI Suite on Mobile | ✅ Done | 2026-09-08 |
+| 34 | Final Polish, Complete Build Verification & Android Documentation | ✅ Done | 2026-09-08 |
+| 35 | Native Android Google OAuth & Credential Manager Integration | ✅ Done | 2026-09-09 |
+| 36 | Native Android UI/UX Overhaul, Category Lifecycle Fixes & Polish | ✅ Done | 2026-09-09 |
 
 ---
 
@@ -543,6 +548,87 @@
 
 ---
 
+## Phase 32 — Multi-Period Budgets & Smart Savings Goals Runway ✅ Done
+
+**Goal:** Implement multi-period budget tracking (Daily, Weekly, Monthly, Yearly) and smart savings goals with real-time deposit/withdraw contribution workflows on native Android.
+
+### Completed Tasks
+- [x] **Data Models & DTOs:** Built `BudgetModels.kt` and `GoalModels.kt` mapping FastAPI schemas (`BudgetDto`, `BudgetCreateRequest`, `BudgetUpdateRequest`, `GoalDto`, `GoalCreateRequest`, `GoalUpdateRequest`, `GoalContributeRequest`).
+- [x] **Retrofit API Interfaces:** Created `BudgetApi.kt` and `GoalApi.kt` registered in `ApiClient.kt`.
+- [x] **Repository Layer:** Implemented `BudgetRepository.kt` and `GoalRepository.kt` with coroutines, `Dispatchers.IO`, and error parsing.
+- [x] **ViewModels:** Created `BudgetViewModel.kt` and `GoalViewModel.kt` managing period filtering, live budget remaining computation, and milestone progress.
+- [x] **Budget Cards & Form Sheet:** Built `BudgetCards.kt` (`PeriodTabRow`, `BudgetCard` with color-coded status badges and dynamic progress bar) and `BudgetFormSheet.kt` (overall and per-category budget creation/editing with period switcher).
+- [x] **Goal Cards & Modals:** Built `GoalCards.kt` (`GoalCard` with AI pacing badge, speedup suggestions, deposit/withdraw action triggers), `GoalFormSheet.kt` (goal creation/editing), and `GoalContributeSheet.kt` (deposit and withdraw flow with live balance preview).
+- [x] **Screens & Navigation:** Built `BudgetsScreen.kt` and `GoalsScreen.kt`; wired routes in `AppNavigation.kt`.
+
+---
+
+## Phase 33 — Full 7-Feature Spendora AI Suite on Mobile ✅ Done
+
+**Goal:** Port all 7 proprietary Spendora AI intelligence capabilities to Native Android Jetpack Compose with custom Canvas visualizations.
+
+### Completed Tasks
+- [x] **Data Models & DTOs:** Created `AiModels.kt` mapping all 7 AI endpoints (`PurchaseSimulationRequest/Response`, `LeakAnalysisResponse`, `SafeToSpendResponse`, `FinancialChatRequest/Response`, `TransactionExtractionRequest/Response`, `FinancialHealthScoreResponse`, `GoalsRunwayResponse`).
+- [x] **Retrofit API & Repository:** Created `AiApi.kt` and `AiRepository.kt` connected to live Render backend.
+- [x] **AI ViewModel:** Built `AiViewModel.kt` managing state flows for all 7 AI features.
+- [x] **Custom Canvas Visualizations:**
+  - `SafeToSpendGauge.kt`: Speedometer arc with needle indicator, color gradients, and dynamic burn pace metrics.
+  - `FinancialHealthRadar.kt`: 5-pillar spider radar chart plotting Savings Discipline, Budget Adherence, Burn Stability, Cash Cushion, and Leak Control.
+- [x] **Interactive Action Sheets:**
+  - `PurchaseSimulatorSheet.kt`: 3-tier verdict banners, 3-metric comparison cards, quick-test sample chips, and direct "Add as Expense" shortcut.
+  - `LeakHunterSheet.kt`: Active subscriptions, micro-spending leaks (<= ₹150), and annualized drain projections.
+  - `SmartScannerSheet.kt`: SMS and Receipt scanner with clipboard paste, Indian bank SMS regex parser, and PII masking.
+- [x] **Conversational Assistant:** Built `FinancialAssistantScreen.kt` with message history, quick prompt chips, and Markdown table rendering.
+- [x] **Dashboard Integration:** Mounted `SafeToSpendGauge` and `FinancialHealthRadar` on `DashboardScreen.kt`.
+
+---
+
+## Phase 34 — Final Polish, Complete Build Verification & Android Documentation ✅ Done
+
+**Goal:** Verify entire mobile build, eliminate all warnings, and produce comprehensive documentation for Android native deployment.
+
+### Completed Tasks
+- [x] **Build Verification:** Successfully built production debug APK at `app/build/outputs/apk/debug/app-debug.apk` with 0 errors.
+- [x] **Comprehensive Documentation:** Created `docs/android-guide.md` with architecture breakdown, ADB device deployment instructions, security model, and complete 7 AI feature documentation.
+- [x] **Memory Synchronization:** Updated `AGENTS.md` and repository memory; pushed full repository to GitHub `main`.
+
+---
+
+## Phase 35 — Native Android Google OAuth & Credential Manager Integration ✅ Done
+
+**Goal:** Integrate modern Google One-Tap Sign-In via Android Credential Manager targeting the backend `/api/v1/auth/google` endpoint.
+
+### Completed Tasks
+- [x] **Google Credential Manager Libraries:** Added `androidx.credentials:credentials:1.3.0`, `androidx.credentials:credentials-play-services-auth:1.3.0`, and `com.google.android.libraries.identity.googleid:googleid:1.1.1`.
+- [x] **Web Client ID & SHA-1 Configuration:** Integrated Google Web Client ID `1046881337432-bkvc5rdkignjlhurgc9grct4ksri9l05.apps.googleusercontent.com` via `buildConfigField` and registered debug SHA-1 `E6:78:3C:60:26:6B:2A:24:DB:73:4C:F3:69:8F:04:60:3A:98:7D:30` in Google Cloud Console.
+- [x] **Branded UI Component:** Built `GoogleLogoIcon` custom vector and `GoogleSignInButton.kt` with Material 3 styling and loading states.
+- [x] **Auth Layer Integration:** Added `googleSignIn` in `AuthApi.kt`, `AuthRepository.kt`, and `AuthViewModel.kt`.
+- [x] **Screen Mounting:** Mounted Google Sign-In button on `LoginScreen.kt` and `RegisterScreen.kt`.
+
+---
+
+## Phase 36 — Native Android UI/UX Overhaul, Category Lifecycle Fixes & Formatting Polish ✅ Done
+
+**Goal:** Resolve UUID parse errors, fix category dropdown selection race conditions, overhaul visual design to Midnight Obsidian & Electric Neon palette, make Canvas widgets responsive across screen sizes, and polish financial formatting.
+
+### Completed Tasks
+- [x] **UUID String vs Int Normalization:** Resolved `NumberFormatException` during sign-in by updating model entity IDs (`id`, `user_id`, `category_id`) across all DTOs, API interfaces, Repositories, ViewModels, and Sheets from `Int` to `String` (PostgreSQL UUID compatibility).
+- [x] **Midnight Obsidian & Electric Neon Theme:** Updated `Color.kt` and `Theme.kt` with deep obsidian background (`#070B12`), dark navy cards (`#131D33`), electric indigo primary (`#6366F1`), vibrant emerald (`#10B981`), and soft rose (`#FF4D6D`).
+- [x] **Canvas Dynamic Responsiveness:** Wrapped `SafeToSpendGauge.kt` and `FinancialHealthRadar.kt` in `BoxWithConstraints` for proportional auto-scaling across all device widths.
+- [x] **Keyboard Overlap Protection:** Added `Modifier.imePadding()` and `verticalScroll` across `ExpenseFormSheet`, `IncomeFormSheet`, `BudgetFormSheet`, `GoalFormSheet`, and `GoalContributeSheet`.
+- [x] **Category Initialization & Selection Fix:**
+  - Added `LaunchedEffect(categories)` in `ExpenseFormSheet.kt` to auto-select the first available category upon loading.
+  - Added explicit category validation error display and loading fallback.
+  - Added `loadCategories()` and `loadExpenses()` in `LaunchedEffect(Unit)` on `DashboardScreen.kt`, `ExpensesScreen.kt`, and `BudgetsScreen.kt`.
+- [x] **FastAPI Schema Alignment:** Aligned `ExpenseApi.kt` and `ExpenseRepository.kt` `createExpense` / `updateExpense` return types directly with FastAPI's `ExpenseResponse` root schema; corrected date filter query parameters to `date_from` and `date_to`.
+- [x] **Formatting & Action Button Polish:**
+  - Removed `-` and `+` prefixes from `ExpenseItemRow` and `IncomeItemRow` amount displays.
+  - Replaced solid red/green action buttons on `DashboardScreen.kt` with sophisticated `SurfaceElevated` cards featuring subtle icon badges.
+  - Unified `IncomeFormSheet` CTA button to use `PrimaryGradient`.
+- [x] **Verification:** Verified `./gradlew assembleDebug` builds with `BUILD SUCCESSFUL` (0 errors) and pushed to GitHub `main`.
+
+---
+
 ## Open Items & Design Decisions
 
 | # | Item | Status | Resolution |
@@ -561,4 +647,8 @@
 | 12 | Financial Health Scoring & Smart Goals Architecture | ✅ Resolved | 5-weighted pillars (Savings 25%, Budgets 25%, Burn 20%, Cushion 15%, Leaks 15%) + dedicated `goals` table with deposit/withdraw contribution tracking and cash flow surplus runway acceleration |
 | 13 | In-Database RAG Architecture for Conversational AI | ✅ Resolved | In-database dynamic entity & temporal extraction querying PostgreSQL via ILIKE and relational bounds; 0 vector DB subscription cost, 0ms external latency, zero-trust tenant isolation |
 | 14 | Mobile Frontend Architecture & Web Archiving | ✅ Resolved | Next.js preserved in `frontend_nextjs_archive/`; Native Android built in `android/` with Kotlin + Jetpack Compose + Material 3 + Retrofit targeting `https://spendora-py.onrender.com` |
+| 15 | Android Model IDs & PostgreSQL UUID Compatibility | ✅ Resolved | All model entity IDs (`id`, `user_id`, `category_id`) typed strictly as `String` across DTOs and database calls to support standard UUIDs without `NumberFormatException` |
+| 16 | Google OAuth Android Architecture | ✅ Resolved | Credential Manager with `googleid` library, Web Client ID defined via `buildConfigField`, and debug SHA-1 registered in Google Cloud Console |
+| 17 | Android UI/UX & Canvas Responsiveness | ✅ Resolved | Midnight Obsidian theme `#070B12`, `BoxWithConstraints` scaling for AI gauges, `imePadding` on all form sheets, and clean INR formatting |
+
 
