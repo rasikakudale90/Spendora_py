@@ -36,27 +36,27 @@ fun GoalCard(
     val accentColor = when (goal.color.lowercase()) {
         "indigo" -> PrimaryIndigoLight
         "blue" -> Color(0xFF38BDF8)
-        "purple" -> Color(0xFFA855F7)
-        "amber" -> AmberWarning
-        "rose" -> RoseDanger
-        else -> EmeraldSuccess
+        "purple" -> SecondaryVioletLight
+        "amber" -> AmberWarningLight
+        "rose" -> RoseDangerLight
+        else -> EmeraldSuccessLight
     }
 
     val pacing = goal.runway?.pacingStatus
     val pacingColor = when (pacing) {
-        "ahead", "on_track" -> EmeraldSuccess
-        "at_risk" -> AmberWarning
-        "behind" -> RoseDanger
-        "completed" -> EmeraldSuccess
+        "ahead", "on_track" -> EmeraldSuccessLight
+        "at_risk" -> AmberWarningLight
+        "behind" -> RoseDangerLight
+        "completed" -> EmeraldSuccessLight
         else -> PrimaryIndigoLight
     }
 
-    Surface(
+    Box(
         modifier = modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(16.dp))
-            .border(1.dp, BorderDark, RoundedCornerShape(16.dp)),
-        color = SurfaceDark
+            .clip(RoundedCornerShape(18.dp))
+            .border(1.dp, BorderDark, RoundedCornerShape(18.dp))
+            .background(CardSurfaceGradient)
     ) {
         Column(
             modifier = Modifier
@@ -71,13 +71,14 @@ fun GoalCard(
             ) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.weight(1f, fill = false)
                 ) {
                     Box(
                         modifier = Modifier
                             .size(40.dp)
                             .clip(RoundedCornerShape(10.dp))
-                            .background(accentColor.copy(alpha = 0.15f)),
+                            .background(accentColor.copy(alpha = 0.15f))
+                            .border(1.dp, accentColor.copy(alpha = 0.3f), RoundedCornerShape(10.dp)),
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
@@ -106,6 +107,7 @@ fun GoalCard(
                                 Text(
                                     text = goal.category,
                                     fontSize = 10.sp,
+                                    fontWeight = FontWeight.Medium,
                                     color = TextSecondary,
                                     modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
                                 )
@@ -158,7 +160,7 @@ fun GoalCard(
                     )
                     Text(
                         text = "Target ${formatInr(goal.targetAmount)} (${goal.progressPercentage.toInt()}%)",
-                        style = MaterialTheme.typography.bodySmall,
+                        style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Medium),
                         color = TextSecondary
                     )
                 }
@@ -166,7 +168,7 @@ fun GoalCard(
                 Spacer(modifier = Modifier.height(6.dp))
 
                 LinearProgressIndicator(
-                    progress = animatedProgress,
+                    progress = { animatedProgress },
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(8.dp)
@@ -181,8 +183,9 @@ fun GoalCard(
                 Spacer(modifier = Modifier.height(12.dp))
                 Surface(
                     modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(10.dp),
-                    color = SurfaceElevated
+                    shape = RoundedCornerShape(12.dp),
+                    color = SurfaceElevated,
+                    border = androidx.compose.foundation.BorderStroke(1.dp, BorderDark)
                 ) {
                     Column(modifier = Modifier.padding(10.dp)) {
                         Row(
@@ -229,7 +232,7 @@ fun GoalCard(
                                 Icon(
                                     imageVector = Icons.Default.AutoAwesome,
                                     contentDescription = null,
-                                    tint = AmberWarning,
+                                    tint = AmberWarningLight,
                                     modifier = Modifier.size(14.dp).padding(top = 1.dp)
                                 )
                                 Spacer(modifier = Modifier.width(6.dp))
@@ -257,15 +260,15 @@ fun GoalCard(
                     text = if (goal.remainingAmount > 0) "${formatInr(goal.remainingAmount)} to go" else "Goal Completed! 🎉",
                     fontSize = 12.sp,
                     fontWeight = FontWeight.SemiBold,
-                    color = if (goal.remainingAmount > 0) TextMuted else EmeraldSuccess
+                    color = if (goal.remainingAmount > 0) TextMuted else EmeraldSuccessLight
                 )
 
                 Button(
                     onClick = onContribute,
                     colors = ButtonDefaults.buttonColors(containerColor = PrimaryIndigo),
-                    shape = RoundedCornerShape(8.dp),
+                    shape = RoundedCornerShape(10.dp),
                     contentPadding = PaddingValues(horizontal = 14.dp, vertical = 6.dp),
-                    modifier = Modifier.height(34.dp)
+                    modifier = Modifier.height(36.dp)
                 ) {
                     Icon(
                         imageVector = Icons.Default.AccountBalanceWallet,

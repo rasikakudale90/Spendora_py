@@ -188,7 +188,7 @@ fun RegisterScreen(
                     modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Divider(modifier = Modifier.weight(1f), color = BorderDark)
+                    HorizontalDivider(modifier = Modifier.weight(1f), color = BorderDark)
                     Text(
                         text = "OR",
                         fontSize = 11.sp,
@@ -196,7 +196,7 @@ fun RegisterScreen(
                         color = TextMuted,
                         modifier = Modifier.padding(horizontal = 12.dp)
                     )
-                    Divider(modifier = Modifier.weight(1f), color = BorderDark)
+                    HorizontalDivider(modifier = Modifier.weight(1f), color = BorderDark)
                 }
 
                 Spacer(modifier = Modifier.height(18.dp))

@@ -51,18 +51,25 @@ fun FinancialHealthRadar(
         else -> RoseDanger
     }
 
-    Surface(
+    val tierBg = when (health.tier.lowercase()) {
+        "elite" -> PrimaryIndigo.copy(alpha = 0.2f)
+        "healthy" -> EmeraldBg
+        "vulnerable" -> AmberBg
+        else -> RoseBg
+    }
+
+    Box(
         modifier = modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(20.dp))
             .border(1.dp, BorderDark, RoundedCornerShape(20.dp))
-            .clickable { onCardClick() },
-        color = SurfaceDark
+            .background(CardSurfaceGradient)
+            .clickable { onCardClick() }
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(20.dp),
+                .padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             // Header Row: Score & Tier Badge
@@ -71,12 +78,16 @@ fun FinancialHealthRadar(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.weight(1f, fill = false)
+                ) {
                     Box(
                         modifier = Modifier
-                            .size(34.dp)
+                            .size(36.dp)
                             .clip(CircleShape)
-                            .background(tierColor.copy(alpha = 0.15f)),
+                            .background(tierBg)
+                            .border(1.dp, tierColor.copy(alpha = 0.3f), CircleShape),
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
@@ -89,7 +100,7 @@ fun FinancialHealthRadar(
                     Spacer(modifier = Modifier.width(10.dp))
                     Column {
                         Text(
-                            text = "Financial Health Score",
+                            text = "Financial Health",
                             style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
                             color = TextPrimary
                         )
@@ -104,93 +115,102 @@ fun FinancialHealthRadar(
 
                 Surface(
                     shape = RoundedCornerShape(20.dp),
-                    color = tierColor.copy(alpha = 0.15f)
+                    color = tierBg,
+                    border = androidx.compose.foundation.BorderStroke(1.dp, tierColor.copy(alpha = 0.3f))
                 ) {
                     Text(
                         text = "${health.compositeScore} / 100",
                         fontSize = 13.sp,
-                        fontWeight = FontWeight.Bold,
+                        fontWeight = FontWeight.ExtraBold,
                         color = tierColor,
                         modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
                     )
                 }
             }
 
-            Spacer(modifier = Modifier.height(18.dp))
+            Spacer(modifier = Modifier.height(14.dp))
 
-            // 5-Pillar Spider Radar Chart Canvas
+            // 5-Pillar Spider Radar Chart Canvas (Responsive)
             val pillars = health.pillars
             if (pillars.isNotEmpty()) {
-                Box(
+                BoxWithConstraints(
                     modifier = Modifier
-                        .size(200.dp)
-                        .padding(8.dp),
+                        .fillMaxWidth()
+                        .height(190.dp)
+                        .padding(4.dp),
                     contentAlignment = Alignment.Center
                 ) {
-                    Canvas(modifier = Modifier.fillMaxSize()) {
-                        val center = Offset(size.width / 2f, size.height / 2f)
-                        val radius = size.minDimension / 2f
-                        val numSides = pillars.size
-                        val angleStep = (2.0 * Math.PI / numSides).toFloat()
+                    val radarSize = maxWidth.coerceAtMost(190.dp)
 
-                        // 1. Draw 4 Concentric Radar Polygons (25%, 50%, 75%, 100%)
-                        for (level in 1..4) {
-                            val levelRadius = radius * (level / 4f)
-                            val gridPath = Path()
+                    Box(
+                        modifier = Modifier.size(radarSize),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Canvas(modifier = Modifier.fillMaxSize()) {
+                            val center = Offset(size.width / 2f, size.height / 2f)
+                            val radius = (size.minDimension / 2f) - 8.dp.toPx()
+                            val numSides = pillars.size
+                            val angleStep = (2.0 * Math.PI / numSides).toFloat()
+
+                            // 1. Draw 4 Concentric Radar Polygons (25%, 50%, 75%, 100%)
+                            for (level in 1..4) {
+                                val levelRadius = radius * (level / 4f)
+                                val gridPath = Path()
+                                for (i in 0 until numSides) {
+                                    val angle = (i * angleStep) - (Math.PI / 2.0).toFloat()
+                                    val x = center.x + levelRadius * cos(angle)
+                                    val y = center.y + levelRadius * sin(angle)
+                                    if (i == 0) gridPath.moveTo(x, y) else gridPath.lineTo(x, y)
+                                }
+                                gridPath.close()
+                                drawPath(gridPath, color = BorderDark, style = Stroke(width = 1.dp.toPx()))
+                            }
+
+                            // 2. Draw Axis Spokes
                             for (i in 0 until numSides) {
                                 val angle = (i * angleStep) - (Math.PI / 2.0).toFloat()
-                                val x = center.x + levelRadius * cos(angle)
-                                val y = center.y + levelRadius * sin(angle)
-                                if (i == 0) gridPath.moveTo(x, y) else gridPath.lineTo(x, y)
+                                val x = center.x + radius * cos(angle)
+                                val y = center.y + radius * sin(angle)
+                                drawLine(
+                                    color = BorderDark,
+                                    start = center,
+                                    end = Offset(x, y),
+                                    strokeWidth = 1.dp.toPx()
+                                )
                             }
-                            gridPath.close()
-                            drawPath(gridPath, color = BorderDark, style = Stroke(width = 1.dp.toPx()))
-                        }
 
-                        // 2. Draw Axis Spokes
-                        for (i in 0 until numSides) {
-                            val angle = (i * angleStep) - (Math.PI / 2.0).toFloat()
-                            val x = center.x + radius * cos(angle)
-                            val y = center.y + radius * sin(angle)
-                            drawLine(
-                                color = BorderDark,
-                                start = center,
-                                end = Offset(x, y),
-                                strokeWidth = 1.dp.toPx()
-                            )
-                        }
+                            // 3. Draw User's Data Polygon
+                            val dataPath = Path()
+                            for (i in 0 until numSides) {
+                                val pScore = (pillars[i].score / 100f).coerceIn(0.1, 1.0).toFloat()
+                                val pRadius = radius * pScore
+                                val angle = (i * angleStep) - (Math.PI / 2.0).toFloat()
+                                val x = center.x + pRadius * cos(angle)
+                                val y = center.y + pRadius * sin(angle)
+                                if (i == 0) dataPath.moveTo(x, y) else dataPath.lineTo(x, y)
+                            }
+                            dataPath.close()
 
-                        // 3. Draw User's Data Polygon
-                        val dataPath = Path()
-                        for (i in 0 until numSides) {
-                            val pScore = (pillars[i].score / 100f).coerceIn(0.1, 1.0).toFloat()
-                            val pRadius = radius * pScore
-                            val angle = (i * angleStep) - (Math.PI / 2.0).toFloat()
-                            val x = center.x + pRadius * cos(angle)
-                            val y = center.y + pRadius * sin(angle)
-                            if (i == 0) dataPath.moveTo(x, y) else dataPath.lineTo(x, y)
-                        }
-                        dataPath.close()
+                            // Fill translucent polygon
+                            drawPath(dataPath, color = PrimaryIndigo.copy(alpha = 0.35f))
+                            // Stroke border
+                            drawPath(dataPath, color = PrimaryIndigoLight, style = Stroke(width = 2.dp.toPx()))
 
-                        // Fill translucent polygon
-                        drawPath(dataPath, color = PrimaryIndigo.copy(alpha = 0.35f))
-                        // Stroke border
-                        drawPath(dataPath, color = PrimaryIndigoLight, style = Stroke(width = 2.dp.toPx()))
-
-                        // 4. Draw Vertex Dots
-                        for (i in 0 until numSides) {
-                            val pScore = (pillars[i].score / 100f).coerceIn(0.1, 1.0).toFloat()
-                            val pRadius = radius * pScore
-                            val angle = (i * angleStep) - (Math.PI / 2.0).toFloat()
-                            val x = center.x + pRadius * cos(angle)
-                            val y = center.y + pRadius * sin(angle)
-                            drawCircle(color = TextPrimary, radius = 3.dp.toPx(), center = Offset(x, y))
+                            // 4. Draw Vertex Dots
+                            for (i in 0 until numSides) {
+                                val pScore = (pillars[i].score / 100f).coerceIn(0.1, 1.0).toFloat()
+                                val pRadius = radius * pScore
+                                val angle = (i * angleStep) - (Math.PI / 2.0).toFloat()
+                                val x = center.x + pRadius * cos(angle)
+                                val y = center.y + pRadius * sin(angle)
+                                drawCircle(color = TextPrimary, radius = 3.dp.toPx(), center = Offset(x, y))
+                            }
                         }
                     }
                 }
             }
 
-            Spacer(modifier = Modifier.height(14.dp))
+            Spacer(modifier = Modifier.height(10.dp))
 
             // Pillar Summary Row
             Row(
@@ -204,10 +224,10 @@ fun FinancialHealthRadar(
                             fontSize = 12.sp,
                             fontWeight = FontWeight.Bold,
                             color = when (p.status) {
-                                "optimal" -> EmeraldSuccess
+                                "optimal" -> EmeraldSuccessLight
                                 "good" -> PrimaryIndigoLight
-                                "fair" -> AmberWarning
-                                else -> RoseDanger
+                                "fair" -> AmberWarningLight
+                                else -> RoseDangerLight
                             }
                         )
                         Text(
@@ -222,11 +242,12 @@ fun FinancialHealthRadar(
             // Top Score Booster Tip
             val topBooster = health.scoreBoosters.firstOrNull()
             if (topBooster != null) {
-                Spacer(modifier = Modifier.height(14.dp))
+                Spacer(modifier = Modifier.height(12.dp))
                 Surface(
                     modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(10.dp),
-                    color = SurfaceElevated
+                    shape = RoundedCornerShape(12.dp),
+                    color = SurfaceElevated,
+                    border = androidx.compose.foundation.BorderStroke(1.dp, BorderDark)
                 ) {
                     Row(
                         modifier = Modifier.padding(10.dp),
@@ -235,7 +256,7 @@ fun FinancialHealthRadar(
                         Icon(
                             imageVector = Icons.Default.AutoAwesome,
                             contentDescription = null,
-                            tint = AmberWarning,
+                            tint = AmberWarningLight,
                             modifier = Modifier.size(16.dp)
                         )
                         Spacer(modifier = Modifier.width(8.dp))

@@ -41,8 +41,9 @@ fun PeriodTabRow(
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(12.dp))
+            .clip(RoundedCornerShape(14.dp))
             .background(SurfaceElevated)
+            .border(1.dp, BorderDark, RoundedCornerShape(14.dp))
             .padding(4.dp),
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
@@ -51,7 +52,7 @@ fun PeriodTabRow(
             Box(
                 modifier = Modifier
                     .weight(1f)
-                    .clip(RoundedCornerShape(8.dp))
+                    .clip(RoundedCornerShape(10.dp))
                     .background(if (isSelected) PrimaryIndigo else Color.Transparent)
                     .clickable { onSelectPeriod(key) }
                     .padding(vertical = 8.dp),
@@ -59,7 +60,7 @@ fun PeriodTabRow(
             ) {
                 Text(
                     text = label,
-                    fontSize = 13.sp,
+                    fontSize = 12.sp,
                     fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
                     color = if (isSelected) TextPrimary else TextMuted
                 )
@@ -86,22 +87,34 @@ fun BudgetCard(
         else -> EmeraldSuccess
     }
 
+    val statusLightColor = when (budget.status) {
+        "over_budget" -> RoseDangerLight
+        "near_limit" -> AmberWarningLight
+        else -> EmeraldSuccessLight
+    }
+
+    val statusBg = when (budget.status) {
+        "over_budget" -> RoseBg
+        "near_limit" -> AmberBg
+        else -> EmeraldBg
+    }
+
     val statusLabel = when (budget.status) {
         "over_budget" -> "Over Budget"
         "near_limit" -> "Near Limit"
         else -> "On Track"
     }
 
-    Surface(
+    Box(
         modifier = modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(16.dp))
+            .clip(RoundedCornerShape(18.dp))
             .border(
                 width = if (budget.status == "over_budget") 1.5.dp else 1.dp,
                 color = if (budget.status == "over_budget") RoseDanger.copy(alpha = 0.6f) else BorderDark,
-                shape = RoundedCornerShape(16.dp)
-            ),
-        color = SurfaceDark
+                shape = RoundedCornerShape(18.dp)
+            )
+            .background(CardSurfaceGradient)
     ) {
         Column(
             modifier = Modifier
@@ -116,19 +129,20 @@ fun BudgetCard(
             ) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.weight(1f, fill = false)
                 ) {
                     Box(
                         modifier = Modifier
-                            .size(36.dp)
-                            .clip(RoundedCornerShape(8.dp))
-                            .background(if (isOverall) PrimaryIndigo.copy(alpha = 0.15f) else statusColor.copy(alpha = 0.15f)),
+                            .size(38.dp)
+                            .clip(RoundedCornerShape(10.dp))
+                            .background(if (isOverall) PrimaryIndigo.copy(alpha = 0.2f) else statusBg)
+                            .border(1.dp, if (isOverall) PrimaryIndigoLight.copy(alpha = 0.3f) else statusColor.copy(alpha = 0.3f), RoundedCornerShape(10.dp)),
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
                             imageVector = Icons.Default.PieChart,
                             contentDescription = null,
-                            tint = if (isOverall) PrimaryIndigoLight else statusColor,
+                            tint = if (isOverall) PrimaryIndigoLight else statusLightColor,
                             modifier = Modifier.size(18.dp)
                         )
                     }
@@ -155,13 +169,14 @@ fun BudgetCard(
                     // Status Badge
                     Surface(
                         shape = RoundedCornerShape(20.dp),
-                        color = statusColor.copy(alpha = 0.15f)
+                        color = statusBg,
+                        border = androidx.compose.foundation.BorderStroke(1.dp, statusColor.copy(alpha = 0.3f))
                     ) {
                         Text(
                             text = statusLabel,
                             fontSize = 11.sp,
-                            fontWeight = FontWeight.SemiBold,
-                            color = statusColor,
+                            fontWeight = FontWeight.Bold,
+                            color = statusLightColor,
                             modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
                         )
                     }
@@ -193,7 +208,7 @@ fun BudgetCard(
             // Progress Bar
             Column(modifier = Modifier.fillMaxWidth()) {
                 LinearProgressIndicator(
-                    progress = animatedProgress,
+                    progress = { animatedProgress },
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(8.dp)
@@ -215,8 +230,8 @@ fun BudgetCard(
                     Spacer(modifier = Modifier.height(2.dp))
                     Text(
                         text = formatInr(budget.spent),
-                        style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
-                        color = if (budget.status == "over_budget") RoseDanger else TextPrimary
+                        style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
+                        color = if (budget.status == "over_budget") RoseDangerLight else TextPrimary
                     )
                 }
 
@@ -225,8 +240,8 @@ fun BudgetCard(
                     Spacer(modifier = Modifier.height(2.dp))
                     Text(
                         text = formatInr(budget.remaining),
-                        style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
-                        color = if (budget.remaining > 0) EmeraldSuccess else RoseDanger
+                        style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
+                        color = if (budget.remaining > 0) EmeraldSuccessLight else RoseDangerLight
                     )
                 }
 
@@ -235,7 +250,7 @@ fun BudgetCard(
                     Spacer(modifier = Modifier.height(2.dp))
                     Text(
                         text = formatInr(budget.amount),
-                        style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
+                        style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
                         color = TextPrimary
                     )
                 }

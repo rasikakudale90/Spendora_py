@@ -18,6 +18,8 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
@@ -30,16 +32,23 @@ import com.spendora.app.ui.theme.*
 @Composable
 fun SpendoraCard(
     modifier: Modifier = Modifier,
-    backgroundColor: Color = SurfaceCard,
+    backgroundColor: Color? = null,
+    gradientBrush: Brush? = CardSurfaceGradient,
     borderColor: Color = BorderDark,
     content: @Composable ColumnScope.() -> Unit
 ) {
-    Card(
+    val backgroundModifier = when {
+        backgroundColor != null -> Modifier.background(backgroundColor)
+        gradientBrush != null -> Modifier.background(gradientBrush)
+        else -> Modifier.background(CardSurfaceGradient)
+    }
+
+    Box(
         modifier = modifier
             .fillMaxWidth()
-            .border(1.dp, borderColor, RoundedCornerShape(16.dp)),
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = backgroundColor)
+            .clip(RoundedCornerShape(16.dp))
+            .border(1.dp, borderColor, RoundedCornerShape(16.dp))
+            .then(backgroundModifier)
     ) {
         Column(
             modifier = Modifier.padding(16.dp),
@@ -55,22 +64,29 @@ fun SpendoraButton(
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
     isLoading: Boolean = false,
-    containerColor: Color = PrimaryIndigo,
+    gradientBrush: Brush? = PrimaryGradient,
+    containerColor: Color? = null,
     contentColor: Color = TextPrimary
 ) {
-    Button(
-        onClick = onClick,
+    val shape = RoundedCornerShape(14.dp)
+
+    val backgroundModifier = if (containerColor != null) {
+        Modifier.background(if (enabled) containerColor else containerColor.copy(alpha = 0.5f), shape)
+    } else if (gradientBrush != null) {
+        Modifier.background(if (enabled) gradientBrush else Brush.linearGradient(listOf(SurfaceElevated, SurfaceElevated)), shape)
+    } else {
+        Modifier.background(PrimaryGradient, shape)
+    }
+
+    Box(
         modifier = modifier
             .fillMaxWidth()
-            .height(52.dp),
-        enabled = enabled && !isLoading,
-        shape = RoundedCornerShape(12.dp),
-        colors = ButtonDefaults.buttonColors(
-            containerColor = containerColor,
-            contentColor = contentColor,
-            disabledContainerColor = containerColor.copy(alpha = 0.5f),
-            disabledContentColor = contentColor.copy(alpha = 0.5f)
-        )
+            .height(52.dp)
+            .shadow(if (enabled && !isLoading) 6.dp else 0.dp, shape = shape, spotColor = PrimaryIndigo.copy(alpha = 0.4f))
+            .clip(shape)
+            .then(backgroundModifier)
+            .clickable(enabled = enabled && !isLoading, onClick = onClick),
+        contentAlignment = Alignment.Center
     ) {
         if (isLoading) {
             CircularProgressIndicator(
@@ -81,7 +97,8 @@ fun SpendoraButton(
         } else {
             Text(
                 text = text,
-                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold)
+                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                color = if (enabled) contentColor else contentColor.copy(alpha = 0.6f)
             )
         }
     }
@@ -106,7 +123,7 @@ fun SpendoraTextField(
     Column(modifier = modifier.fillMaxWidth()) {
         Text(
             text = label,
-            style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Medium),
+            style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold),
             color = TextSecondary,
             modifier = Modifier.padding(bottom = 6.dp)
         )
@@ -143,12 +160,12 @@ fun SpendoraTextField(
             colors = OutlinedTextFieldDefaults.colors(
                 focusedContainerColor = SurfaceDark,
                 unfocusedContainerColor = SurfaceDark,
-                focusedBorderColor = PrimaryIndigo,
+                focusedBorderColor = PrimaryIndigoLight,
                 unfocusedBorderColor = BorderDark,
                 focusedTextColor = TextPrimary,
                 unfocusedTextColor = TextPrimary,
                 errorBorderColor = RoseDanger,
-                cursorColor = PrimaryIndigo
+                cursorColor = PrimaryIndigoLight
             )
         )
 

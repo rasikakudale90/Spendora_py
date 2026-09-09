@@ -51,6 +51,12 @@ fun SafeToSpendGauge(
         else -> EmeraldSuccess
     }
 
+    val statusLightColor = when (safeToSpend.burnRateStatus) {
+        "danger" -> RoseDangerLight
+        "warning" -> AmberWarningLight
+        else -> EmeraldSuccessLight
+    }
+
     val statusBg = when (safeToSpend.burnRateStatus) {
         "danger" -> RoseBg
         "warning" -> AmberBg
@@ -59,22 +65,22 @@ fun SafeToSpendGauge(
 
     val statusTitle = when (safeToSpend.burnRateStatus) {
         "danger" -> "High Burn Danger"
-        "warning" -> "Moderate Burn Warning"
-        else -> "Optimal Pace"
+        "warning" -> "Moderate Pace"
+        else -> "Optimal Safe Pace"
     }
 
-    Surface(
+    Box(
         modifier = modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(20.dp))
             .border(1.dp, BorderDark, RoundedCornerShape(20.dp))
-            .clickable { onCardClick() },
-        color = SurfaceDark
+            .background(CardSurfaceGradient)
+            .clickable { onCardClick() }
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(20.dp),
+                .padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             // Header Row: Title & Live Badge
@@ -83,25 +89,29 @@ fun SafeToSpendGauge(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.weight(1f, fill = false)
+                ) {
                     Box(
                         modifier = Modifier
-                            .size(34.dp)
+                            .size(36.dp)
                             .clip(CircleShape)
-                            .background(statusColor.copy(alpha = 0.15f)),
+                            .background(statusBg)
+                            .border(1.dp, statusColor.copy(alpha = 0.3f), CircleShape),
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
                             imageVector = Icons.Default.Speed,
                             contentDescription = null,
-                            tint = statusColor,
+                            tint = statusLightColor,
                             modifier = Modifier.size(18.dp)
                         )
                     }
                     Spacer(modifier = Modifier.width(10.dp))
                     Column {
                         Text(
-                            text = "Safe-to-Spend Forecast",
+                            text = "Safe-to-Spend",
                             style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
                             color = TextPrimary
                         )
@@ -115,77 +125,87 @@ fun SafeToSpendGauge(
 
                 Surface(
                     shape = RoundedCornerShape(20.dp),
-                    color = statusColor.copy(alpha = 0.15f)
+                    color = statusBg,
+                    border = androidx.compose.foundation.BorderStroke(1.dp, statusColor.copy(alpha = 0.3f))
                 ) {
                     Text(
                         text = statusTitle,
                         fontSize = 11.sp,
                         fontWeight = FontWeight.Bold,
-                        color = statusColor,
-                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
+                        color = statusLightColor,
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
                     )
                 }
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(14.dp))
 
-            // Speedometer Gauge Arc (Custom Canvas)
-            Box(
+            // Speedometer Gauge Arc (Responsive Aspect Ratio Canvas)
+            BoxWithConstraints(
                 modifier = Modifier
-                    .size(width = 240.dp, height = 130.dp),
+                    .fillMaxWidth()
+                    .height(130.dp),
                 contentAlignment = Alignment.BottomCenter
             ) {
-                Canvas(modifier = Modifier.fillMaxSize()) {
-                    val strokeWidth = 16.dp.toPx()
-                    val arcSize = Size(size.width - strokeWidth, (size.height * 2) - strokeWidth)
-                    val topLeft = Offset(strokeWidth / 2, strokeWidth / 2)
+                val gaugeWidth = maxWidth.coerceAtMost(260.dp)
 
-                    // Track Arc (180 degrees from 180 to 360)
-                    drawArc(
-                        color = BorderDark,
-                        startAngle = 180f,
-                        sweepAngle = 180f,
-                        useCenter = false,
-                        topLeft = topLeft,
-                        size = arcSize,
-                        style = Stroke(width = strokeWidth, cap = StrokeCap.Round)
-                    )
+                Box(
+                    modifier = Modifier.size(width = gaugeWidth, height = 130.dp),
+                    contentAlignment = Alignment.BottomCenter
+                ) {
+                    Canvas(modifier = Modifier.fillMaxSize()) {
+                        val strokeWidth = 14.dp.toPx()
+                        val arcSize = Size(size.width - strokeWidth, (size.height * 2) - strokeWidth)
+                        val topLeft = Offset(strokeWidth / 2, strokeWidth / 2)
 
-                    // Active Progress Arc
-                    val sweepAngle = 180f * animatedPace
-                    if (sweepAngle > 0f) {
+                        // Track Arc (180 degrees from 180 to 360)
                         drawArc(
-                            brush = Brush.horizontalGradient(
-                                colors = listOf(EmeraldSuccess, statusColor)
-                            ),
+                            color = SurfaceElevated,
                             startAngle = 180f,
-                            sweepAngle = sweepAngle,
+                            sweepAngle = 180f,
                             useCenter = false,
                             topLeft = topLeft,
                             size = arcSize,
                             style = Stroke(width = strokeWidth, cap = StrokeCap.Round)
                         )
-                    }
-                }
 
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    modifier = Modifier.padding(bottom = 6.dp)
-                ) {
-                    Text(
-                        text = formatInr(safeToSpend.dailySafeSpend),
-                        style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
-                        color = TextPrimary
-                    )
-                    Text(
-                        text = "Safe Daily Limit",
-                        fontSize = 12.sp,
-                        color = TextSecondary
-                    )
+                        // Active Progress Arc
+                        val sweepAngle = 180f * animatedPace
+                        if (sweepAngle > 0f) {
+                            drawArc(
+                                brush = Brush.horizontalGradient(
+                                    colors = listOf(EmeraldSuccess, statusColor)
+                                ),
+                                startAngle = 180f,
+                                sweepAngle = sweepAngle,
+                                useCenter = false,
+                                topLeft = topLeft,
+                                size = arcSize,
+                                style = Stroke(width = strokeWidth, cap = StrokeCap.Round)
+                            )
+                        }
+                    }
+
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        modifier = Modifier.padding(bottom = 6.dp)
+                    ) {
+                        Text(
+                            text = formatInr(safeToSpend.dailySafeSpend),
+                            style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.ExtraBold),
+                            color = TextPrimary
+                        )
+                        Text(
+                            text = "Daily Safe Burn",
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Medium,
+                            color = TextSecondary
+                        )
+                    }
                 }
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(14.dp))
 
             // Sub-metrics row: Burn Rate vs Projected Balance
             Row(
@@ -193,27 +213,31 @@ fun SafeToSpendGauge(
                     .fillMaxWidth()
                     .clip(RoundedCornerShape(12.dp))
                     .background(SurfaceElevated)
+                    .border(1.dp, BorderDark, RoundedCornerShape(12.dp))
                     .padding(12.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Column {
-                    Text(text = "Current Daily Burn", fontSize = 11.sp, color = TextMuted)
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(text = "Current Burn Pace", fontSize = 11.sp, color = TextMuted)
                     Spacer(modifier = Modifier.height(2.dp))
                     Text(
-                        text = formatInr(safeToSpend.currentBurnRatePerDay) + " / day",
-                        style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
-                        color = if (safeToSpend.burnRateStatus == "danger") RoseDanger else TextPrimary
+                        text = "${formatInr(safeToSpend.currentBurnRatePerDay)} / day",
+                        style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
+                        color = if (safeToSpend.burnRateStatus == "danger") RoseDangerLight else TextPrimary
                     )
                 }
 
-                Column(horizontalAlignment = Alignment.End) {
-                    Text(text = "Projected Month-End", fontSize = 11.sp, color = TextMuted)
+                Column(
+                    modifier = Modifier.weight(1f),
+                    horizontalAlignment = Alignment.End
+                ) {
+                    Text(text = "Projected Balance", fontSize = 11.sp, color = TextMuted)
                     Spacer(modifier = Modifier.height(2.dp))
                     Text(
                         text = formatInr(safeToSpend.projectedMonthEndBalance),
-                        style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
-                        color = if (safeToSpend.projectedMonthEndBalance >= 0) EmeraldSuccess else RoseDanger
+                        style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
+                        color = if (safeToSpend.projectedMonthEndBalance >= 0) EmeraldSuccessLight else RoseDangerLight
                     )
                 }
             }

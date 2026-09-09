@@ -1,9 +1,14 @@
 package com.spendora.app.ui.components
 
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ReceiptLong
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -17,7 +22,7 @@ sealed class BottomNavItem(
     val icon: ImageVector
 ) {
     object Dashboard : BottomNavItem("Dashboard", Screen.Dashboard.route, Icons.Default.Dashboard)
-    object Expenses : BottomNavItem("Expenses", Screen.Expenses.route, Icons.Default.ReceiptLong)
+    object Expenses : BottomNavItem("Expenses", Screen.Expenses.route, Icons.AutoMirrored.Filled.ReceiptLong)
     object Income : BottomNavItem("Income", Screen.Income.route, Icons.Default.AccountBalanceWallet)
     object Budgets : BottomNavItem("Budgets", Screen.Budgets.route, Icons.Default.PieChart)
     object Goals : BottomNavItem("Goals", Screen.Goals.route, Icons.Default.Flag)
@@ -37,8 +42,11 @@ fun SpendoraBottomNavBar(
     )
 
     NavigationBar(
-        containerColor = SurfaceDark,
-        tonalElevation = 8.dp
+        modifier = Modifier
+            .fillMaxWidth()
+            .border(width = 1.dp, color = BorderDark),
+        containerColor = BackgroundDark,
+        tonalElevation = 12.dp
     ) {
         items.forEach { item ->
             val isSelected = currentRoute == item.route
@@ -55,13 +63,17 @@ fun SpendoraBottomNavBar(
                 label = {
                     Text(
                         text = item.title,
-                        fontSize = 11.sp,
-                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                        fontSize = 10.sp,
+                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
                         color = if (isSelected) TextPrimary else TextMuted
                     )
                 },
                 colors = NavigationBarItemDefaults.colors(
-                    indicatorColor = PrimaryIndigo.copy(alpha = 0.2f)
+                    selectedIconColor = PrimaryIndigoLight,
+                    unselectedIconColor = TextMuted,
+                    selectedTextColor = TextPrimary,
+                    unselectedTextColor = TextMuted,
+                    indicatorColor = PrimaryIndigo.copy(alpha = 0.25f)
                 )
             )
         }

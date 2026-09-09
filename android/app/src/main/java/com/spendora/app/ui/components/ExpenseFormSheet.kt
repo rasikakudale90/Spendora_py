@@ -43,20 +43,23 @@ fun ExpenseFormSheet(
     var titleError by remember { mutableStateOf<String?>(null) }
     var amountError by remember { mutableStateOf<String?>(null) }
 
+    val scrollState = rememberScrollState()
+
     ModalBottomSheet(
         onDismissRequest = onDismiss,
-        containerColor = SurfaceDark,
-        dragHandle = { BottomSheetDefaults.DragHandle(color = TextMuted) }
+        containerColor = BackgroundDark,
+        dragHandle = { BottomSheetDefaults.DragHandle(color = BorderDark) }
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 24.dp, vertical = 8.dp)
-                .verticalScroll(rememberScrollState())
+                .padding(horizontal = 20.dp, vertical = 8.dp)
+                .imePadding()
+                .verticalScroll(scrollState)
         ) {
             Text(
                 text = if (expenseToEdit == null) "Add Expense" else "Edit Expense",
-                style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
+                style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.ExtraBold),
                 color = TextPrimary
             )
 
@@ -94,7 +97,7 @@ fun ExpenseFormSheet(
 
             Text(
                 text = "Category",
-                style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Medium),
+                style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold),
                 color = TextSecondary,
                 modifier = Modifier.padding(bottom = 6.dp)
             )
@@ -108,10 +111,21 @@ fun ExpenseFormSheet(
                     FilterChip(
                         selected = isSelected,
                         onClick = { selectedCategoryId = category.id },
-                        label = { Text(text = category.name, color = if (isSelected) TextPrimary else TextSecondary) },
+                        label = {
+                            Text(
+                                text = category.name,
+                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                                color = if (isSelected) TextPrimary else TextSecondary
+                            )
+                        },
                         colors = FilterChipDefaults.filterChipColors(
                             selectedContainerColor = PrimaryIndigo,
                             containerColor = SurfaceElevated
+                        ),
+                        border = FilterChipDefaults.filterChipBorder(
+                            enabled = true,
+                            selected = isSelected,
+                            borderColor = if (isSelected) PrimaryIndigoLight else BorderDark
                         )
                     )
                 }
@@ -121,7 +135,7 @@ fun ExpenseFormSheet(
 
             Text(
                 text = "Payment Mode",
-                style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Medium),
+                style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold),
                 color = TextSecondary,
                 modifier = Modifier.padding(bottom = 6.dp)
             )
@@ -135,10 +149,21 @@ fun ExpenseFormSheet(
                     FilterChip(
                         selected = isSelected,
                         onClick = { selectedPaymentMode = mode },
-                        label = { Text(text = mode.value, color = if (isSelected) TextPrimary else TextSecondary) },
+                        label = {
+                            Text(
+                                text = mode.value,
+                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                                color = if (isSelected) TextPrimary else TextSecondary
+                            )
+                        },
                         colors = FilterChipDefaults.filterChipColors(
                             selectedContainerColor = PrimaryIndigo,
                             containerColor = SurfaceElevated
+                        ),
+                        border = FilterChipDefaults.filterChipBorder(
+                            enabled = true,
+                            selected = isSelected,
+                            borderColor = if (isSelected) PrimaryIndigoLight else BorderDark
                         )
                     )
                 }
@@ -158,6 +183,7 @@ fun ExpenseFormSheet(
 
             SpendoraButton(
                 text = if (expenseToEdit == null) "Save Expense" else "Update Expense",
+                gradientBrush = PrimaryGradient,
                 onClick = {
                     var valid = true
                     if (title.isBlank()) {

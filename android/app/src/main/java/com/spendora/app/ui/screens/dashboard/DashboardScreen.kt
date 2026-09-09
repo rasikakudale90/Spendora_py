@@ -1,6 +1,7 @@
 package com.spendora.app.ui.screens.dashboard
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -9,6 +10,8 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.HelpOutline
+import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -70,7 +73,7 @@ fun DashboardScreen(
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(horizontal = 20.dp),
+                .padding(horizontal = 16.dp),
             contentPadding = PaddingValues(top = 16.dp, bottom = 80.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
@@ -81,10 +84,10 @@ fun DashboardScreen(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Column {
+                    Column(modifier = Modifier.weight(1f, fill = false)) {
                         Text(
                             text = "Hello, ${currentUser?.fullName?.split(" ")?.firstOrNull() ?: "there"} 👋",
-                            style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold),
+                            style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.ExtraBold),
                             color = TextPrimary
                         )
                         Text(
@@ -97,12 +100,13 @@ fun DashboardScreen(
                     IconButton(
                         onClick = { authViewModel.logout() },
                         modifier = Modifier
-                            .size(38.dp)
+                            .size(40.dp)
                             .clip(CircleShape)
-                            .background(SurfaceDark)
+                            .background(SurfaceElevated)
+                            .border(1.dp, BorderDark, CircleShape)
                     ) {
                         Icon(
-                            imageVector = Icons.Default.Logout,
+                            imageVector = Icons.AutoMirrored.Filled.Logout,
                             contentDescription = "Logout",
                             tint = TextMuted,
                             modifier = Modifier.size(18.dp)
@@ -117,44 +121,51 @@ fun DashboardScreen(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
-                    Button(
-                        onClick = { showAddExpenseSheet = true },
+                    Box(
                         modifier = Modifier
                             .weight(1f)
-                            .height(46.dp),
-                        shape = RoundedCornerShape(12.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = RoseDanger)
+                            .height(48.dp)
+                            .clip(RoundedCornerShape(14.dp))
+                            .background(RoseGradient)
+                            .clickable { showAddExpenseSheet = true },
+                        contentAlignment = Alignment.Center
                     ) {
-                        Icon(imageVector = Icons.Default.Add, contentDescription = null, modifier = Modifier.size(18.dp))
-                        Spacer(modifier = Modifier.width(6.dp))
-                        Text(text = "Expense", fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(imageVector = Icons.Default.Add, contentDescription = null, tint = TextPrimary, modifier = Modifier.size(18.dp))
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text(text = "Expense", fontWeight = FontWeight.Bold, fontSize = 13.sp, color = TextPrimary)
+                        }
                     }
 
-                    Button(
-                        onClick = { showAddIncomeSheet = true },
+                    Box(
                         modifier = Modifier
                             .weight(1f)
-                            .height(46.dp),
-                        shape = RoundedCornerShape(12.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = EmeraldSuccess)
+                            .height(48.dp)
+                            .clip(RoundedCornerShape(14.dp))
+                            .background(EmeraldGradient)
+                            .clickable { showAddIncomeSheet = true },
+                        contentAlignment = Alignment.Center
                     ) {
-                        Icon(imageVector = Icons.Default.Add, contentDescription = null, modifier = Modifier.size(18.dp))
-                        Spacer(modifier = Modifier.width(6.dp))
-                        Text(text = "Income", fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(imageVector = Icons.Default.Add, contentDescription = null, tint = TextPrimary, modifier = Modifier.size(18.dp))
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text(text = "Income", fontWeight = FontWeight.Bold, fontSize = 13.sp, color = TextPrimary)
+                        }
                     }
 
-                    IconButton(
-                        onClick = onOpenAiAssistant,
+                    Box(
                         modifier = Modifier
-                            .size(46.dp)
-                            .clip(RoundedCornerShape(12.dp))
-                            .background(PrimaryIndigo)
+                            .size(48.dp)
+                            .clip(RoundedCornerShape(14.dp))
+                            .background(PrimaryGradient)
+                            .clickable { onOpenAiAssistant() },
+                        contentAlignment = Alignment.Center
                     ) {
                         Icon(
                             imageVector = Icons.Default.AutoAwesome,
                             contentDescription = "AI Assistant",
                             tint = TextPrimary,
-                            modifier = Modifier.size(20.dp)
+                            modifier = Modifier.size(22.dp)
                         )
                     }
                 }
@@ -177,7 +188,7 @@ fun DashboardScreen(
                                 modifier = Modifier.padding(horizontal = 12.dp, vertical = 7.dp),
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Icon(Icons.Default.HelpOutline, contentDescription = null, tint = PrimaryIndigoLight, modifier = Modifier.size(14.dp))
+                                Icon(Icons.AutoMirrored.Filled.HelpOutline, contentDescription = null, tint = PrimaryIndigoLight, modifier = Modifier.size(14.dp))
                                 Spacer(modifier = Modifier.width(6.dp))
                                 Text("Can I Afford This?", fontSize = 11.sp, color = TextPrimary, fontWeight = FontWeight.SemiBold)
                             }
@@ -195,7 +206,7 @@ fun DashboardScreen(
                                 modifier = Modifier.padding(horizontal = 12.dp, vertical = 7.dp),
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Icon(Icons.Default.WaterDrop, contentDescription = null, tint = RoseDanger, modifier = Modifier.size(14.dp))
+                                Icon(Icons.Default.WaterDrop, contentDescription = null, tint = RoseDangerLight, modifier = Modifier.size(14.dp))
                                 Spacer(modifier = Modifier.width(6.dp))
                                 Text("Leak Hunter", fontSize = 11.sp, color = TextPrimary, fontWeight = FontWeight.SemiBold)
                             }
@@ -213,7 +224,7 @@ fun DashboardScreen(
                                 modifier = Modifier.padding(horizontal = 12.dp, vertical = 7.dp),
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Icon(Icons.Default.DocumentScanner, contentDescription = null, tint = EmeraldSuccess, modifier = Modifier.size(14.dp))
+                                Icon(Icons.Default.DocumentScanner, contentDescription = null, tint = EmeraldSuccessLight, modifier = Modifier.size(14.dp))
                                 Spacer(modifier = Modifier.width(6.dp))
                                 Text("Scan SMS Alert", fontSize = 11.sp, color = TextPrimary, fontWeight = FontWeight.SemiBold)
                             }
@@ -226,14 +237,14 @@ fun DashboardScreen(
             item {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
                     KpiCard(
                         title = "Total Income",
                         amount = dashboardState.summary.totalIncome,
                         icon = Icons.Default.ArrowUpward,
-                        iconTint = EmeraldSuccess,
-                        iconBg = EmeraldSuccess.copy(alpha = 0.15f),
+                        iconTint = EmeraldSuccessLight,
+                        iconBg = EmeraldBg,
                         isPositive = true,
                         modifier = Modifier.weight(1f)
                     )
@@ -242,8 +253,8 @@ fun DashboardScreen(
                         title = "Total Spent",
                         amount = dashboardState.summary.totalSpent,
                         icon = Icons.Default.ArrowDownward,
-                        iconTint = RoseDanger,
-                        iconBg = RoseDanger.copy(alpha = 0.15f),
+                        iconTint = RoseDangerLight,
+                        iconBg = RoseBg,
                         isPositive = false,
                         modifier = Modifier.weight(1f)
                     )
@@ -253,7 +264,7 @@ fun DashboardScreen(
             item {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
                     val isSurplus = dashboardState.summary.netSavings >= 0
                     KpiCard(
@@ -261,29 +272,33 @@ fun DashboardScreen(
                         amount = dashboardState.summary.netSavings,
                         subtitle = if (isSurplus) "Surplus" else "Deficit",
                         icon = Icons.Default.AccountBalance,
-                        iconTint = if (isSurplus) EmeraldSuccess else RoseDanger,
-                        iconBg = (if (isSurplus) EmeraldSuccess else RoseDanger).copy(alpha = 0.15f),
+                        iconTint = if (isSurplus) EmeraldSuccessLight else RoseDangerLight,
+                        iconBg = if (isSurplus) EmeraldBg else RoseBg,
                         isPositive = isSurplus,
                         modifier = Modifier.weight(1f)
                     )
 
-                    SpendoraCard(modifier = Modifier.weight(1f)) {
+                    SpendoraCard(
+                        modifier = Modifier.weight(1f),
+                        borderColor = if (dashboardState.summary.savingsRate >= 20.0) EmeraldSuccess.copy(alpha = 0.3f) else BorderDark
+                    ) {
                         Text(
                             text = "Savings Rate",
-                            style = MaterialTheme.typography.bodySmall,
+                            style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Medium),
                             color = TextSecondary
+                        )
+                        Spacer(modifier = Modifier.height(6.dp))
+                        Text(
+                            text = "${"%.1f".format(dashboardState.summary.savingsRate)}%",
+                            style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.ExtraBold),
+                            color = if (dashboardState.summary.savingsRate >= 20.0) EmeraldSuccessLight else AmberWarningLight
                         )
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
-                            text = "${"%.1f".format(dashboardState.summary.savingsRate)}%",
-                            style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
-                            color = if (dashboardState.summary.savingsRate >= 20.0) EmeraldSuccess else AmberWarning
-                        )
-                        Spacer(modifier = Modifier.height(2.dp))
-                        Text(
-                            text = "${dashboardState.summary.expenseCount} transactions",
+                            text = "${dashboardState.summary.expenseCount} entries this month",
                             fontSize = 11.sp,
-                            color = TextMuted
+                            color = TextMuted,
+                            maxLines = 1
                         )
                     }
                 }

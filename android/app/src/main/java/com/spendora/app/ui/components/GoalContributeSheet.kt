@@ -1,6 +1,7 @@
 package com.spendora.app.ui.components
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -38,27 +39,31 @@ fun GoalContributeSheet(
         (goal.currentAmount - amount).coerceAtLeast(0.0)
     }
 
+    val scrollState = rememberScrollState()
+
     ModalBottomSheet(
         onDismissRequest = onDismiss,
-        containerColor = SurfaceDark,
+        containerColor = BackgroundDark,
         tonalElevation = 16.dp,
-        shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)
+        shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
+        dragHandle = { BottomSheetDefaults.DragHandle(color = BorderDark) }
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 24.dp, vertical = 16.dp)
-                .verticalScroll(rememberScrollState())
+                .padding(horizontal = 20.dp, vertical = 12.dp)
+                .imePadding()
+                .verticalScroll(scrollState)
         ) {
             Text(
                 text = "Update Goal Contribution",
-                style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
+                style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.ExtraBold),
                 color = TextPrimary
             )
             Spacer(modifier = Modifier.height(4.dp))
             Text(
                 text = goal.name,
-                style = MaterialTheme.typography.bodyMedium,
+                style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
                 color = PrimaryIndigoLight
             )
             Spacer(modifier = Modifier.height(16.dp))
@@ -68,15 +73,16 @@ fun GoalContributeSheet(
                 Box(
                     modifier = Modifier
                         .weight(1f)
-                        .clip(RoundedCornerShape(8.dp))
+                        .clip(RoundedCornerShape(10.dp))
                         .background(if (action == "deposit") EmeraldSuccess else SurfaceElevated)
+                        .border(1.dp, if (action == "deposit") EmeraldSuccessLight else BorderDark, RoundedCornerShape(10.dp))
                         .clickable { action = "deposit"; errorMessage = null }
                         .padding(vertical = 10.dp),
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
                         text = "+ Deposit Funds",
-                        fontWeight = if (action == "deposit") FontWeight.Bold else FontWeight.Normal,
+                        fontWeight = if (action == "deposit") FontWeight.Bold else FontWeight.Medium,
                         color = if (action == "deposit") TextPrimary else TextMuted
                     )
                 }
@@ -84,15 +90,16 @@ fun GoalContributeSheet(
                 Box(
                     modifier = Modifier
                         .weight(1f)
-                        .clip(RoundedCornerShape(8.dp))
+                        .clip(RoundedCornerShape(10.dp))
                         .background(if (action == "withdraw") RoseDanger else SurfaceElevated)
+                        .border(1.dp, if (action == "withdraw") RoseDangerLight else BorderDark, RoundedCornerShape(10.dp))
                         .clickable { action = "withdraw"; errorMessage = null }
                         .padding(vertical = 10.dp),
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
                         text = "- Withdraw Funds",
-                        fontWeight = if (action == "withdraw") FontWeight.Bold else FontWeight.Normal,
+                        fontWeight = if (action == "withdraw") FontWeight.Bold else FontWeight.Medium,
                         color = if (action == "withdraw") TextPrimary else TextMuted
                     )
                 }
@@ -100,13 +107,7 @@ fun GoalContributeSheet(
             Spacer(modifier = Modifier.height(16.dp))
 
             // Amount Input
-            Text(
-                text = if (action == "deposit") "Deposit Amount (₹)" else "Withdrawal Amount (₹)",
-                fontSize = 12.sp,
-                color = TextSecondary
-            )
-            Spacer(modifier = Modifier.height(6.dp))
-            OutlinedTextField(
+            SpendoraTextField(
                 value = amountText,
                 onValueChange = {
                     if (it.isEmpty() || it.matches(Regex("^\\d*\\.?\\d{0,2}$"))) {
@@ -114,27 +115,18 @@ fun GoalContributeSheet(
                         errorMessage = null
                     }
                 },
-                placeholder = { Text("e.g. 5000", color = TextMuted) },
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true,
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedContainerColor = SurfaceElevated,
-                    unfocusedContainerColor = SurfaceElevated,
-                    focusedBorderColor = if (action == "deposit") EmeraldSuccess else RoseDanger,
-                    unfocusedBorderColor = BorderDark,
-                    focusedTextColor = TextPrimary,
-                    unfocusedTextColor = TextPrimary
-                ),
-                shape = RoundedCornerShape(12.dp)
+                label = if (action == "deposit") "Deposit Amount (₹)" else "Withdrawal Amount (₹)",
+                placeholder = "e.g. 5000",
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal)
             )
             Spacer(modifier = Modifier.height(14.dp))
 
             // Live Preview Card
             Surface(
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(12.dp),
-                color = SurfaceElevated
+                shape = RoundedCornerShape(14.dp),
+                color = SurfaceElevated,
+                border = androidx.compose.foundation.BorderStroke(1.dp, BorderDark)
             ) {
                 Row(
                     modifier = Modifier
@@ -161,7 +153,7 @@ fun GoalContributeSheet(
                         Text(
                             text = formatInr(newSavedAmount),
                             style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
-                            color = if (action == "deposit") EmeraldSuccess else RoseDanger
+                            color = if (action == "deposit") EmeraldSuccessLight else RoseDangerLight
                         )
                     }
                 }
@@ -169,22 +161,11 @@ fun GoalContributeSheet(
             Spacer(modifier = Modifier.height(14.dp))
 
             // Notes / Reason
-            Text(text = "Note / Reason (Optional)", fontSize = 12.sp, color = TextSecondary)
-            Spacer(modifier = Modifier.height(6.dp))
-            OutlinedTextField(
+            SpendoraTextField(
                 value = notes,
                 onValueChange = { notes = it },
-                placeholder = { Text("e.g. Monthly salary savings", color = TextMuted) },
-                modifier = Modifier.fillMaxWidth(),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedContainerColor = SurfaceElevated,
-                    unfocusedContainerColor = SurfaceElevated,
-                    focusedBorderColor = PrimaryIndigo,
-                    unfocusedBorderColor = BorderDark,
-                    focusedTextColor = TextPrimary,
-                    unfocusedTextColor = TextPrimary
-                ),
-                shape = RoundedCornerShape(12.dp)
+                label = "Note / Reason (Optional)",
+                placeholder = "e.g. Monthly salary savings"
             )
 
             if (errorMessage != null) {
@@ -196,6 +177,7 @@ fun GoalContributeSheet(
 
             SpendoraButton(
                 text = if (action == "deposit") "Confirm Deposit" else "Confirm Withdrawal",
+                gradientBrush = if (action == "deposit") EmeraldGradient else RoseGradient,
                 onClick = {
                     val amt = amountText.toDoubleOrNull()
                     if (amt == null || amt <= 0) {

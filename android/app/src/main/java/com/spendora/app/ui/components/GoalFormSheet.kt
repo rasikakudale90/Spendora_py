@@ -4,6 +4,8 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -44,55 +46,46 @@ fun GoalFormSheet(
         "emerald" to EmeraldSuccess,
         "indigo" to PrimaryIndigoLight,
         "blue" to Color(0xFF38BDF8),
-        "purple" to Color(0xFFA855F7),
+        "purple" to SecondaryVioletLight,
         "amber" to AmberWarning,
         "rose" to RoseDanger
     )
 
+    val scrollState = rememberScrollState()
+
     ModalBottomSheet(
         onDismissRequest = onDismiss,
-        containerColor = SurfaceDark,
+        containerColor = BackgroundDark,
         tonalElevation = 16.dp,
-        shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)
+        shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
+        dragHandle = { BottomSheetDefaults.DragHandle(color = BorderDark) }
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 24.dp, vertical = 16.dp)
-                .verticalScroll(rememberScrollState())
+                .padding(horizontal = 20.dp, vertical = 12.dp)
+                .imePadding()
+                .verticalScroll(scrollState)
         ) {
             Text(
                 text = if (isEditing) "Edit Savings Goal" else "Create New Goal",
-                style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
+                style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.ExtraBold),
                 color = TextPrimary
             )
             Spacer(modifier = Modifier.height(16.dp))
 
             // Goal Title
-            Text(text = "Goal Title", fontSize = 12.sp, color = TextSecondary)
-            Spacer(modifier = Modifier.height(6.dp))
-            OutlinedTextField(
+            SpendoraTextField(
                 value = name,
                 onValueChange = { name = it; errorMessage = null },
-                placeholder = { Text("e.g. Dream Car, Emergency Fund", color = TextMuted) },
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true,
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedContainerColor = SurfaceElevated,
-                    unfocusedContainerColor = SurfaceElevated,
-                    focusedBorderColor = PrimaryIndigo,
-                    unfocusedBorderColor = BorderDark,
-                    focusedTextColor = TextPrimary,
-                    unfocusedTextColor = TextPrimary
-                ),
-                shape = RoundedCornerShape(12.dp)
+                label = "Goal Title",
+                placeholder = "e.g. Dream Car, Emergency Fund",
+                errorMessage = null
             )
-            Spacer(modifier = Modifier.height(14.dp))
+            Spacer(modifier = Modifier.height(12.dp))
 
             // Target Amount
-            Text(text = "Target Amount (₹)", fontSize = 12.sp, color = TextSecondary)
-            Spacer(modifier = Modifier.height(6.dp))
-            OutlinedTextField(
+            SpendoraTextField(
                 value = targetAmountText,
                 onValueChange = {
                     if (it.isEmpty() || it.matches(Regex("^\\d*\\.?\\d{0,2}$"))) {
@@ -100,26 +93,14 @@ fun GoalFormSheet(
                         errorMessage = null
                     }
                 },
-                placeholder = { Text("e.g. 500000", color = TextMuted) },
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true,
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedContainerColor = SurfaceElevated,
-                    unfocusedContainerColor = SurfaceElevated,
-                    focusedBorderColor = PrimaryIndigo,
-                    unfocusedBorderColor = BorderDark,
-                    focusedTextColor = TextPrimary,
-                    unfocusedTextColor = TextPrimary
-                ),
-                shape = RoundedCornerShape(12.dp)
+                label = "Target Amount (₹)",
+                placeholder = "e.g. 500000",
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal)
             )
-            Spacer(modifier = Modifier.height(14.dp))
+            Spacer(modifier = Modifier.height(12.dp))
 
             // Current Saved Amount
-            Text(text = "Current Saved (₹)", fontSize = 12.sp, color = TextSecondary)
-            Spacer(modifier = Modifier.height(6.dp))
-            OutlinedTextField(
+            SpendoraTextField(
                 value = currentAmountText,
                 onValueChange = {
                     if (it.isEmpty() || it.matches(Regex("^\\d*\\.?\\d{0,2}$"))) {
@@ -127,72 +108,56 @@ fun GoalFormSheet(
                         errorMessage = null
                     }
                 },
-                placeholder = { Text("0.00", color = TextMuted) },
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true,
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedContainerColor = SurfaceElevated,
-                    unfocusedContainerColor = SurfaceElevated,
-                    focusedBorderColor = PrimaryIndigo,
-                    unfocusedBorderColor = BorderDark,
-                    focusedTextColor = TextPrimary,
-                    unfocusedTextColor = TextPrimary
-                ),
-                shape = RoundedCornerShape(12.dp)
+                label = "Current Saved (₹)",
+                placeholder = "0.00",
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal)
             )
-            Spacer(modifier = Modifier.height(14.dp))
+            Spacer(modifier = Modifier.height(12.dp))
 
             // Target Deadline Date (YYYY-MM-DD)
-            Text(text = "Target Deadline (YYYY-MM-DD, Optional)", fontSize = 12.sp, color = TextSecondary)
-            Spacer(modifier = Modifier.height(6.dp))
-            OutlinedTextField(
+            SpendoraTextField(
                 value = targetDate,
                 onValueChange = { targetDate = it },
-                placeholder = { Text("2026-12-31", color = TextMuted) },
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true,
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedContainerColor = SurfaceElevated,
-                    unfocusedContainerColor = SurfaceElevated,
-                    focusedBorderColor = PrimaryIndigo,
-                    unfocusedBorderColor = BorderDark,
-                    focusedTextColor = TextPrimary,
-                    unfocusedTextColor = TextPrimary
-                ),
-                shape = RoundedCornerShape(12.dp)
+                label = "Target Deadline (YYYY-MM-DD, Optional)",
+                placeholder = "2026-12-31"
             )
-            Spacer(modifier = Modifier.height(14.dp))
+            Spacer(modifier = Modifier.height(12.dp))
 
             // Category Chips
-            Text(text = "Category", fontSize = 12.sp, color = TextSecondary)
+            Text(text = "Category", fontSize = 12.sp, fontWeight = FontWeight.SemiBold, color = TextSecondary)
             Spacer(modifier = Modifier.height(6.dp))
-            Row(
+            LazyRow(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(6.dp)
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                categories.take(4).forEach { cat ->
+                items(categories) { cat ->
                     val isSelected = category == cat
-                    Surface(
-                        shape = RoundedCornerShape(8.dp),
-                        color = if (isSelected) PrimaryIndigo else SurfaceElevated,
-                        modifier = Modifier
-                            .clickable { category = cat }
-                    ) {
-                        Text(
-                            text = cat,
-                            fontSize = 11.sp,
-                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-                            color = if (isSelected) TextPrimary else TextMuted,
-                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)
+                    FilterChip(
+                        selected = isSelected,
+                        onClick = { category = cat },
+                        label = {
+                            Text(
+                                text = cat,
+                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                                color = if (isSelected) TextPrimary else TextSecondary
+                            )
+                        },
+                        colors = FilterChipDefaults.filterChipColors(
+                            selectedContainerColor = PrimaryIndigo,
+                            containerColor = SurfaceElevated
+                        ),
+                        border = FilterChipDefaults.filterChipBorder(
+                            enabled = true,
+                            selected = isSelected,
+                            borderColor = if (isSelected) PrimaryIndigoLight else BorderDark
                         )
-                    }
+                    )
                 }
             }
-            Spacer(modifier = Modifier.height(14.dp))
+            Spacer(modifier = Modifier.height(12.dp))
 
             // Color Theme Chips
-            Text(text = "Accent Color", fontSize = 12.sp, color = TextSecondary)
+            Text(text = "Accent Color", fontSize = 12.sp, fontWeight = FontWeight.SemiBold, color = TextSecondary)
             Spacer(modifier = Modifier.height(6.dp))
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -203,7 +168,7 @@ fun GoalFormSheet(
                     val isSelected = color == colorName
                     Box(
                         modifier = Modifier
-                            .size(32.dp)
+                            .size(34.dp)
                             .clip(CircleShape)
                             .background(colorVal)
                             .border(
@@ -215,25 +180,15 @@ fun GoalFormSheet(
                     )
                 }
             }
-            Spacer(modifier = Modifier.height(14.dp))
+            Spacer(modifier = Modifier.height(12.dp))
 
             // Notes
-            Text(text = "Notes (Optional)", fontSize = 12.sp, color = TextSecondary)
-            Spacer(modifier = Modifier.height(6.dp))
-            OutlinedTextField(
+            SpendoraTextField(
                 value = notes,
                 onValueChange = { notes = it },
-                placeholder = { Text("e.g. Monthly SIP contribution", color = TextMuted) },
-                modifier = Modifier.fillMaxWidth(),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedContainerColor = SurfaceElevated,
-                    unfocusedContainerColor = SurfaceElevated,
-                    focusedBorderColor = PrimaryIndigo,
-                    unfocusedBorderColor = BorderDark,
-                    focusedTextColor = TextPrimary,
-                    unfocusedTextColor = TextPrimary
-                ),
-                shape = RoundedCornerShape(12.dp)
+                label = "Notes (Optional)",
+                placeholder = "e.g. Monthly SIP contribution",
+                singleLine = false
             )
 
             if (errorMessage != null) {
@@ -245,6 +200,7 @@ fun GoalFormSheet(
 
             SpendoraButton(
                 text = if (isEditing) "Update Goal" else "Create Goal",
+                gradientBrush = PrimaryGradient,
                 onClick = {
                     if (name.isBlank()) {
                         errorMessage = "Please enter a goal title"
