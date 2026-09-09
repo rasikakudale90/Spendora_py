@@ -55,6 +55,8 @@
 | 42 | Stitch Screen-by-Screen Visual Parity & Full Android App Assembly | ✅ Done | 2026-09-09 |
 | 43 | Live Notifications Drawer, AI Header Decoupling & Functional Account Rail | ✅ Done | 2026-09-09 |
 | 44 | Native Biometric Vault Security & Financial Statement CSV Export System | ✅ Done | 2026-09-09 |
+| 45 | Expense Category Resolution & Data Binding Fix | ✅ Done | 2026-09-09 |
+| 46 | Overview Dashboard UI/UX De-Clutter, Spacing & 3-Dots Menu Overhaul | ✅ Done | 2026-09-09 |
 
 ---
 
@@ -792,6 +794,42 @@
 - [x] **Build Verification:**
   - `./gradlew assembleDebug` passed in `4m 5s` with `BUILD SUCCESSFUL` (0 errors).
   - Output APK generated at `app/build/outputs/apk/debug/app-debug.apk`.
+
+---
+
+## Phase 45 — Expense Category Resolution & Data Binding Fix ✅ Done
+
+**Goal:** Resolve issue where newly created and listed expenses defaulted to displaying `"General"` instead of their actual category name.
+
+### Completed Tasks
+- [x] **Root Cause Investigation:** Identified that the FastAPI backend schema (`ExpenseResponse`) nests category objects (`category: { id, name }`), but `TransactionCards.kt` was directly accessing `expense.categoryName ?: "General"`, ignoring `category.name`.
+- [x] **Data Binding Fix (`TransactionCards.kt`):**
+  - Updated `ExpenseItemRow` to bind directly to `expense.displayCategoryName` which safely resolves `categoryName ?: category?.name ?: "General"`.
+- [x] **Build Verification:**
+  - `./gradlew assembleDebug` passed with `BUILD SUCCESSFUL` (0 errors).
+
+---
+
+## Phase 46 — Overview Dashboard UI/UX De-Clutter, Spacing & 3-Dots Menu Overhaul ✅ Done
+
+**Goal:** Fix the compact "cupboard" layout on the overview page, eliminate Spendora title wrapping, add generous spacing, and create a top-right 3-dots overflow menu for secondary actions.
+
+### Completed Tasks
+- [x] **Header Decoupling & Title Expansion (`DashboardScreen.kt`):**
+  - Expanded brand header so `"Spendora"` title stays on a single line with `OVERVIEW` sub-badge.
+  - Streamlined top-right action row from 5 crowded icons to 3 spacious icons (`Theme Toggle`, `AI Assistant Sparkle`, `Notifications & Alerts` with dynamic alert indicator) + a dedicated 3-dots overflow menu button (`MoreVert`).
+- [x] **3-Dots Overflow Menu (`DropdownMenu`):**
+  - Moved secondary tools out of the main overview canvas into a sleek popup menu:
+    - 📄 **Export Statement (CSV / PDF)** (`StatementExportSheet`)
+    - 🔍 **Spending Leak Audit** (`LeakHunterSheet`)
+    - 🧮 **Purchase Simulator** (`PurchaseSimulatorSheet`)
+    - 🛡️ **Financial Health Radar** (`FinancialHealthDetailSheet`)
+    - 🚪 **Sign Out** (`authViewModel.logout()`)
+- [x] **Spacing & Quick Actions Overhaul:**
+  - Increased `LazyColumn` item spacing to `18.dp` and top padding to `16.dp` for a modern, airy rhythm.
+  - Upgraded the 4 quick action buttons (`Expense`, `Income`, `Scan Bill`, `Simulate`) into 56dp circular interactive pods with dedicated color accents and generous touch padding.
+- [x] **Build Verification:**
+  - `./gradlew assembleDebug` passed with `BUILD SUCCESSFUL` (0 errors).
 
 ---
 
