@@ -20,6 +20,7 @@ import com.spendora.app.ui.components.SpendoraBottomNavBar
 import com.spendora.app.ui.screens.auth.LoginScreen
 import com.spendora.app.ui.screens.auth.OtpForgotPasswordScreen
 import com.spendora.app.ui.screens.auth.RegisterScreen
+import com.spendora.app.ui.screens.splash.SplashScreen
 import com.spendora.app.ui.screens.dashboard.DashboardScreen
 import com.spendora.app.ui.screens.expenses.ExpensesScreen
 import com.spendora.app.ui.screens.income.IncomeScreen
@@ -60,7 +61,7 @@ fun AppNavigation(
     )
     val showBottomBar = currentRoute in authenticatedRoutes
 
-    val startDestination = if (isLoggedIn) Screen.Dashboard.route else Screen.Login.route
+    val startDestination = Screen.Splash.route
 
     Scaffold(
         containerColor = BackgroundDark,
@@ -84,6 +85,18 @@ fun AppNavigation(
             startDestination = startDestination,
             modifier = Modifier.padding(innerPadding)
         ) {
+            // Intro / Animated Splash
+            composable(Screen.Splash.route) {
+                SplashScreen(
+                    onSplashFinished = {
+                        val targetRoute = if (isLoggedIn) Screen.Dashboard.route else Screen.Login.route
+                        navController.navigate(targetRoute) {
+                            popUpTo(Screen.Splash.route) { inclusive = true }
+                        }
+                    }
+                )
+            }
+
             // Auth Routes
             composable(Screen.Login.route) {
                 LoginScreen(

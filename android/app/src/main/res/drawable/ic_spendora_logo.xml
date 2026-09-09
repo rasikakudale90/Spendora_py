@@ -31,14 +31,14 @@
 
     <!-- Ambient Glow Circle -->
     <path
-        android:pathData="M256,256 m-140,0 a140,140 0 1,0 280,0 a140,140 0 1,0 -280,0"
-        android:fillAlpha="0.25">
+        android:pathData="M256,256 m-110,0 a110,110 0 1,0 220,0 a110,110 0 1,0 -220,0"
+        android:fillAlpha="0.20">
         <aapt:attr name="android:fillColor">
             <gradient
-                android:startX="116"
-                android:startY="116"
-                android:endX="396"
-                android:endY="396"
+                android:startX="146"
+                android:startY="146"
+                android:endX="366"
+                android:endY="366"
                 android:type="linear">
                 <item android:color="#FF6366F1" android:offset="0.0" />
                 <item android:color="#FF10B981" android:offset="1.0" />
@@ -46,18 +46,18 @@
         </aapt:attr>
     </path>
 
-    <!-- Stylized Spendora S Financial Ribbon -->
+    <!-- Sleek & Proportional Spendora S Financial Ribbon -->
     <path
-        android:pathData="M 330,165 C 330,130 300,110 256,110 C 200,110 170,140 170,175 C 170,230 340,215 340,310 C 340,365 295,402 240,402 C 180,402 150,365 150,330"
-        android:strokeWidth="44"
+        android:pathData="M 315,190 C 315,160 290,142 256,142 C 215,142 195,165 195,192 C 195,236 320,226 320,295 C 320,340 286,370 246,370 C 202,370 180,342 180,318"
+        android:strokeWidth="28"
         android:strokeLineCap="round"
         android:strokeLineJoin="round">
         <aapt:attr name="android:strokeColor">
             <gradient
-                android:startX="150"
-                android:startY="110"
-                android:endX="340"
-                android:endY="402"
+                android:startX="180"
+                android:startY="142"
+                android:endX="320"
+                android:endY="370"
                 android:type="linear">
                 <item android:color="#FF38BDF8" android:offset="0.0" />
                 <item android:color="#FF6366F1" android:offset="0.5" />
@@ -68,9 +68,9 @@
 
     <!-- 4-Point Sparkle Accent Top Right -->
     <path
-        android:pathData="M 370,130 Q 370,155 395,155 Q 370,155 370,180 Q 370,155 345,155 Q 370,155 370,130 Z"
+        android:pathData="M 345,145 Q 345,165 365,165 Q 345,165 345,185 Q 345,165 325,165 Q 345,165 345,145 Z"
         android:fillColor="#FF38BDF8" />
     <path
-        android:pathData="M370,155 m-3,0 a3,3 0 1,0 6,0 a3,3 0 1,0 -6,0"
+        android:pathData="M345,165 m-2.5,0 a2.5,2.5 0 1,0 5,0 a2.5,2.5 0 1,0 -5,0"
         android:fillColor="#FFFFFFFF" />
 </vector>

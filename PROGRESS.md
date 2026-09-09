@@ -49,6 +49,7 @@
 | 36 | Native Android UI/UX Overhaul, Category Lifecycle Fixes & Polish | ✅ Done | 2026-09-09 |
 | 37 | Dedicated AI Feature Sheets & Independent Click Lifecycle | ✅ Done | 2026-09-09 |
 | 38 | Native Android Brand Identity & Adaptive App Launcher Logo | ✅ Done | 2026-09-09 |
+| 39 | Refined S Logo Proportions & Animated Spendora-to-S Launch Sequence | ✅ Done | 2026-09-09 |
 
 ---
 
@@ -663,6 +664,23 @@
   - Integrated `SpendoraLogo(size = 72.dp)` on `LoginScreen.kt` and `RegisterScreen.kt` (replacing text `✦` placeholders).
   - Integrated `SpendoraLogo(size = 42.dp)` on `DashboardScreen.kt` header row next to user greeting.
 - [x] **Build Verification:** Successfully built debug APK with `./gradlew assembleDebug` (`BUILD SUCCESSFUL` in 48s, 0 errors).
+
+---
+
+## Phase 39 — Refined S Logo Proportions & Animated Spendora-to-S Launch Sequence ✅ Done
+
+**Goal:** Refine the Spendora S logo ribbon proportions to eliminate bulkiness, and build a cinematic splash launch animation that smoothly collapses the "Spendora" wordmark into the iconic glowing "S" emblem.
+
+### Completed Tasks
+- [x] **Refined S Logo Proportions:**
+  - Reduced stroke width on `ic_spendora_logo.xml` from 44 to 28dp with 35% more breathing room within the squircle frame.
+  - Reduced stroke width on `ic_launcher_foreground.xml` from 9 to 6dp with centered bounds and proportional 4-point sparkle star.
+- [x] **Animated SplashScreen (`SplashScreen.kt`):**
+  - **Stage 1 (Intro):** "Spendora" wordmark enters with gradient "S" (`CyanInfoLight` → `PrimaryIndigoLight` → `EmeraldSuccessLight`) and subtle brand tagline.
+  - **Stage 2 (Morphing):** Letters `"pendora"` collapse horizontally into `"S"`, while the glowing squircle `SpendoraLogo` expands with spring physics and an ambient radial aura pulse.
+  - **Stage 3 (Navigation):** Automatically routes to Dashboard (if authenticated) or Login screen, seamlessly popping `Screen.Splash` off the backstack.
+- [x] **Navigation Setup:** Registered `Screen.Splash` in `Screen.kt` and wired as `startDestination` in `AppNavigation.kt`.
+- [x] **Build Verification:** Verified `./gradlew assembleDebug` builds with `BUILD SUCCESSFUL in 45s` (0 errors).
 
 ---
 

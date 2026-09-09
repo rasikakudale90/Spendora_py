@@ -1,6 +1,9 @@
 package com.spendora.app.ui.navigation
 
 sealed class Screen(val route: String) {
+    // Intro / Splash
+    object Splash : Screen("splash")
+
     // Auth Routes
     object Login : Screen("login")
     object Register : Screen("register")
