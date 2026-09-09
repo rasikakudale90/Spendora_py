@@ -140,7 +140,7 @@ fun IncomeFormSheet(
 
             SpendoraButton(
                 text = if (incomeToEdit == null) "Save Income" else "Update Income",
-                gradientBrush = EmeraldGradient,
+                gradientBrush = PrimaryGradient,
                 onClick = {
                     var valid = true
                     if (title.isBlank()) {

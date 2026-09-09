@@ -207,9 +207,9 @@ fun ExpenseItemRow(
                 horizontalArrangement = Arrangement.End
             ) {
                 Text(
-                    text = "-${formatInr(expense.amount)}",
+                    text = formatInr(expense.amount),
                     style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.ExtraBold),
-                    color = RoseDangerLight,
+                    color = TextPrimary,
                     maxLines = 1
                 )
 
@@ -315,7 +315,7 @@ fun IncomeItemRow(
                 horizontalArrangement = Arrangement.End
             ) {
                 Text(
-                    text = "+${formatInr(income.amount)}",
+                    text = formatInr(income.amount),
                     style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.ExtraBold),
                     color = EmeraldSuccessLight,
                     maxLines = 1

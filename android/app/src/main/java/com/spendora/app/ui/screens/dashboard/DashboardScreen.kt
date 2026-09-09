@@ -128,20 +128,31 @@ fun DashboardScreen(
                     Box(
                         modifier = Modifier
                             .weight(1f)
-                            .height(48.dp)
+                            .height(50.dp)
                             .clip(RoundedCornerShape(14.dp))
-                            .background(RoseGradient)
+                            .background(SurfaceElevated)
+                            .border(1.dp, BorderDark, RoundedCornerShape(14.dp))
                             .clickable {
                                 if (expenseState.categories.isEmpty()) {
                                     expenseViewModel.loadCategories()
                                 }
                                 showAddExpenseSheet = true
-                            },
+                            }
+                            .padding(horizontal = 12.dp),
                         contentAlignment = Alignment.Center
                     ) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(imageVector = Icons.Default.Add, contentDescription = null, tint = TextPrimary, modifier = Modifier.size(18.dp))
-                            Spacer(modifier = Modifier.width(6.dp))
+                            Box(
+                                modifier = Modifier
+                                    .size(28.dp)
+                                    .clip(CircleShape)
+                                    .background(RoseBg)
+                                    .border(1.dp, RoseDanger.copy(alpha = 0.3f), CircleShape),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(imageVector = Icons.Default.Add, contentDescription = null, tint = RoseDangerLight, modifier = Modifier.size(16.dp))
+                            }
+                            Spacer(modifier = Modifier.width(8.dp))
                             Text(text = "Expense", fontWeight = FontWeight.Bold, fontSize = 13.sp, color = TextPrimary)
                         }
                     }
@@ -149,22 +160,33 @@ fun DashboardScreen(
                     Box(
                         modifier = Modifier
                             .weight(1f)
-                            .height(48.dp)
+                            .height(50.dp)
                             .clip(RoundedCornerShape(14.dp))
-                            .background(EmeraldGradient)
-                            .clickable { showAddIncomeSheet = true },
+                            .background(SurfaceElevated)
+                            .border(1.dp, BorderDark, RoundedCornerShape(14.dp))
+                            .clickable { showAddIncomeSheet = true }
+                            .padding(horizontal = 12.dp),
                         contentAlignment = Alignment.Center
                     ) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(imageVector = Icons.Default.Add, contentDescription = null, tint = TextPrimary, modifier = Modifier.size(18.dp))
-                            Spacer(modifier = Modifier.width(6.dp))
+                            Box(
+                                modifier = Modifier
+                                    .size(28.dp)
+                                    .clip(CircleShape)
+                                    .background(EmeraldBg)
+                                    .border(1.dp, EmeraldSuccess.copy(alpha = 0.3f), CircleShape),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(imageVector = Icons.Default.Add, contentDescription = null, tint = EmeraldSuccessLight, modifier = Modifier.size(16.dp))
+                            }
+                            Spacer(modifier = Modifier.width(8.dp))
                             Text(text = "Income", fontWeight = FontWeight.Bold, fontSize = 13.sp, color = TextPrimary)
                         }
                     }
 
                     Box(
                         modifier = Modifier
-                            .size(48.dp)
+                            .size(50.dp)
                             .clip(RoundedCornerShape(14.dp))
                             .background(PrimaryGradient)
                             .clickable { onOpenAiAssistant() },
