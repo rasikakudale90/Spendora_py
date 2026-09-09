@@ -173,7 +173,7 @@ fun ExpenseItemRow(
                             border = androidx.compose.foundation.BorderStroke(1.dp, BorderDark)
                         ) {
                             Text(
-                                text = expense.categoryName ?: "General",
+                                text = expense.displayCategoryName,
                                 fontSize = 10.sp,
                                 fontWeight = FontWeight.Medium,
                                 color = TextSecondary,
