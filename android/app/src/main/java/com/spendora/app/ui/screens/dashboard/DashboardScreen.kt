@@ -52,6 +52,7 @@ fun DashboardScreen(
 ) {
     val dashboardState by dashboardViewModel.uiState.collectAsState()
     val expenseState by expenseViewModel.uiState.collectAsState()
+    val incomeState by incomeViewModel.uiState.collectAsState()
     val aiState by aiViewModel.uiState.collectAsState()
     val currentUser by authViewModel.currentUser.collectAsState()
 
@@ -62,9 +63,18 @@ fun DashboardScreen(
     var showScannerSheet by remember { mutableStateOf(false) }
     var showSafeToSpendSheet by remember { mutableStateOf(false) }
     var showHealthDetailSheet by remember { mutableStateOf(false) }
+    var showNotificationsSheet by remember { mutableStateOf(false) }
 
     var selectedAccountIndex by remember { mutableIntStateOf(0) }
     var selectedActivityFilter by remember { mutableStateOf("All") }
+
+    val accountOptions = listOf(
+        "All Ledgers" to null,
+        "UPI & Online" to "UPI",
+        "Cards & Bank" to "Card",
+        "Cash Reserve" to "Cash"
+    )
+    val accountDotColors = listOf(PrimaryCyan, QuantumViolet, PrimaryCyanLight, EmeraldSuccess)
 
     LaunchedEffect(Unit) {
         dashboardViewModel.loadDashboard()
@@ -74,6 +84,29 @@ fun DashboardScreen(
         incomeViewModel.loadMonthlySummary()
         aiViewModel.loadSafeToSpend()
         aiViewModel.loadFinancialHealth()
+    }
+
+    val selectedPaymentMode = accountOptions[selectedAccountIndex].second
+    val activeAccountExpenses = remember(expenseState.expenses, selectedPaymentMode) {
+        if (selectedPaymentMode == null) {
+            expenseState.expenses
+        } else {
+            expenseState.expenses.filter { it.paymentMode.name.equals(selectedPaymentMode, ignoreCase = true) }
+        }
+    }
+    val activeAccountSpent = remember(activeAccountExpenses, selectedPaymentMode, dashboardState.summary.totalSpent) {
+        if (selectedPaymentMode == null) {
+            dashboardState.summary.totalSpent
+        } else {
+            activeAccountExpenses.sumOf { it.amount }
+        }
+    }
+    val activeAccountTxCount = remember(activeAccountExpenses, selectedPaymentMode, dashboardState.summary.expenseCount) {
+        if (selectedPaymentMode == null) {
+            dashboardState.summary.expenseCount
+        } else {
+            activeAccountExpenses.size
+        }
     }
 
     Box(
@@ -88,7 +121,7 @@ fun DashboardScreen(
             contentPadding = PaddingValues(top = 12.dp, bottom = 96.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // Header: Spendora Logo, Overview Title, Notification Bell & Actions
+            // Header: Spendora Logo, Overview Title, AI Assistant, Notification Bell & Actions
             item {
                 Row(
                     modifier = Modifier
@@ -127,6 +160,7 @@ fun DashboardScreen(
                         val currentTheme by authViewModel.themeMode.collectAsState()
                         val isDarkMode = currentTheme == "dark"
 
+                        // Theme Toggle (Sun / Moon)
                         IconButton(
                             onClick = { authViewModel.toggleTheme() },
                             modifier = Modifier
@@ -143,30 +177,53 @@ fun DashboardScreen(
                             )
                         }
 
-                        // Notification / AI Chat Bell with Cyan Pulse Badge
+                        // AI Assistant Sparkle Button
+                        Box(
+                            modifier = Modifier
+                                .size(38.dp)
+                                .clip(CircleShape)
+                                .background(PrimaryCyan.copy(alpha = 0.15f))
+                                .border(1.dp, PrimaryCyan.copy(alpha = 0.45f), CircleShape)
+                                .clickable { onOpenAiAssistant() },
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.AutoAwesome,
+                                contentDescription = "Open AI Financial Assistant",
+                                tint = PrimaryCyanLight,
+                                modifier = Modifier.size(18.dp)
+                            )
+                        }
+
+                        // Notification Bell with Active Alerts Badge
+                        val hasAlerts = (aiState.safeToSpend?.burnPacePercentage ?: 0.0) > 105.0 ||
+                                (aiState.leakAnalysis?.detectedSubscriptions?.isNotEmpty() == true)
+
                         Box(
                             modifier = Modifier
                                 .size(38.dp)
                                 .clip(CircleShape)
                                 .background(SurfaceElevated)
                                 .border(1.dp, BorderDark, CircleShape)
-                                .clickable { onOpenAiAssistant() },
+                                .clickable { showNotificationsSheet = true },
                             contentAlignment = Alignment.Center
                         ) {
                             Icon(
                                 imageVector = Icons.Default.Notifications,
-                                contentDescription = "Notifications & AI Assistant",
-                                tint = TextSecondary,
+                                contentDescription = "Notifications & Alerts",
+                                tint = if (hasAlerts) AmberWarningLight else TextSecondary,
                                 modifier = Modifier.size(18.dp)
                             )
-                            Box(
-                                modifier = Modifier
-                                    .size(7.dp)
-                                    .align(Alignment.TopEnd)
-                                    .offset(x = (-8).dp, y = 8.dp)
-                                    .clip(CircleShape)
-                                    .background(PrimaryCyan)
-                            )
+                            if (hasAlerts) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(7.dp)
+                                        .align(Alignment.TopEnd)
+                                        .offset(x = (-8).dp, y = 8.dp)
+                                        .clip(CircleShape)
+                                        .background(AmberWarningLight)
+                                )
+                            }
                         }
 
                         IconButton(
@@ -188,19 +245,15 @@ fun DashboardScreen(
                 }
             }
 
-            // Account Selector Rail (Horizontal Scroll)
+            // Account Selector Rail (Functional Filter for All, UPI, Cards, Cash)
             item {
-                val accounts = listOf(
-                    "Main Vault •••• 8492" to PrimaryCyan,
-                    "Crypto Stash" to QuantumViolet,
-                    "Savings Reserve" to EmeraldSuccess
-                )
                 LazyRow(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    items(accounts.indices.toList()) { index ->
-                        val (accName, dotColor) = accounts[index]
+                    items(accountOptions.indices.toList()) { index ->
+                        val (accName, _) = accountOptions[index]
+                        val dotColor = accountDotColors[index % accountDotColors.size]
                         val isSelected = selectedAccountIndex == index
                         Box(
                             modifier = Modifier
@@ -232,10 +285,10 @@ fun DashboardScreen(
                                 if (isSelected) {
                                     Spacer(modifier = Modifier.width(4.dp))
                                     Icon(
-                                        imageVector = Icons.Default.KeyboardArrowDown,
+                                        imageVector = Icons.Default.Check,
                                         contentDescription = null,
                                         tint = PrimaryCyanLight,
-                                        modifier = Modifier.size(16.dp)
+                                        modifier = Modifier.size(14.dp)
                                     )
                                 }
                             }
@@ -246,9 +299,9 @@ fun DashboardScreen(
 
             // Hero Net Worth & Monthly Burn Telemetry Card
             item {
-                val netWorth = dashboardState.summary.totalIncome - dashboardState.summary.totalSpent
+                val netWorth = dashboardState.summary.totalIncome - activeAccountSpent
                 val isPositive = netWorth >= 0
-                val totalSpent = dashboardState.summary.totalSpent
+                val totalSpent = activeAccountSpent
                 val totalBudget = if (dashboardState.summary.totalIncome > 0) dashboardState.summary.totalIncome else 50000.0
                 val burnPct = ((totalSpent / totalBudget) * 100).coerceIn(0.0, 100.0)
 
@@ -269,7 +322,7 @@ fun DashboardScreen(
                         ) {
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 Text(
-                                    text = "NET LIQUID ASSETS",
+                                    text = if (selectedPaymentMode != null) "NET ${selectedPaymentMode.uppercase()} ASSETS" else "NET LIQUID ASSETS",
                                     style = MaterialTheme.typography.labelSmall.copy(
                                         fontWeight = FontWeight.Bold,
                                         letterSpacing = 1.1.sp
@@ -302,7 +355,7 @@ fun DashboardScreen(
                                     )
                                     Spacer(modifier = Modifier.width(3.dp))
                                     Text(
-                                        text = "+${"%.1f".format(dashboardState.summary.savingsRate.coerceAtLeast(12.4))}%",
+                                        text = "+${"%.1f".format(dashboardState.summary.savingsRate)}%",
                                         style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
                                         color = EmeraldSuccessLight
                                     )
@@ -310,18 +363,21 @@ fun DashboardScreen(
                             }
                         }
 
-                        Spacer(modifier = Modifier.height(8.dp))
+                        Spacer(modifier = Modifier.height(10.dp))
 
-                        // Large Display Balance
+                        // Big Bold Net Worth Display
                         Text(
-                            text = formatInr(netWorth.coerceAtLeast(0.0)),
-                            style = MaterialTheme.typography.displayMedium.copy(fontWeight = FontWeight.ExtraBold),
-                            color = TextPrimary
+                            text = formatInr(netWorth),
+                            style = MaterialTheme.typography.displayMedium.copy(
+                                fontWeight = FontWeight.Bold,
+                                letterSpacing = (-1).sp
+                            ),
+                            color = if (isPositive) TextPrimary else RoseDanger
                         )
 
                         Spacer(modifier = Modifier.height(2.dp))
                         Text(
-                            text = "Live telemetry sync • ${dashboardState.summary.expenseCount} transactions",
+                            text = "Live telemetry sync • $activeAccountTxCount transactions",
                             style = MaterialTheme.typography.bodySmall,
                             color = TextMuted
                         )
@@ -877,38 +933,68 @@ fun DashboardScreen(
             }
 
             // Transactions Feed
-            val filteredExpenses = when (selectedActivityFilter) {
-                "Income" -> emptyList()
-                else -> dashboardState.recentExpenses
-            }
-
-            if (filteredExpenses.isEmpty() && selectedActivityFilter != "Income") {
-                item {
-                    SpendoraCard {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(vertical = 16.dp),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(
-                                text = "No recent activity found.",
-                                color = TextMuted,
-                                fontSize = 13.sp
+            when (selectedActivityFilter) {
+                "Income" -> {
+                    if (incomeState.incomes.isEmpty()) {
+                        item {
+                            SpendoraCard {
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(vertical = 16.dp),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Text(
+                                        text = "No income transactions logged this cycle.",
+                                        color = TextMuted,
+                                        fontSize = 13.sp
+                                    )
+                                }
+                            }
+                        }
+                    } else {
+                        items(incomeState.incomes.take(10), key = { "inc_${it.id}" }) { income ->
+                            IncomeItemRow(
+                                income = income,
+                                onEdit = { onNavigateToIncome() },
+                                onDelete = {
+                                    incomeViewModel.deleteIncome(income.id)
+                                    dashboardViewModel.loadDashboard()
+                                }
                             )
                         }
                     }
                 }
-            } else {
-                items(filteredExpenses) { expense ->
-                    ExpenseItemRow(
-                        expense = expense,
-                        onEdit = { onNavigateToExpenses() },
-                        onDelete = {
-                            expenseViewModel.deleteExpense(expense.id)
-                            dashboardViewModel.loadDashboard()
+                else -> {
+                    if (activeAccountExpenses.isEmpty()) {
+                        item {
+                            SpendoraCard {
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(vertical = 16.dp),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Text(
+                                        text = if (selectedPaymentMode != null) "No $selectedPaymentMode transactions recorded." else "No recent activity found.",
+                                        color = TextMuted,
+                                        fontSize = 13.sp
+                                    )
+                                }
+                            }
                         }
-                    )
+                    } else {
+                        items(activeAccountExpenses.take(10), key = { "exp_${it.id}" }) { expense ->
+                            ExpenseItemRow(
+                                expense = expense,
+                                onEdit = { onNavigateToExpenses() },
+                                onDelete = {
+                                    expenseViewModel.deleteExpense(expense.id)
+                                    dashboardViewModel.loadDashboard()
+                                }
+                            )
+                        }
+                    }
                 }
             }
         }
@@ -1019,6 +1105,15 @@ fun DashboardScreen(
         FinancialHealthDetailSheet(
             aiViewModel = aiViewModel,
             onDismiss = { showHealthDetailSheet = false }
+        )
+    }
+
+    if (showNotificationsSheet) {
+        SpendoraNotificationsSheet(
+            summary = dashboardState.summary,
+            safeToSpend = aiState.safeToSpend,
+            leakAnalysis = aiState.leakAnalysis,
+            onDismiss = { showNotificationsSheet = false }
         )
     }
 }
