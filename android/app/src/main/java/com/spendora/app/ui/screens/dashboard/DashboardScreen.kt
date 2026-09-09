@@ -92,17 +92,24 @@ fun DashboardScreen(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Column(modifier = Modifier.weight(1f, fill = false)) {
-                        Text(
-                            text = "Hello, ${currentUser?.fullName?.split(" ")?.firstOrNull() ?: "there"} 👋",
-                            style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.ExtraBold),
-                            color = TextPrimary
-                        )
-                        Text(
-                            text = "Here is your live financial snapshot",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = TextSecondary
-                        )
+                    Row(
+                        modifier = Modifier.weight(1f, fill = false),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        SpendoraLogo(size = 42.dp)
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Column {
+                            Text(
+                                text = "Hello, ${currentUser?.fullName?.split(" ")?.firstOrNull() ?: "there"} 👋",
+                                style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.ExtraBold),
+                                color = TextPrimary
+                            )
+                            Text(
+                                text = "Here is your live financial snapshot",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = TextSecondary
+                            )
+                        }
                     }
 
                     IconButton(

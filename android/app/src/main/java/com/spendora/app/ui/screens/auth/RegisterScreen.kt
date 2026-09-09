@@ -29,6 +29,7 @@ import androidx.compose.ui.unit.sp
 import com.spendora.app.ui.components.PasswordStrengthIndicator
 import com.spendora.app.ui.components.SpendoraButton
 import com.spendora.app.ui.components.SpendoraCard
+import com.spendora.app.ui.components.SpendoraLogo
 import com.spendora.app.ui.components.SpendoraTextField
 import com.spendora.app.ui.theme.*
 import com.spendora.app.ui.viewmodel.AuthUiEvent
@@ -70,21 +71,10 @@ fun RegisterScreen(
         ) {
             Spacer(modifier = Modifier.height(32.dp))
 
-            Box(
-                modifier = Modifier
-                    .size(64.dp)
-                    .clip(RoundedCornerShape(18.dp))
-                    .background(EmeraldSuccess.copy(alpha = 0.15f)),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = "✦",
-                    fontSize = 32.sp,
-                    color = EmeraldSuccessLight
-                )
-            }
+            // Brand Header
+            SpendoraLogo(size = 72.dp)
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(18.dp))
 
             Text(
                 text = "Create Your Account",

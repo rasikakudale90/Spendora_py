@@ -27,6 +27,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.spendora.app.ui.components.SpendoraButton
 import com.spendora.app.ui.components.SpendoraCard
+import com.spendora.app.ui.components.SpendoraLogo
 import com.spendora.app.ui.components.SpendoraTextField
 import com.spendora.app.ui.theme.*
 import com.spendora.app.ui.viewmodel.AuthUiEvent
@@ -71,21 +72,9 @@ fun LoginScreen(
             Spacer(modifier = Modifier.height(32.dp))
 
             // Brand Header
-            Box(
-                modifier = Modifier
-                    .size(64.dp)
-                    .clip(RoundedCornerShape(18.dp))
-                    .background(PrimaryIndigo.copy(alpha = 0.15f)),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = "✦",
-                    fontSize = 32.sp,
-                    color = PrimaryIndigoLight
-                )
-            }
+            SpendoraLogo(size = 72.dp)
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(18.dp))
 
             Text(
                 text = "Welcome to Spendora",
