@@ -36,6 +36,8 @@ fun IncomeScreen(
     val sources = listOf("All", "Salary", "Freelance", "Investment", "Bonus", "Gift", "Rental", "Other")
 
     LaunchedEffect(Unit) {
+        viewModel.loadIncomes()
+        viewModel.loadMonthlySummary()
         viewModel.toastEvents.collect { msg ->
             Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
         }

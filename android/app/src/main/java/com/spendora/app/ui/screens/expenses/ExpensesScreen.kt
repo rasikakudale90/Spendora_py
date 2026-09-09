@@ -37,6 +37,8 @@ fun ExpensesScreen(
     var showDeleteConfirmDialog by remember { mutableStateOf<ExpenseDto?>(null) }
 
     LaunchedEffect(Unit) {
+        viewModel.loadCategories()
+        viewModel.loadExpenses()
         viewModel.toastEvents.collect { msg ->
             Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
         }
@@ -47,6 +49,9 @@ fun ExpensesScreen(
         floatingActionButton = {
             FloatingActionButton(
                 onClick = {
+                    if (uiState.categories.isEmpty()) {
+                        viewModel.loadCategories()
+                    }
                     expenseToEdit = null
                     showFormSheet = true
                 },

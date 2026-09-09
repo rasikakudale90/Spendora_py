@@ -49,6 +49,7 @@ fun GoalsScreen(
     )
 
     LaunchedEffect(Unit) {
+        viewModel.loadGoals()
         viewModel.toastEvents.collect { message ->
             Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
         }

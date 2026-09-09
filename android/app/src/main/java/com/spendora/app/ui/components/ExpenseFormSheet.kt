@@ -1,6 +1,8 @@
 package com.spendora.app.ui.components
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
@@ -11,10 +13,12 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.spendora.app.data.model.CategoryDto
 import com.spendora.app.data.model.ExpenseDto
 import com.spendora.app.data.model.PaymentMode
@@ -36,14 +40,24 @@ fun ExpenseFormSheet(
     var title by remember { mutableStateOf(expenseToEdit?.title ?: "") }
     var amountText by remember { mutableStateOf(expenseToEdit?.amount?.toString() ?: "") }
     var expenseDate by remember { mutableStateOf(expenseToEdit?.expenseDate ?: todayDate) }
-    var selectedCategoryId by remember { mutableStateOf(expenseToEdit?.categoryId ?: categories.firstOrNull()?.id ?: "") }
+    var selectedCategoryId by remember(expenseToEdit, categories) {
+        mutableStateOf(expenseToEdit?.categoryId ?: categories.firstOrNull()?.id ?: "")
+    }
     var selectedPaymentMode by remember { mutableStateOf(expenseToEdit?.paymentMode ?: PaymentMode.UPI) }
     var notes by remember { mutableStateOf(expenseToEdit?.notes ?: "") }
 
     var titleError by remember { mutableStateOf<String?>(null) }
     var amountError by remember { mutableStateOf<String?>(null) }
+    var categoryError by remember { mutableStateOf<String?>(null) }
 
     val scrollState = rememberScrollState()
+
+    LaunchedEffect(categories) {
+        if (selectedCategoryId.isBlank() && categories.isNotEmpty()) {
+            selectedCategoryId = categories.first().id
+            categoryError = null
+        }
+    }
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,
@@ -95,40 +109,97 @@ fun ExpenseFormSheet(
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            Text(
-                text = "Category",
-                style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold),
-                color = TextSecondary,
-                modifier = Modifier.padding(bottom = 6.dp)
-            )
-
-            LazyRow(
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                modifier = Modifier.fillMaxWidth()
+            // Category Selection Row
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                items(categories) { category ->
-                    val isSelected = selectedCategoryId == category.id
-                    FilterChip(
-                        selected = isSelected,
-                        onClick = { selectedCategoryId = category.id },
-                        label = {
-                            Text(
-                                text = category.name,
-                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-                                color = if (isSelected) TextPrimary else TextSecondary
-                            )
-                        },
-                        colors = FilterChipDefaults.filterChipColors(
-                            selectedContainerColor = PrimaryIndigo,
-                            containerColor = SurfaceElevated
-                        ),
-                        border = FilterChipDefaults.filterChipBorder(
-                            enabled = true,
-                            selected = isSelected,
-                            borderColor = if (isSelected) PrimaryIndigoLight else BorderDark
+                Text(
+                    text = "Category",
+                    style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold),
+                    color = TextSecondary
+                )
+                if (categories.isNotEmpty()) {
+                    val activeCat = categories.find { it.id == selectedCategoryId }
+                    if (activeCat != null) {
+                        Text(
+                            text = "Selected: ${activeCat.name}",
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = PrimaryIndigoLight
                         )
-                    )
+                    }
                 }
+            }
+
+            Spacer(modifier = Modifier.height(6.dp))
+
+            if (categories.isEmpty()) {
+                Surface(
+                    shape = RoundedCornerShape(10.dp),
+                    color = SurfaceElevated,
+                    border = androidx.compose.foundation.BorderStroke(1.dp, BorderDark),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Row(
+                        modifier = Modifier.padding(12.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(16.dp),
+                            color = PrimaryIndigoLight,
+                            strokeWidth = 2.dp
+                        )
+                        Spacer(modifier = Modifier.width(10.dp))
+                        Text(
+                            text = "Loading categories...",
+                            fontSize = 12.sp,
+                            color = TextSecondary
+                        )
+                    }
+                }
+            } else {
+                LazyRow(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    items(categories) { category ->
+                        val isSelected = selectedCategoryId == category.id
+                        FilterChip(
+                            selected = isSelected,
+                            onClick = {
+                                selectedCategoryId = category.id
+                                categoryError = null
+                            },
+                            label = {
+                                Text(
+                                    text = category.name,
+                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                                    color = if (isSelected) TextPrimary else TextSecondary
+                                )
+                            },
+                            colors = FilterChipDefaults.filterChipColors(
+                                selectedContainerColor = PrimaryIndigo,
+                                containerColor = SurfaceElevated
+                            ),
+                            border = FilterChipDefaults.filterChipBorder(
+                                enabled = true,
+                                selected = isSelected,
+                                borderColor = if (isSelected) PrimaryIndigoLight else BorderDark
+                            )
+                        )
+                    }
+                }
+            }
+
+            AnimatedVisibility(visible = !categoryError.isNullOrBlank()) {
+                Text(
+                    text = categoryError ?: "",
+                    color = RoseDanger,
+                    style = MaterialTheme.typography.bodySmall,
+                    modifier = Modifier.padding(top = 4.dp, start = 4.dp)
+                )
             }
 
             Spacer(modifier = Modifier.height(12.dp))
@@ -195,8 +266,12 @@ fun ExpenseFormSheet(
                         amountError = "Enter a valid positive amount"
                         valid = false
                     }
+                    if (selectedCategoryId.isBlank()) {
+                        categoryError = "Please select a category"
+                        valid = false
+                    }
 
-                    if (valid && amountVal != null) {
+                    if (valid && amountVal != null && selectedCategoryId.isNotBlank()) {
                         onSave(
                             expenseToEdit?.id,
                             title,

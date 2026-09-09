@@ -71,9 +71,10 @@ class ExpenseViewModel(application: Application) : AndroidViewModel(application)
             )
 
             result.onSuccess { res ->
+                val count = if (res.totalCount > 0) res.totalCount else res.total
                 _uiState.value = _uiState.value.copy(
                     expenses = res.items,
-                    totalCount = res.totalCount,
+                    totalCount = count,
                     page = res.page,
                     totalPages = res.totalPages,
                     isLoading = false

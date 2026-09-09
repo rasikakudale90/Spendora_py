@@ -79,7 +79,7 @@ class ExpenseRepository(context: Context) {
         categoryId: String,
         paymentMode: PaymentMode,
         notes: String? = null
-    ): Result<ExpenseCreateResponse> = withContext(Dispatchers.IO) {
+    ): Result<ExpenseDto> = withContext(Dispatchers.IO) {
         try {
             val request = ExpenseCreateRequest(
                 title = title.trim(),
@@ -108,7 +108,7 @@ class ExpenseRepository(context: Context) {
         categoryId: String,
         paymentMode: PaymentMode,
         notes: String? = null
-    ): Result<ExpenseCreateResponse> = withContext(Dispatchers.IO) {
+    ): Result<ExpenseDto> = withContext(Dispatchers.IO) {
         try {
             val request = ExpenseCreateRequest(
                 title = title.trim(),

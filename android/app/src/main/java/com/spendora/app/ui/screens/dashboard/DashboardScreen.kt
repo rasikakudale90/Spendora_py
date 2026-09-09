@@ -61,6 +61,10 @@ fun DashboardScreen(
 
     LaunchedEffect(Unit) {
         dashboardViewModel.loadDashboard()
+        expenseViewModel.loadCategories()
+        expenseViewModel.loadExpenses()
+        incomeViewModel.loadIncomes()
+        incomeViewModel.loadMonthlySummary()
         aiViewModel.loadSafeToSpend()
         aiViewModel.loadFinancialHealth()
     }
@@ -127,7 +131,12 @@ fun DashboardScreen(
                             .height(48.dp)
                             .clip(RoundedCornerShape(14.dp))
                             .background(RoseGradient)
-                            .clickable { showAddExpenseSheet = true },
+                            .clickable {
+                                if (expenseState.categories.isEmpty()) {
+                                    expenseViewModel.loadCategories()
+                                }
+                                showAddExpenseSheet = true
+                            },
                         contentAlignment = Alignment.Center
                     ) {
                         Row(verticalAlignment = Alignment.CenterVertically) {

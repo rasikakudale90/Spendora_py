@@ -25,19 +25,33 @@ data class CategoryCreateRequest(
     @SerializedName("name") val name: String
 )
 
+data class DailyBudgetAlert(
+    @SerializedName("exceeded") val isBreached: Boolean = false,
+    @SerializedName("limit_amount") val dailyLimit: Double = 0.0,
+    @SerializedName("total_spent") val todaySpent: Double = 0.0,
+    @SerializedName("exceeded_amount") val exceededAmount: Double = 0.0,
+    @SerializedName("percentage_used") val percentageUsed: Double = 0.0,
+    @SerializedName("message") val message: String = ""
+)
+
 data class ExpenseDto(
     @SerializedName("id") val id: String,
     @SerializedName("title") val title: String,
     @SerializedName("amount") val amount: Double,
     @SerializedName("expense_date") val expenseDate: String,
     @SerializedName("category_id") val categoryId: String,
+    @SerializedName("category") val category: CategoryDto? = null,
     @SerializedName("category_name") val categoryName: String? = null,
     @SerializedName("payment_mode") val paymentMode: PaymentMode = PaymentMode.OTHER,
     @SerializedName("notes") val notes: String? = null,
     @SerializedName("user_id") val userId: String? = null,
     @SerializedName("created_at") val createdAt: String? = null,
-    @SerializedName("updated_at") val updatedAt: String? = null
-)
+    @SerializedName("updated_at") val updatedAt: String? = null,
+    @SerializedName("daily_budget_alert") val dailyBudgetAlert: DailyBudgetAlert? = null
+) {
+    val displayCategoryName: String
+        get() = categoryName ?: category?.name ?: "General"
+}
 
 data class ExpenseCreateRequest(
     @SerializedName("title") val title: String,
@@ -48,22 +62,11 @@ data class ExpenseCreateRequest(
     @SerializedName("notes") val notes: String? = null
 )
 
-data class DailyBudgetAlert(
-    @SerializedName("category_name") val categoryName: String,
-    @SerializedName("daily_limit") val dailyLimit: Double,
-    @SerializedName("today_spent") val todaySpent: Double,
-    @SerializedName("is_breached") val isBreached: Boolean
-)
-
-data class ExpenseCreateResponse(
-    @SerializedName("expense") val expense: ExpenseDto,
-    @SerializedName("daily_budget_alert") val dailyBudgetAlert: DailyBudgetAlert? = null
-)
-
 data class ExpenseListResponse(
-    @SerializedName("items") val items: List<ExpenseDto>,
-    @SerializedName("total_count") val totalCount: Int,
-    @SerializedName("page") val page: Int,
-    @SerializedName("page_size") val pageSize: Int,
-    @SerializedName("total_pages") val totalPages: Int
+    @SerializedName("items") val items: List<ExpenseDto> = emptyList(),
+    @SerializedName("total") val total: Int = 0,
+    @SerializedName("total_count") val totalCount: Int = 0,
+    @SerializedName("page") val page: Int = 1,
+    @SerializedName("page_size") val pageSize: Int = 20,
+    @SerializedName("total_pages") val totalPages: Int = 1
 )

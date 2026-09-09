@@ -18,8 +18,8 @@ interface ExpenseApi {
     suspend fun getExpenses(
         @Query("search") search: String? = null,
         @Query("category_id") categoryId: String? = null,
-        @Query("start_date") startDate: String? = null,
-        @Query("end_date") endDate: String? = null,
+        @Query("date_from") startDate: String? = null,
+        @Query("date_to") endDate: String? = null,
         @Query("payment_mode") paymentMode: String? = null,
         @Query("sort_by") sortBy: String? = "expense_date",
         @Query("sort_order") sortOrder: String? = "desc",
@@ -30,13 +30,13 @@ interface ExpenseApi {
     @POST("api/v1/expenses")
     suspend fun createExpense(
         @Body request: ExpenseCreateRequest
-    ): Response<ExpenseCreateResponse>
+    ): Response<ExpenseDto>
 
     @PATCH("api/v1/expenses/{id}")
     suspend fun updateExpense(
         @Path("id") id: String,
         @Body request: ExpenseCreateRequest
-    ): Response<ExpenseCreateResponse>
+    ): Response<ExpenseDto>
 
     @DELETE("api/v1/expenses/{id}")
     suspend fun deleteExpense(

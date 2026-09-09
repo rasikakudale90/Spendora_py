@@ -43,6 +43,8 @@ fun BudgetsScreen(
     var deletingBudget by remember { mutableStateOf<BudgetDto?>(null) }
 
     LaunchedEffect(Unit) {
+        viewModel.loadCategories()
+        viewModel.loadBudgets()
         viewModel.toastEvents.collect { message ->
             Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
         }
@@ -53,12 +55,15 @@ fun BudgetsScreen(
         floatingActionButton = {
             FloatingActionButton(
                 onClick = {
+                    if (uiState.categories.isEmpty()) {
+                        viewModel.loadCategories()
+                    }
                     editingBudget = null
                     showFormSheet = true
                 },
                 containerColor = PrimaryIndigo,
                 contentColor = TextPrimary,
-                shape = CircleShape
+                shape = RoundedCornerShape(16.dp)
             ) {
                 Icon(imageVector = Icons.Default.Add, contentDescription = "Add Budget")
             }
