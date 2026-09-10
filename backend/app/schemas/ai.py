@@ -97,9 +97,9 @@ class ChatMessage(BaseModel):
 
 
 class FinancialActionIntent(BaseModel):
-    action: Literal["simulate_purchase", "view_leaks", "navigate", "set_budget", "add_expense", "none"]
-    label: str
-    payload: Optional[dict] = None
+    action: str = Field(..., description="Action identifier e.g. simulate_purchase, view_leaks, navigate, set_budget, add_expense, none")
+    label: str = Field(..., description="Button label")
+    payload: Optional[dict] = Field(default_factory=dict)
 
 
 class FinancialChatRequest(BaseModel):

@@ -445,7 +445,7 @@ async def chat_with_financial_assistant(
         cat_spent_total = sum(e.amount for e in cat_expenses)
         cat_budget_obj = await budget_repo.get_category_budget(current_user.id, cat_id, start_of_month)
         cat_budget_amt = float(cat_budget_obj.amount) if cat_budget_obj else None
-        cat_budget_spent = float(cat_budget_obj.spent) if cat_budget_obj else float(cat_spent_total)
+        cat_budget_spent = float(cat_spent_total)
 
         matched_category_data = {
             "name": meta["matched_category"]["name"],
@@ -491,19 +491,31 @@ async def chat_with_financial_assistant(
     for b in user_budgets:
         cat_name = b.category.name if b.category else "Overall Budget"
         b_amt = float(b.amount)
-        b_spent = float(b.spent)
+        if b.scope == "overall":
+            b_spent_dec = await budget_repo.get_spent_for_period(current_user.id, b.period_start, b.period_end)
+        else:
+            b_spent_dec = await budget_repo.get_spent_for_period(current_user.id, b.period_start, b.period_end, b.category_id)
+        b_spent = float(b_spent_dec)
         pct = round((b_spent / b_amt * 100), 1) if b_amt > 0 else 0.0
+        
+        if b_spent > b_amt:
+            b_status = "over_budget"
+        elif b_spent >= (b_amt * 0.8):
+            b_status = "near_limit"
+        else:
+            b_status = "on_track"
+
         b_item = {
             "category": cat_name,
             "amount": b_amt,
             "spent": b_spent,
             "utilization_pct": pct,
-            "status": b.status,
+            "status": b_status,
         }
         active_budgets_list.append(b_item)
-        if b_spent > b_amt:
+        if b_status == "over_budget":
             breached_budgets.append(b_item)
-        elif b_spent >= (b_amt * 0.8):
+        elif b_status == "near_limit":
             near_limit_budgets.append(b_item)
 
     # 7. Goals Status

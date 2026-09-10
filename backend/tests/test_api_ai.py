@@ -292,6 +292,68 @@ async def test_rag_chat_greetings_and_help(client: AsyncClient):
     assert "no recorded expenses for 'help'" not in help_data["reply"].lower()
 
 
+@pytest.mark.asyncio
+async def test_rag_chat_with_active_budgets_and_categories(client: AsyncClient):
+    # 1. Fetch categories
+    cat_resp = await client.get("/api/v1/categories")
+    cat_id = cat_resp.json()[0]["id"]
+    cat_name = cat_resp.json()[0]["name"]
+
+    # 2. Create overall and category budgets
+    today_iso = date.today().isoformat()
+    await client.post(
+        "/api/v1/budgets",
+        json={
+            "scope": "overall",
+            "amount": "25000.00",
+            "period_type": "monthly",
+            "period_start": today_iso,
+        },
+    )
+    await client.post(
+        "/api/v1/budgets",
+        json={
+            "scope": "category",
+            "category_id": cat_id,
+            "amount": "5000.00",
+            "period_type": "monthly",
+            "period_start": today_iso,
+        },
+    )
+
+    # 3. Add expense under that category
+    await client.post(
+        "/api/v1/expenses",
+        json={
+            "title": "Grocery Shopping",
+            "amount": "1200.00",
+            "expense_date": today_iso,
+            "category_id": cat_id,
+        },
+    )
+
+    # 4. Query AI Chat with specific category query
+    chat_resp = await client.post(
+        "/api/v1/ai/chat",
+        json={"message": f"How much did I spend on {cat_name}?", "history": []},
+    )
+    assert chat_resp.status_code == 200
+    data = chat_resp.json()
+    assert "reply" in data
+    assert "1,200" in data["reply"] or "1200" in data["reply"]
+    assert "context_summary" in data
+
+    # 5. Query AI Chat about overall budget status
+    budget_resp = await client.post(
+        "/api/v1/ai/chat",
+        json={"message": "What is my budget status?", "history": []},
+    )
+    assert budget_resp.status_code == 200
+    b_data = budget_resp.json()
+    assert "reply" in b_data
+
+
+
 
 
 
