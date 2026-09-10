@@ -55,8 +55,9 @@
 | 42 | Stitch Screen-by-Screen Visual Parity & Full Android App Assembly | ✅ Done | 2026-09-09 |
 | 43 | Live Notifications Drawer, AI Header Decoupling & Functional Account Rail | ✅ Done | 2026-09-09 |
 | 44 | Native Biometric Vault Security & Financial Statement CSV Export System | ✅ Done | 2026-09-09 |
-| 45 | Expense Category Resolution & Data Binding Fix | ✅ Done | 2026-09-09 |
 | 46 | Overview Dashboard UI/UX De-Clutter, Spacing & 3-Dots Menu Overhaul | ✅ Done | 2026-09-09 |
+| 47 | Spendora AI Advisor Fix & Multi-Turn RAG Polish | ✅ Done | 2026-09-10 |
+| 48 | AI Advisor HTTP 500 Fix & Interactive Spending Clusters Navigation | ✅ Done | 2026-09-10 |
 
 ---
 
@@ -860,8 +861,32 @@
 
 ---
 
-## Open Items & Design Decisions
+## Phase 48 — AI Advisor HTTP 500 Fix & Interactive Spending Clusters Navigation ✅ Done
 
+**Goal:** Resolve the HTTP 500 Internal Server Error in the AI Advisor chat caused by attempting to read non-existent ORM model attributes (`b.spent` & `b.status`), make action intent parsing resilient, and convert the Overview page's static Spending Clusters widget into an interactive category drill-down router.
+
+### Completed Tasks
+- [x] **Backend Dynamic Budget Spent & Status Computation (`routers/ai.py`):**
+  - Resolved `AttributeError: 'Budget' object has no attribute 'spent'` and `'status'` in `chat_with_financial_assistant`.
+  - Replaced direct attribute access on raw SQLAlchemy `Budget` models with dynamic database aggregations via `budget_repo.get_spent_for_period()`.
+  - Dynamically evaluated budget status thresholds (`over_budget`, `near_limit`, `on_track`) for both overall and category budgets.
+  - Corrected category drill-down spent computation to use `cat_spent_total`.
+- [x] **Resilient Action Intent Schema (`schemas/ai.py`):**
+  - Updated `FinancialActionIntent.action` from strict `Literal[...]` to flexible `str` with default empty payload dict to prevent Pydantic 500 validation crashes when LLM responses return custom action names.
+- [x] **Automated Regression Testing (`backend/tests/test_api_ai.py`):**
+  - Added `test_rag_chat_with_active_budgets_and_categories` verifying that user queries correctly retrieve active budgets, category totals, and status indicators without errors.
+  - Verified test suite: all 9/9 AI tests passed (100%).
+- [x] **Interactive Spending Clusters Navigation (`DashboardScreen.kt`):**
+  - Transformed the static visual Spending Clusters card into a clickable surface (`clickable { onNavigateToExpenses() }`).
+  - Added interactive category badge pods that route straight to the Expenses ledger.
+  - Added a prominent `"View Breakdown →"` header badge button.
+- [x] **Build & Deployment:**
+  - Pushed backend fix to GitHub `main` (`e5c4603`) for automated Render deployment.
+  - Android build `./gradlew assembleDebug` compiled with `BUILD SUCCESSFUL in 1m 30s` (0 errors) and pushed commit `2b511b9` to GitHub `main`.
+
+---
+
+## Open Items & Design Decisions
 
 | # | Item | Status | Resolution |
 |---|---|---|---|
@@ -884,6 +909,7 @@
 | 17 | Android UI/UX & Canvas Responsiveness | ✅ Resolved | Midnight Obsidian theme `#070B12`, `BoxWithConstraints` scaling for AI gauges, `imePadding` on all form sheets, and clean INR formatting |
 | 18 | Zero-Hardcoded Light & Dark Theme Token Architecture | ✅ Resolved | `LocalSpendoraColors` + `SpendoraTheme.colors` dynamic composition local tokens persisted via `SessionManager.kt` with live header toggle |
 | 19 | AI Chat Assistant Multi-Turn & Intent Guarding | ✅ Resolved | Token-based greeting/summary intent detection + strictly alternating Gemini multi-turn role history + Android prior-turn deduplication & action intent chips |
+| 20 | Dynamic Budget Resolution & Spending Clusters Interaction | ✅ Resolved | Dynamic calculation of `spent` and `status` via `BudgetRepository.get_spent_for_period()`, flexible action intent schemas, and direct navigation routing on Spending Clusters card |
 
 
 
