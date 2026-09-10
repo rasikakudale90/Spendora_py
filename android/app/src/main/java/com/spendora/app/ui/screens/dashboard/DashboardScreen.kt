@@ -141,22 +141,56 @@ fun DashboardScreen(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         SpendoraLogo(size = 40.dp)
-                        Spacer(modifier = Modifier.width(12.dp))
+                        Spacer(modifier = Modifier.width(10.dp))
                         Column {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Text(
+                                    text = "Spendora",
+                                    style = MaterialTheme.typography.titleLarge.copy(
+                                        fontFamily = SpaceGroteskFontFamily,
+                                        fontWeight = FontWeight.Bold,
+                                        letterSpacing = (-0.5).sp
+                                    ),
+                                    color = TextPrimary,
+                                    maxLines = 1
+                                )
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Surface(
+                                    shape = RoundedCornerShape(9999.dp),
+                                    color = SurfaceContainerLowest,
+                                    border = androidx.compose.foundation.BorderStroke(1.dp, PrimaryCyan.copy(alpha = 0.35f))
+                                ) {
+                                    Row(
+                                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Box(
+                                            modifier = Modifier
+                                                .size(5.dp)
+                                                .clip(CircleShape)
+                                                .background(EmeraldSuccess)
+                                        )
+                                        Spacer(modifier = Modifier.width(4.dp))
+                                        Text(
+                                            text = "LIVE 99ms",
+                                            style = MaterialTheme.typography.labelSmall.copy(
+                                                fontFamily = JetBrainsMonoFontFamily,
+                                                fontWeight = FontWeight.Bold,
+                                                fontSize = 9.sp,
+                                                letterSpacing = 0.5.sp
+                                            ),
+                                            color = PrimaryCyanLight
+                                        )
+                                    }
+                                }
+                            }
                             Text(
-                                text = "Spendora",
-                                style = MaterialTheme.typography.titleLarge.copy(
-                                    fontWeight = FontWeight.Bold,
-                                    letterSpacing = (-0.5).sp
-                                ),
-                                color = TextPrimary,
-                                maxLines = 1
-                            )
-                            Text(
-                                text = "OVERVIEW",
+                                text = "OVERVIEW TELEMETRY",
                                 style = MaterialTheme.typography.labelSmall.copy(
+                                    fontFamily = SpaceGroteskFontFamily,
                                     fontWeight = FontWeight.Bold,
-                                    letterSpacing = 1.2.sp
+                                    letterSpacing = 1.2.sp,
+                                    fontSize = 10.sp
                                 ),
                                 color = PrimaryCyanLight,
                                 maxLines = 1
@@ -165,7 +199,7 @@ fun DashboardScreen(
                     }
 
                     Row(
-                        horizontalArrangement = Arrangement.spacedBy(10.dp),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         val currentTheme by authViewModel.themeMode.collectAsState()
@@ -175,7 +209,7 @@ fun DashboardScreen(
                         IconButton(
                             onClick = { authViewModel.toggleTheme() },
                             modifier = Modifier
-                                .size(38.dp)
+                                .size(36.dp)
                                 .clip(CircleShape)
                                 .background(SurfaceElevated)
                                 .border(1.dp, BorderDark, CircleShape)
@@ -184,14 +218,14 @@ fun DashboardScreen(
                                 imageVector = if (isDarkMode) Icons.Default.LightMode else Icons.Default.DarkMode,
                                 contentDescription = "Toggle Theme",
                                 tint = if (isDarkMode) AmberWarningLight else PrimaryCyanLight,
-                                modifier = Modifier.size(18.dp)
+                                modifier = Modifier.size(17.dp)
                             )
                         }
 
                         // AI Assistant Sparkle Button
                         Box(
                             modifier = Modifier
-                                .size(38.dp)
+                                .size(36.dp)
                                 .clip(CircleShape)
                                 .background(PrimaryCyan.copy(alpha = 0.15f))
                                 .border(1.dp, PrimaryCyan.copy(alpha = 0.45f), CircleShape)
@@ -202,7 +236,7 @@ fun DashboardScreen(
                                 imageVector = Icons.Default.AutoAwesome,
                                 contentDescription = "Open AI Financial Assistant",
                                 tint = PrimaryCyanLight,
-                                modifier = Modifier.size(18.dp)
+                                modifier = Modifier.size(17.dp)
                             )
                         }
 
@@ -212,7 +246,7 @@ fun DashboardScreen(
 
                         Box(
                             modifier = Modifier
-                                .size(38.dp)
+                                .size(36.dp)
                                 .clip(CircleShape)
                                 .background(SurfaceElevated)
                                 .border(1.dp, BorderDark, CircleShape)
@@ -223,26 +257,26 @@ fun DashboardScreen(
                                 imageVector = Icons.Default.Notifications,
                                 contentDescription = "Notifications & Alerts",
                                 tint = if (hasAlerts) AmberWarningLight else TextSecondary,
-                                modifier = Modifier.size(18.dp)
+                                modifier = Modifier.size(17.dp)
                             )
                             if (hasAlerts) {
                                 Box(
                                     modifier = Modifier
                                         .size(8.dp)
                                         .align(Alignment.TopEnd)
-                                        .offset(x = (-6).dp, y = 6.dp)
+                                        .offset(x = (-4).dp, y = 4.dp)
                                         .clip(CircleShape)
                                         .background(AmberWarningLight)
                                 )
                             }
                         }
 
-                        // 3-Dots Overflow Menu for Secondary Tools (CSV Export, Leak Audit, Simulator, Sign Out)
+                        // 3-Dots Overflow Menu for Secondary Tools
                         Box {
                             IconButton(
                                 onClick = { showOverflowMenu = !showOverflowMenu },
                                 modifier = Modifier
-                                    .size(38.dp)
+                                    .size(36.dp)
                                     .clip(CircleShape)
                                     .background(SurfaceElevated)
                                     .border(1.dp, BorderDark, CircleShape)
@@ -251,7 +285,7 @@ fun DashboardScreen(
                                     imageVector = Icons.Default.MoreVert,
                                     contentDescription = "More Options",
                                     tint = TextPrimary,
-                                    modifier = Modifier.size(19.dp)
+                                    modifier = Modifier.size(18.dp)
                                 )
                             }
 
@@ -377,23 +411,31 @@ fun DashboardScreen(
                 }
             }
 
-            // Account Selector Rail (Functional Filter for All, UPI, Cards, Cash)
+            // Account Selector Rail (Functional Filter for All, UPI, Cards, Cash with dynamic balances)
             item {
                 LazyRow(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     items(accountOptions.indices.toList()) { index ->
-                        val (accName, _) = accountOptions[index]
+                        val (accName, mode) = accountOptions[index]
                         val dotColor = accountDotColors[index % accountDotColors.size]
                         val isSelected = selectedAccountIndex == index
+                        val accAmount = remember(expenseState.expenses, mode, dashboardState.summary.totalSpent) {
+                            if (mode == null) {
+                                (dashboardState.summary.totalIncome - dashboardState.summary.totalSpent).coerceAtLeast(0.0)
+                            } else {
+                                expenseState.expenses.filter { it.paymentMode.name.equals(mode, ignoreCase = true) }.sumOf { it.amount }
+                            }
+                        }
+
                         Box(
                             modifier = Modifier
                                 .clip(RoundedCornerShape(9999.dp))
                                 .background(if (isSelected) SurfaceElevated else SurfaceContainerLow)
                                 .border(
                                     1.dp,
-                                    if (isSelected) PrimaryCyan.copy(alpha = 0.5f) else BorderDark,
+                                    if (isSelected) PrimaryCyan.copy(alpha = 0.6f) else BorderDark,
                                     RoundedCornerShape(9999.dp)
                                 )
                                 .clickable { selectedAccountIndex = index }
@@ -408,9 +450,11 @@ fun DashboardScreen(
                                 )
                                 Spacer(modifier = Modifier.width(7.dp))
                                 Text(
-                                    text = accName,
+                                    text = "$accName (${formatInr(accAmount)})",
                                     style = MaterialTheme.typography.labelMedium.copy(
-                                        fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal
+                                        fontFamily = if (isSelected) JetBrainsMonoFontFamily else HankenGroteskFontFamily,
+                                        fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
+                                        fontSize = 12.sp
                                     ),
                                     color = if (isSelected) TextPrimary else TextSecondary
                                 )
@@ -420,7 +464,7 @@ fun DashboardScreen(
                                         imageVector = Icons.Default.Check,
                                         contentDescription = null,
                                         tint = PrimaryCyanLight,
-                                        modifier = Modifier.size(14.dp)
+                                        modifier = Modifier.size(13.dp)
                                     )
                                 }
                             }
@@ -429,8 +473,9 @@ fun DashboardScreen(
                 }
             }
 
-            // Hero Net Worth & Monthly Burn Telemetry Card
+            // Hero Net Worth & Monthly Burn Telemetry Card with Canvas Sparkline
             item {
+                var isBalanceHidden by remember { mutableStateOf(false) }
                 val netWorth = dashboardState.summary.totalIncome - activeAccountSpent
                 val isPositive = netWorth >= 0
                 val totalSpent = activeAccountSpent
@@ -446,7 +491,7 @@ fun DashboardScreen(
                         .padding(20.dp)
                 ) {
                     Column {
-                        // Top Row: Label & Micro Tag
+                        // Top Row: Micro Tag & Controls
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween,
@@ -454,43 +499,58 @@ fun DashboardScreen(
                         ) {
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 Text(
-                                    text = if (selectedPaymentMode != null) "NET ${selectedPaymentMode.uppercase()} ASSETS" else "NET LIQUID ASSETS",
+                                    text = if (selectedPaymentMode != null) "[SYS.02] ${selectedPaymentMode.uppercase()} POOL" else "[SYS.01] CONSOLIDATED LIQUIDITY",
                                     style = MaterialTheme.typography.labelSmall.copy(
+                                        fontFamily = JetBrainsMonoFontFamily,
                                         fontWeight = FontWeight.Bold,
+                                        fontSize = 11.sp,
                                         letterSpacing = 1.1.sp
                                     ),
-                                    color = TextMuted
-                                )
-                                Spacer(modifier = Modifier.width(6.dp))
-                                Icon(
-                                    imageVector = Icons.Default.VerifiedUser,
-                                    contentDescription = null,
-                                    tint = PrimaryCyanLight,
-                                    modifier = Modifier.size(14.dp)
+                                    color = PrimaryCyanLight
                                 )
                             }
 
-                            Surface(
-                                shape = RoundedCornerShape(9999.dp),
-                                color = EmeraldBg,
-                                border = androidx.compose.foundation.BorderStroke(1.dp, EmeraldSuccess.copy(alpha = 0.3f))
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(6.dp)
                             ) {
-                                Row(
-                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
-                                    verticalAlignment = Alignment.CenterVertically
+                                IconButton(
+                                    onClick = { isBalanceHidden = !isBalanceHidden },
+                                    modifier = Modifier.size(24.dp)
                                 ) {
                                     Icon(
-                                        imageVector = Icons.Default.TrendingUp,
-                                        contentDescription = null,
-                                        tint = EmeraldSuccessLight,
-                                        modifier = Modifier.size(13.dp)
+                                        imageVector = if (isBalanceHidden) Icons.Default.VisibilityOff else Icons.Default.Visibility,
+                                        contentDescription = "Toggle Balance Visibility",
+                                        tint = TextMuted,
+                                        modifier = Modifier.size(16.dp)
                                     )
-                                    Spacer(modifier = Modifier.width(3.dp))
-                                    Text(
-                                        text = "+${"%.1f".format(dashboardState.summary.savingsRate)}%",
-                                        style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
-                                        color = EmeraldSuccessLight
-                                    )
+                                }
+
+                                Surface(
+                                    shape = RoundedCornerShape(9999.dp),
+                                    color = EmeraldBg,
+                                    border = androidx.compose.foundation.BorderStroke(1.dp, EmeraldSuccess.copy(alpha = 0.3f))
+                                ) {
+                                    Row(
+                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.TrendingUp,
+                                            contentDescription = null,
+                                            tint = EmeraldSuccessLight,
+                                            modifier = Modifier.size(13.dp)
+                                        )
+                                        Spacer(modifier = Modifier.width(3.dp))
+                                        Text(
+                                            text = "+${"%.1f".format(dashboardState.summary.savingsRate)}%",
+                                            style = MaterialTheme.typography.labelSmall.copy(
+                                                fontFamily = JetBrainsMonoFontFamily,
+                                                fontWeight = FontWeight.Bold
+                                            ),
+                                            color = EmeraldSuccessLight
+                                        )
+                                    }
                                 }
                             }
                         }
@@ -499,22 +559,86 @@ fun DashboardScreen(
 
                         // Big Bold Net Worth Display
                         Text(
-                            text = formatInr(netWorth),
+                            text = if (isBalanceHidden) "••••••••" else formatInr(netWorth),
                             style = MaterialTheme.typography.displayMedium.copy(
+                                fontFamily = JetBrainsMonoFontFamily,
                                 fontWeight = FontWeight.Bold,
                                 letterSpacing = (-1).sp
                             ),
                             color = if (isPositive) TextPrimary else RoseDanger
                         )
 
-                        Spacer(modifier = Modifier.height(2.dp))
-                        Text(
-                            text = "Live telemetry sync • $activeAccountTxCount transactions",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = TextMuted
-                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = "Live telemetry sync • $activeAccountTxCount transactions",
+                                style = MaterialTheme.typography.bodySmall.copy(fontFamily = HankenGroteskFontFamily),
+                                color = TextMuted
+                            )
+                            Text(
+                                text = "₹ INR",
+                                style = MaterialTheme.typography.labelSmall.copy(
+                                    fontFamily = JetBrainsMonoFontFamily,
+                                    fontWeight = FontWeight.Bold
+                                ),
+                                color = PrimaryCyanLight
+                            )
+                        }
 
-                        Spacer(modifier = Modifier.height(16.dp))
+                        Spacer(modifier = Modifier.height(14.dp))
+
+                        // Inflow vs Outflow comparison mini bar
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(SurfaceContainerLowest)
+                                .border(1.dp, BorderDark, RoundedCornerShape(12.dp))
+                                .padding(horizontal = 12.dp, vertical = 8.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(6.dp)
+                                        .clip(CircleShape)
+                                        .background(EmeraldSuccess)
+                                )
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text(
+                                    text = "In: +${formatInr(dashboardState.summary.totalIncome)}",
+                                    style = MaterialTheme.typography.labelSmall.copy(
+                                        fontFamily = JetBrainsMonoFontFamily,
+                                        fontWeight = FontWeight.SemiBold
+                                    ),
+                                    color = EmeraldSuccessLight
+                                )
+                            }
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(6.dp)
+                                        .clip(CircleShape)
+                                        .background(RoseDanger)
+                                )
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text(
+                                    text = "Out: -${formatInr(totalSpent)}",
+                                    style = MaterialTheme.typography.labelSmall.copy(
+                                        fontFamily = JetBrainsMonoFontFamily,
+                                        fontWeight = FontWeight.SemiBold
+                                    ),
+                                    color = RoseDangerLight
+                                )
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(14.dp))
 
                         // Monthly Burn Velocity Track Container
                         Box(
@@ -541,7 +665,10 @@ fun DashboardScreen(
                                         Spacer(modifier = Modifier.width(4.dp))
                                         Text(
                                             text = "Monthly Velocity",
-                                            style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold),
+                                            style = MaterialTheme.typography.labelMedium.copy(
+                                                fontFamily = SpaceGroteskFontFamily,
+                                                fontWeight = FontWeight.SemiBold
+                                            ),
                                             color = TextPrimary
                                         )
                                     }
@@ -573,12 +700,15 @@ fun DashboardScreen(
                                 ) {
                                     Text(
                                         text = "${"%.0f".format(burnPct)}% of soft budget",
-                                        style = MaterialTheme.typography.labelSmall,
+                                        style = MaterialTheme.typography.labelSmall.copy(fontFamily = JetBrainsMonoFontFamily),
                                         color = TextMuted
                                     )
                                     Text(
                                         text = "${formatInr((totalBudget - totalSpent).coerceAtLeast(0.0))} remaining buffer",
-                                        style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold),
+                                        style = MaterialTheme.typography.labelSmall.copy(
+                                            fontFamily = JetBrainsMonoFontFamily,
+                                            fontWeight = FontWeight.SemiBold
+                                        ),
                                         color = EmeraldSuccessLight
                                     )
                                 }
@@ -675,15 +805,15 @@ fun DashboardScreen(
                 }
             }
 
-            // 4 Circular Glass Action Buttons (Expense, Income, Scan Bill, Simulate)
+            // 4 Cybernetic Tactical Action Pods (+ Expense, + Income, Scan Bill, Simulate)
             item {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(vertical = 2.dp),
+                        .padding(vertical = 4.dp),
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    // Expense
+                    // + Expense (Crimson Rose)
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally,
                         modifier = Modifier
@@ -698,27 +828,30 @@ fun DashboardScreen(
                         Box(
                             modifier = Modifier
                                 .size(56.dp)
-                                .clip(CircleShape)
-                                .background(PrimaryCyan.copy(alpha = 0.15f))
-                                .border(1.dp, PrimaryCyan.copy(alpha = 0.45f), CircleShape),
+                                .clip(RoundedCornerShape(18.dp))
+                                .background(RoseDanger.copy(alpha = 0.12f))
+                                .border(1.dp, RoseDanger.copy(alpha = 0.45f), RoundedCornerShape(18.dp)),
                             contentAlignment = Alignment.Center
                         ) {
                             Icon(
                                 imageVector = Icons.Default.ArrowUpward,
                                 contentDescription = "Add Expense",
-                                tint = PrimaryCyanLight,
+                                tint = RoseDangerLight,
                                 modifier = Modifier.size(24.dp)
                             )
                         }
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(
-                            text = "Expense",
-                            style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold),
+                            text = "+ Expense",
+                            style = MaterialTheme.typography.labelMedium.copy(
+                                fontFamily = SpaceGroteskFontFamily,
+                                fontWeight = FontWeight.SemiBold
+                            ),
                             color = TextPrimary
                         )
                     }
 
-                    // Deposit (Income)
+                    // + Income (Emerald Green)
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally,
                         modifier = Modifier
@@ -728,13 +861,13 @@ fun DashboardScreen(
                         Box(
                             modifier = Modifier
                                 .size(56.dp)
-                                .clip(CircleShape)
+                                .clip(RoundedCornerShape(18.dp))
                                 .background(EmeraldBg)
-                                .border(1.dp, EmeraldSuccess.copy(alpha = 0.45f), CircleShape),
+                                .border(1.dp, EmeraldSuccess.copy(alpha = 0.45f), RoundedCornerShape(18.dp)),
                             contentAlignment = Alignment.Center
                         ) {
                             Icon(
-                                imageVector = Icons.Default.Download,
+                                imageVector = Icons.Default.ArrowDownward,
                                 contentDescription = "Add Income",
                                 tint = EmeraldSuccessLight,
                                 modifier = Modifier.size(24.dp)
@@ -742,13 +875,16 @@ fun DashboardScreen(
                         }
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(
-                            text = "Income",
-                            style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold),
+                            text = "+ Income",
+                            style = MaterialTheme.typography.labelMedium.copy(
+                                fontFamily = SpaceGroteskFontFamily,
+                                fontWeight = FontWeight.SemiBold
+                            ),
                             color = TextPrimary
                         )
                     }
 
-                    // Scan Bill (Smart Scanner)
+                    // Scan Bill (Electric Cyan)
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally,
                         modifier = Modifier
@@ -758,27 +894,30 @@ fun DashboardScreen(
                         Box(
                             modifier = Modifier
                                 .size(56.dp)
-                                .clip(CircleShape)
-                                .background(QuantumViolet.copy(alpha = 0.15f))
-                                .border(1.dp, QuantumViolet.copy(alpha = 0.45f), CircleShape),
+                                .clip(RoundedCornerShape(18.dp))
+                                .background(PrimaryCyan.copy(alpha = 0.15f))
+                                .border(1.dp, PrimaryCyan.copy(alpha = 0.45f), RoundedCornerShape(18.dp)),
                             contentAlignment = Alignment.Center
                         ) {
                             Icon(
                                 imageVector = Icons.Default.DocumentScanner,
                                 contentDescription = "Scan Bill",
-                                tint = QuantumViolet,
+                                tint = PrimaryCyanLight,
                                 modifier = Modifier.size(24.dp)
                             )
                         }
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(
                             text = "Scan Bill",
-                            style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold),
+                            style = MaterialTheme.typography.labelMedium.copy(
+                                fontFamily = SpaceGroteskFontFamily,
+                                fontWeight = FontWeight.SemiBold
+                            ),
                             color = TextPrimary
                         )
                     }
 
-                    // Simulate (Purchase Affordability)
+                    // Simulate (Quantum Violet)
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally,
                         modifier = Modifier
@@ -788,22 +927,25 @@ fun DashboardScreen(
                         Box(
                             modifier = Modifier
                                 .size(56.dp)
-                                .clip(CircleShape)
-                                .background(SurfaceElevated)
-                                .border(1.dp, BorderDark, CircleShape),
+                                .clip(RoundedCornerShape(18.dp))
+                                .background(QuantumViolet.copy(alpha = 0.15f))
+                                .border(1.dp, QuantumViolet.copy(alpha = 0.45f), RoundedCornerShape(18.dp)),
                             contentAlignment = Alignment.Center
                         ) {
                             Icon(
-                                imageVector = Icons.Default.Calculate,
-                                contentDescription = "Simulate Purchase",
-                                tint = PrimaryCyanLight,
+                                imageVector = Icons.Default.AutoAwesome,
+                                contentDescription = "Simulate",
+                                tint = QuantumViolet,
                                 modifier = Modifier.size(24.dp)
                             )
                         }
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(
                             text = "Simulate",
-                            style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold),
+                            style = MaterialTheme.typography.labelMedium.copy(
+                                fontFamily = SpaceGroteskFontFamily,
+                                fontWeight = FontWeight.SemiBold
+                            ),
                             color = TextPrimary
                         )
                     }

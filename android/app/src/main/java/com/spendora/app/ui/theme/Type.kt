@@ -18,6 +18,10 @@ val SpaceGroteskFamily = FontFamily.SansSerif
 val HankenGroteskFamily = FontFamily.SansSerif
 val JetBrainsMonoFamily = FontFamily.Monospace
 
+val SpaceGroteskFontFamily = SpaceGroteskFamily
+val HankenGroteskFontFamily = HankenGroteskFamily
+val JetBrainsMonoFontFamily = JetBrainsMonoFamily
+
 val Typography = Typography(
     displayLarge = TextStyle(
         fontFamily = SpaceGroteskFamily,
