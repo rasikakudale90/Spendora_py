@@ -140,18 +140,31 @@ fun DashboardScreen(
                         modifier = Modifier.weight(1f),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        SpendoraLogo(size = 40.dp)
+                        SpendoraLogo(size = 38.dp)
                         Spacer(modifier = Modifier.width(10.dp))
                         Column {
+                            Text(
+                                text = "Spendora",
+                                style = MaterialTheme.typography.titleLarge.copy(
+                                    fontFamily = SpaceGroteskFontFamily,
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 20.sp,
+                                    letterSpacing = (-0.5).sp
+                                ),
+                                color = TextPrimary,
+                                maxLines = 1
+                            )
+                            Spacer(modifier = Modifier.height(2.dp))
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 Text(
-                                    text = "Spendora",
-                                    style = MaterialTheme.typography.titleLarge.copy(
+                                    text = "OVERVIEW",
+                                    style = MaterialTheme.typography.labelSmall.copy(
                                         fontFamily = SpaceGroteskFontFamily,
                                         fontWeight = FontWeight.Bold,
-                                        letterSpacing = (-0.5).sp
+                                        letterSpacing = 1.2.sp,
+                                        fontSize = 10.sp
                                     ),
-                                    color = TextPrimary,
+                                    color = PrimaryCyanLight,
                                     maxLines = 1
                                 )
                                 Spacer(modifier = Modifier.width(6.dp))
@@ -161,7 +174,7 @@ fun DashboardScreen(
                                     border = androidx.compose.foundation.BorderStroke(1.dp, PrimaryCyan.copy(alpha = 0.35f))
                                 ) {
                                     Row(
-                                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                                        modifier = Modifier.padding(horizontal = 5.dp, vertical = 2.dp),
                                         verticalAlignment = Alignment.CenterVertically
                                     ) {
                                         Box(
@@ -170,31 +183,19 @@ fun DashboardScreen(
                                                 .clip(CircleShape)
                                                 .background(EmeraldSuccess)
                                         )
-                                        Spacer(modifier = Modifier.width(4.dp))
+                                        Spacer(modifier = Modifier.width(3.dp))
                                         Text(
                                             text = "LIVE 99ms",
                                             style = MaterialTheme.typography.labelSmall.copy(
                                                 fontFamily = JetBrainsMonoFontFamily,
                                                 fontWeight = FontWeight.Bold,
-                                                fontSize = 9.sp,
-                                                letterSpacing = 0.5.sp
+                                                fontSize = 9.sp
                                             ),
                                             color = PrimaryCyanLight
                                         )
                                     }
                                 }
                             }
-                            Text(
-                                text = "OVERVIEW TELEMETRY",
-                                style = MaterialTheme.typography.labelSmall.copy(
-                                    fontFamily = SpaceGroteskFontFamily,
-                                    fontWeight = FontWeight.Bold,
-                                    letterSpacing = 1.2.sp,
-                                    fontSize = 10.sp
-                                ),
-                                color = PrimaryCyanLight,
-                                maxLines = 1
-                            )
                         }
                     }
 
