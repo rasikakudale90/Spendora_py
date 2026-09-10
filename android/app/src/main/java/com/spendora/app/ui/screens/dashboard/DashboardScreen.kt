@@ -906,6 +906,7 @@ fun DashboardScreen(
                         .clip(RoundedCornerShape(20.dp))
                         .background(SurfaceElevated)
                         .border(1.dp, BorderDark, RoundedCornerShape(20.dp))
+                        .clickable { onNavigateToExpenses() }
                         .padding(16.dp)
                 ) {
                     Column {
@@ -928,11 +929,19 @@ fun DashboardScreen(
                                     color = TextPrimary
                                 )
                             }
-                            Text(
-                                text = "This Month",
-                                style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold),
-                                color = PrimaryCyanLight
-                            )
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(8.dp))
+                                    .background(SurfaceContainerLow)
+                                    .padding(horizontal = 8.dp, vertical = 4.dp)
+                            ) {
+                                Text(
+                                    text = "View Breakdown →",
+                                    style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold),
+                                    color = PrimaryCyanLight
+                                )
+                            }
                         }
 
                         Spacer(modifier = Modifier.height(12.dp))
@@ -977,6 +986,7 @@ fun DashboardScreen(
                                                     .weight(1f)
                                                     .clip(RoundedCornerShape(10.dp))
                                                     .background(SurfaceContainerLow)
+                                                    .clickable { onNavigateToExpenses() }
                                                     .padding(horizontal = 10.dp, vertical = 8.dp)
                                             ) {
                                                 Row(
