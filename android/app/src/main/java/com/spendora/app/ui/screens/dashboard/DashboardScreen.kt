@@ -137,10 +137,9 @@ fun DashboardScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Row(
-                        modifier = Modifier.weight(1f),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        SpendoraLogo(size = 38.dp)
+                        SpendoraLogo(size = 36.dp)
                         Spacer(modifier = Modifier.width(10.dp))
                         Column {
                             Text(
@@ -154,48 +153,17 @@ fun DashboardScreen(
                                 color = TextPrimary,
                                 maxLines = 1
                             )
-                            Spacer(modifier = Modifier.height(2.dp))
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Text(
-                                    text = "OVERVIEW",
-                                    style = MaterialTheme.typography.labelSmall.copy(
-                                        fontFamily = SpaceGroteskFontFamily,
-                                        fontWeight = FontWeight.Bold,
-                                        letterSpacing = 1.2.sp,
-                                        fontSize = 10.sp
-                                    ),
-                                    color = PrimaryCyanLight,
-                                    maxLines = 1
-                                )
-                                Spacer(modifier = Modifier.width(6.dp))
-                                Surface(
-                                    shape = RoundedCornerShape(9999.dp),
-                                    color = SurfaceContainerLowest,
-                                    border = androidx.compose.foundation.BorderStroke(1.dp, PrimaryCyan.copy(alpha = 0.35f))
-                                ) {
-                                    Row(
-                                        modifier = Modifier.padding(horizontal = 5.dp, vertical = 2.dp),
-                                        verticalAlignment = Alignment.CenterVertically
-                                    ) {
-                                        Box(
-                                            modifier = Modifier
-                                                .size(5.dp)
-                                                .clip(CircleShape)
-                                                .background(EmeraldSuccess)
-                                        )
-                                        Spacer(modifier = Modifier.width(3.dp))
-                                        Text(
-                                            text = "LIVE 99ms",
-                                            style = MaterialTheme.typography.labelSmall.copy(
-                                                fontFamily = JetBrainsMonoFontFamily,
-                                                fontWeight = FontWeight.Bold,
-                                                fontSize = 9.sp
-                                            ),
-                                            color = PrimaryCyanLight
-                                        )
-                                    }
-                                }
-                            }
+                            Text(
+                                text = "OVERVIEW",
+                                style = MaterialTheme.typography.labelSmall.copy(
+                                    fontFamily = SpaceGroteskFontFamily,
+                                    fontWeight = FontWeight.Bold,
+                                    letterSpacing = 1.2.sp,
+                                    fontSize = 10.sp
+                                ),
+                                color = PrimaryCyanLight,
+                                maxLines = 1
+                            )
                         }
                     }
 
