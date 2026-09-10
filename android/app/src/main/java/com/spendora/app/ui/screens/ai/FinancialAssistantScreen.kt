@@ -11,9 +11,10 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.AutoAwesome
-import androidx.compose.material.icons.filled.Send
+import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -24,9 +25,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.spendora.app.data.model.ChatMessage
+import com.spendora.app.data.model.FinancialActionIntent
 import com.spendora.app.ui.theme.*
 import com.spendora.app.ui.viewmodel.AiViewModel
-import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -38,7 +39,6 @@ fun FinancialAssistantScreen(
     val uiState by viewModel.uiState.collectAsState()
     var inputText by remember { mutableStateOf("") }
     val listState = rememberLazyListState()
-    val coroutineScope = rememberCoroutineScope()
 
     LaunchedEffect(uiState.chatMessages.size) {
         if (uiState.chatMessages.isNotEmpty()) {
@@ -47,46 +47,64 @@ fun FinancialAssistantScreen(
     }
 
     Scaffold(
-        containerColor = BackgroundDark,
+        containerColor = SpendoraTheme.colors.background,
         topBar = {
             TopAppBar(
                 title = {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Box(
                             modifier = Modifier
-                                .size(32.dp)
+                                .size(34.dp)
                                 .clip(CircleShape)
-                                .background(PrimaryIndigo.copy(alpha = 0.2f)),
+                                .background(SpendoraTheme.colors.primary.copy(alpha = 0.15f))
+                                .border(1.dp, SpendoraTheme.colors.primary.copy(alpha = 0.4f), CircleShape),
                             contentAlignment = Alignment.Center
                         ) {
                             Icon(
                                 imageVector = Icons.Default.AutoAwesome,
                                 contentDescription = null,
-                                tint = PrimaryIndigoLight,
-                                modifier = Modifier.size(16.dp)
+                                tint = SpendoraTheme.colors.primaryLight,
+                                modifier = Modifier.size(17.dp)
                             )
                         }
                         Spacer(modifier = Modifier.width(10.dp))
                         Column {
                             Text(
                                 text = "Spendora AI Advisor",
-                                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                                color = TextPrimary
+                                style = MaterialTheme.typography.titleMedium.copy(
+                                    fontWeight = FontWeight.Bold,
+                                    letterSpacing = (-0.3).sp
+                                ),
+                                color = SpendoraTheme.colors.textPrimary
                             )
-                            Text(
-                                text = "Live Data Grounded",
-                                fontSize = 11.sp,
-                                color = EmeraldSuccessLight
-                            )
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(6.dp)
+                                        .clip(CircleShape)
+                                        .background(SpendoraTheme.colors.emerald)
+                                )
+                                Spacer(modifier = Modifier.width(5.dp))
+                                Text(
+                                    text = "In-Database RAG • Grounded Facts",
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.Medium,
+                                    color = SpendoraTheme.colors.emerald
+                                )
+                            }
                         }
                     }
                 },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(imageVector = Icons.Default.ArrowBack, contentDescription = "Back", tint = TextPrimary)
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Back",
+                            tint = SpendoraTheme.colors.textPrimary
+                        )
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = SurfaceDark)
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = SpendoraTheme.colors.surface)
             )
         }
     ) { padding ->
@@ -102,28 +120,39 @@ fun FinancialAssistantScreen(
                     .weight(1f)
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp, vertical = 8.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+                verticalArrangement = Arrangement.spacedBy(14.dp)
             ) {
                 items(uiState.chatMessages) { message ->
-                    ChatMessageBubble(message = message)
+                    ChatMessageBubble(
+                        message = message,
+                        onActionClick = { intent ->
+                            if (intent.action == "simulate_purchase" && intent.payload != null) {
+                                val title = intent.payload["title"]?.toString() ?: "Item"
+                                val amount = (intent.payload["amount"] as? Number)?.toDouble() ?: 1000.0
+                                viewModel.sendChatMessage("Simulate purchase for $title costing $amount")
+                            } else if (intent.label.isNotBlank()) {
+                                viewModel.sendChatMessage(intent.label)
+                            }
+                        }
+                    )
                 }
 
                 if (uiState.isChatLoading) {
                     item {
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier.padding(vertical = 6.dp)
+                            modifier = Modifier.padding(vertical = 8.dp, horizontal = 4.dp)
                         ) {
                             CircularProgressIndicator(
                                 modifier = Modifier.size(16.dp),
-                                color = PrimaryIndigoLight,
+                                color = SpendoraTheme.colors.primary,
                                 strokeWidth = 2.dp
                             )
-                            Spacer(modifier = Modifier.width(8.dp))
+                            Spacer(modifier = Modifier.width(10.dp))
                             Text(
-                                text = "Analyzing financial telemetry...",
+                                text = "Analyzing financial telemetry & retrieved knowledge...",
                                 fontSize = 12.sp,
-                                color = TextMuted
+                                color = SpendoraTheme.colors.textMuted
                             )
                         }
                     }
@@ -140,17 +169,30 @@ fun FinancialAssistantScreen(
                 items(uiState.suggestedPrompts) { prompt ->
                     Surface(
                         shape = RoundedCornerShape(16.dp),
-                        color = SurfaceElevated,
+                        color = SpendoraTheme.colors.surfaceElevated,
+                        border = androidx.compose.foundation.BorderStroke(1.dp, SpendoraTheme.colors.border),
                         modifier = Modifier.clickable {
                             viewModel.sendChatMessage(prompt)
                         }
                     ) {
-                        Text(
-                            text = prompt,
-                            fontSize = 11.sp,
-                            color = TextSecondary,
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
                             modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
-                        )
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.AutoAwesome,
+                                contentDescription = null,
+                                tint = SpendoraTheme.colors.primaryLight,
+                                modifier = Modifier.size(12.dp)
+                            )
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text(
+                                text = prompt,
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Medium,
+                                color = SpendoraTheme.colors.textSecondary
+                            )
+                        }
                     }
                 }
             }
@@ -158,34 +200,40 @@ fun FinancialAssistantScreen(
             // Message Input Bar
             Surface(
                 modifier = Modifier.fillMaxWidth(),
-                color = SurfaceDark,
+                color = SpendoraTheme.colors.surface,
                 tonalElevation = 8.dp
             ) {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 12.dp, vertical = 10.dp),
+                        .padding(horizontal = 14.dp, vertical = 10.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     OutlinedTextField(
                         value = inputText,
                         onValueChange = { inputText = it },
-                        placeholder = { Text("Ask Spendora AI anything...", color = TextMuted, fontSize = 13.sp) },
+                        placeholder = {
+                            Text(
+                                "Ask Spendora AI anything...",
+                                color = SpendoraTheme.colors.textMuted,
+                                fontSize = 13.sp
+                            )
+                        },
                         modifier = Modifier
                             .weight(1f)
-                            .heightIn(min = 44.dp, max = 100.dp),
+                            .heightIn(min = 46.dp, max = 110.dp),
                         colors = OutlinedTextFieldDefaults.colors(
-                            focusedContainerColor = SurfaceElevated,
-                            unfocusedContainerColor = SurfaceElevated,
-                            focusedBorderColor = PrimaryIndigo,
-                            unfocusedBorderColor = BorderDark,
-                            focusedTextColor = TextPrimary,
-                            unfocusedTextColor = TextPrimary
+                            focusedContainerColor = SpendoraTheme.colors.surfaceElevated,
+                            unfocusedContainerColor = SpendoraTheme.colors.surfaceElevated,
+                            focusedBorderColor = SpendoraTheme.colors.primary,
+                            unfocusedBorderColor = SpendoraTheme.colors.border,
+                            focusedTextColor = SpendoraTheme.colors.textPrimary,
+                            unfocusedTextColor = SpendoraTheme.colors.textPrimary
                         ),
-                        shape = RoundedCornerShape(22.dp)
+                        shape = RoundedCornerShape(23.dp)
                     )
 
-                    Spacer(modifier = Modifier.width(8.dp))
+                    Spacer(modifier = Modifier.width(10.dp))
 
                     IconButton(
                         onClick = {
@@ -196,14 +244,14 @@ fun FinancialAssistantScreen(
                             }
                         },
                         modifier = Modifier
-                            .size(44.dp)
+                            .size(46.dp)
                             .clip(CircleShape)
-                            .background(PrimaryIndigo)
+                            .background(SpendoraTheme.colors.primary)
                     ) {
                         Icon(
-                            imageVector = Icons.Default.Send,
+                            imageVector = Icons.AutoMirrored.Filled.Send,
                             contentDescription = "Send",
-                            tint = TextPrimary,
+                            tint = Color.Black,
                             modifier = Modifier.size(18.dp)
                         )
                     }
@@ -214,7 +262,10 @@ fun FinancialAssistantScreen(
 }
 
 @Composable
-fun ChatMessageBubble(message: ChatMessage) {
+fun ChatMessageBubble(
+    message: ChatMessage,
+    onActionClick: (FinancialActionIntent) -> Unit = {}
+) {
     val isUser = message.role == "user"
 
     Row(
@@ -224,39 +275,78 @@ fun ChatMessageBubble(message: ChatMessage) {
         if (!isUser) {
             Box(
                 modifier = Modifier
-                    .size(28.dp)
+                    .size(30.dp)
                     .clip(CircleShape)
-                    .background(PrimaryIndigo.copy(alpha = 0.2f)),
+                    .background(SpendoraTheme.colors.primary.copy(alpha = 0.15f))
+                    .border(1.dp, SpendoraTheme.colors.primary.copy(alpha = 0.35f), CircleShape),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
                     imageVector = Icons.Default.AutoAwesome,
                     contentDescription = null,
-                    tint = PrimaryIndigoLight,
-                    modifier = Modifier.size(14.dp)
+                    tint = SpendoraTheme.colors.primaryLight,
+                    modifier = Modifier.size(15.dp)
                 )
             }
-            Spacer(modifier = Modifier.width(8.dp))
+            Spacer(modifier = Modifier.width(10.dp))
         }
 
-        Surface(
-            shape = RoundedCornerShape(
-                topStart = 16.dp,
-                topEnd = 16.dp,
-                bottomStart = if (isUser) 16.dp else 4.dp,
-                bottomEnd = if (isUser) 4.dp else 16.dp
-            ),
-            color = if (isUser) PrimaryIndigo else SurfaceDark,
-            border = if (!isUser) androidx.compose.foundation.BorderStroke(1.dp, BorderDark) else null,
-            modifier = Modifier.widthIn(max = 280.dp)
+        Column(
+            horizontalAlignment = if (isUser) Alignment.End else Alignment.Start,
+            modifier = Modifier.fillMaxWidth(if (isUser) 0.82f else 0.90f)
         ) {
-            Text(
-                text = message.content,
-                fontSize = 13.sp,
-                color = TextPrimary,
-                lineHeight = 18.sp,
-                modifier = Modifier.padding(12.dp)
-            )
+            Surface(
+                shape = RoundedCornerShape(
+                    topStart = 18.dp,
+                    topEnd = 18.dp,
+                    bottomStart = if (isUser) 18.dp else 4.dp,
+                    bottomEnd = if (isUser) 4.dp else 18.dp
+                ),
+                color = if (isUser) SpendoraTheme.colors.primary else SpendoraTheme.colors.surface,
+                border = if (!isUser) androidx.compose.foundation.BorderStroke(1.dp, SpendoraTheme.colors.border) else null
+            ) {
+                Column(modifier = Modifier.padding(14.dp)) {
+                    Text(
+                        text = message.content,
+                        fontSize = 13.5.sp,
+                        color = if (isUser) Color(0xFF03151E) else SpendoraTheme.colors.textPrimary,
+                        lineHeight = 20.sp,
+                        fontWeight = if (isUser) FontWeight.Medium else FontWeight.Normal
+                    )
+
+                    // Render Action Intent Button if present
+                    if (!isUser && message.actionIntent != null) {
+                        Spacer(modifier = Modifier.height(10.dp))
+                        Surface(
+                            shape = RoundedCornerShape(12.dp),
+                            color = SpendoraTheme.colors.primary.copy(alpha = 0.12f),
+                            border = androidx.compose.foundation.BorderStroke(1.dp, SpendoraTheme.colors.primary.copy(alpha = 0.4f)),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable { onActionClick(message.actionIntent) }
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Text(
+                                    text = message.actionIntent.label,
+                                    fontSize = 12.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = SpendoraTheme.colors.primaryLight
+                                )
+                                Icon(
+                                    imageVector = Icons.Default.ChevronRight,
+                                    contentDescription = null,
+                                    tint = SpendoraTheme.colors.primaryLight,
+                                    modifier = Modifier.size(16.dp)
+                                )
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 }

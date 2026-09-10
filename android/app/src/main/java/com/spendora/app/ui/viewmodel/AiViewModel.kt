@@ -121,33 +121,35 @@ class AiViewModel(application: Application) : AndroidViewModel(application) {
 
     fun sendChatMessage(message: String) {
         if (message.isBlank()) return
-        val currentHistory = _uiState.value.chatMessages.toMutableList()
+        val priorHistory = _uiState.value.chatMessages.takeLast(10)
         val userMsg = ChatMessage(role = "user", content = message.trim())
-        currentHistory.add(userMsg)
+        val updatedHistory = _uiState.value.chatMessages.toMutableList().apply { add(userMsg) }
 
         _uiState.value = _uiState.value.copy(
-            chatMessages = currentHistory,
+            chatMessages = updatedHistory,
             isChatLoading = true
         )
 
         viewModelScope.launch {
             val result = aiRepo.chat(
-                message = message,
-                history = currentHistory.takeLast(10)
+                message = message.trim(),
+                history = priorHistory
             )
             result.onSuccess { res ->
-                val updated = _uiState.value.chatMessages.toMutableList()
-                updated.add(ChatMessage(role = "assistant", content = res.reply))
+                val withAssistant = _uiState.value.chatMessages.toMutableList().apply {
+                    add(ChatMessage(role = "assistant", content = res.reply, actionIntent = res.actionIntent))
+                }
                 _uiState.value = _uiState.value.copy(
-                    chatMessages = updated,
+                    chatMessages = withAssistant,
                     suggestedPrompts = if (res.suggestedPrompts.isNotEmpty()) res.suggestedPrompts else _uiState.value.suggestedPrompts,
                     isChatLoading = false
                 )
             }.onFailure { error ->
-                val updated = _uiState.value.chatMessages.toMutableList()
-                updated.add(ChatMessage(role = "assistant", content = "⚠️ I ran into an issue retrieving data: ${error.message}. Please try again."))
+                val withError = _uiState.value.chatMessages.toMutableList().apply {
+                    add(ChatMessage(role = "assistant", content = "⚠️ I ran into an issue retrieving data: ${error.message}. Please try again."))
+                }
                 _uiState.value = _uiState.value.copy(
-                    chatMessages = updated,
+                    chatMessages = withError,
                     isChatLoading = false
                 )
             }

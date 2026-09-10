@@ -268,6 +268,11 @@ def _extract_rag_query_metadata(
             break
 
     # 3. Intent detection
+    tokens = set(re.findall(r"\b[a-zA-Z0-9_-]+\b", msg_lower))
+    is_greeting = bool(tokens & {"hi", "hello", "hey", "hola", "namaste", "sup", "yo"} or any(phrase in msg_lower for phrase in ["good morning", "good evening", "good afternoon", "how are you"]))
+    is_help = any(phrase in msg_lower for phrase in ["help", "guide", "how to use", "what can you do", "features", "commands", "who are you", "what are you"])
+    is_summary = any(phrase in msg_lower for phrase in ["overview", "summary", "snapshot", "financial health", "how am i doing", "financial summary", "my finances"])
+    is_tips = any(phrase in msg_lower for phrase in ["tip", "tips", "advice", "advise", "suggest", "recommendation", "how to save", "save money", "cut expenses"])
     is_goal = any(w in msg_lower for w in ["goal", "goals", "target", "milestone", "runway", "save for", "emergency fund", "saving goal"])
     is_budget = any(w in msg_lower for w in ["budget", "budgets", "limit", "exceed", "over budget", "threshold", "allowance", "breach", "overspent", "deficit"])
     is_income = any(w in msg_lower for w in ["income", "salary", "freelance", "earned", "earning", "cash inflow", "paycheck", "credited", "bonus", "earnings", "source", "sources"])
@@ -275,29 +280,39 @@ def _extract_rag_query_metadata(
     is_safe_spend = any(w in msg_lower for w in ["safe to spend", "daily limit", "burn rate", "safe spend", "daily burn", "burn velocity"])
     is_leak = any(w in msg_lower for w in ["leak", "subscription", "recurring", "audit", "micro-spend"])
     is_highest = any(w in msg_lower for w in ["highest", "biggest", "largest", "maximum expense", "most expensive"])
+    is_recent = any(w in msg_lower for w in ["recent", "latest", "last expense", "last transaction", "recent activity"])
+    is_spending = any(w in msg_lower for w in ["spent", "spending", "outflow", "expenses this month", "how much did i spend", "total spent"])
 
-    # 4. Candidate search token extraction
+    # 4. Candidate search token extraction (Targeted Merchant Queries)
     quoted = re.findall(r'["\']([^"\']+)["\']', raw)
     search_term = None
+    stop_words = {
+        "what", "is", "are", "was", "were", "how", "much", "many", "did", "do", "does",
+        "i", "me", "my", "we", "us", "you", "your", "spend", "spent", "spending",
+        "pay", "paid", "paying", "buy", "bought", "buying", "on", "for", "at", "in",
+        "to", "of", "the", "a", "an", "this", "that", "these", "those", "about",
+        "show", "tell", "give", "check", "any", "all", "with", "from", "there",
+        "have", "has", "had", "get", "got", "cost", "worth", "date", "time",
+        "money", "expense", "expenses", "transaction", "transactions", "rupee",
+        "rupees", "rs", "inr", "total", "can", "could", "would", "please",
+        "today", "yesterday", "month", "year", "week", "day", "record", "records",
+        "history", "list", "see", "find", "ever", "last", "first", "recent", "there",
+        "active", "saving", "savings", "goal", "goals", "milestone", "milestones",
+        "target", "targets", "budget", "budgets", "limit", "limits", "income",
+        "incomes", "salary", "salaries", "earnings", "source", "sources", "food",
+        "hi", "hello", "hey", "help", "guide", "spendora", "bot", "assistant",
+        "advisor", "summary", "overview", "status", "health", "report", "tip", "tips",
+        "advice", "fine", "good", "great", "ok", "okay", "thanks", "thank",
+        "anything", "something", "item", "items", "finances", "financial"
+    }
+
     if quoted:
         search_term = quoted[0].strip()
-    elif not (is_goal or is_budget or is_income or is_safe_spend or is_leak):
-        stop_words = {
-            "what", "is", "are", "was", "were", "how", "much", "many", "did", "do", "does",
-            "i", "me", "my", "we", "us", "you", "your", "spend", "spent", "spending",
-            "pay", "paid", "paying", "buy", "bought", "buying", "on", "for", "at", "in",
-            "to", "of", "the", "a", "an", "this", "that", "these", "those", "about",
-            "show", "tell", "give", "check", "any", "all", "with", "from", "there",
-            "have", "has", "had", "get", "got", "cost", "worth", "date", "time",
-            "money", "expense", "expenses", "transaction", "transactions", "rupee",
-            "rupees", "rs", "inr", "total", "can", "could", "would", "please",
-            "today", "yesterday", "month", "year", "week", "day", "record", "records",
-            "history", "list", "see", "find", "ever", "last", "first", "recent", "there",
-            "active", "saving", "savings", "goal", "goals", "milestone", "milestones",
-            "target", "targets", "budget", "budgets", "limit", "limits", "income",
-            "incomes", "salary", "salaries", "earnings", "source", "sources"
-        }
-        clean_words = re.findall(r"\b[a-zA-Z0-9_-]{2,}\b", msg_lower)
+    elif not (is_greeting or is_help or is_summary or is_tips or is_goal or is_budget or is_income or is_safe_spend or is_leak or is_afford or is_highest or is_recent):
+        # Look for explicit merchant inquiry patterns (e.g., on Starbucks, from Ferrari, at Swiggy, for Amazon)
+        merchant_pattern = re.search(r"\b(?:on|at|to|for|from|search|find)\s+([a-zA-Z0-9_\s]{2,25})", raw, re.IGNORECASE)
+        target_text = merchant_pattern.group(1) if merchant_pattern else msg_lower
+        clean_words = re.findall(r"\b[a-zA-Z0-9_-]{2,}\b", target_text.lower())
         candidates = [
             w for w in clean_words
             if w not in stop_words and not w.isdigit()
@@ -308,6 +323,16 @@ def _extract_rag_query_metadata(
 
         if candidates:
             search_term = " ".join(candidates[:2])
+    elif is_spending and not (is_greeting or is_help or is_summary or is_tips or is_goal or is_budget or is_income or is_safe_spend or is_leak or is_afford or is_highest or is_recent):
+        merchant_pattern = re.search(r"\b(?:on|at|from)\s+([a-zA-Z0-9_\s]{2,25})", raw, re.IGNORECASE)
+        if merchant_pattern:
+            clean_words = re.findall(r"\b[a-zA-Z0-9_-]{2,}\b", merchant_pattern.group(1).lower())
+            candidates = [w for w in clean_words if w not in stop_words and not w.isdigit()]
+            if matched_category:
+                cat_words = set(re.findall(r"\b\w+\b", matched_category["name"].lower()))
+                candidates = [w for w in candidates if w not in cat_words]
+            if candidates:
+                search_term = " ".join(candidates[:2])
 
     return {
         "search_term": search_term,
@@ -316,6 +341,10 @@ def _extract_rag_query_metadata(
         "date_to": date_to,
         "temporal_label": temporal_label,
         "intents": {
+            "is_greeting": is_greeting,
+            "is_help": is_help,
+            "is_summary": is_summary,
+            "is_tips": is_tips,
             "is_goal": is_goal,
             "is_budget": is_budget,
             "is_income": is_income,
@@ -323,6 +352,8 @@ def _extract_rag_query_metadata(
             "is_safe_spend": is_safe_spend,
             "is_leak": is_leak,
             "is_highest": is_highest,
+            "is_recent": is_recent,
+            "is_spending": is_spending,
         }
     }
 

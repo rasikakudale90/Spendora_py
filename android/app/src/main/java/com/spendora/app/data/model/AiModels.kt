@@ -86,7 +86,8 @@ data class SafeToSpendResponse(
 data class ChatMessage(
     @SerializedName("role") val role: String, // "user", "assistant", "system"
     @SerializedName("content") val content: String,
-    @SerializedName("timestamp") val timestamp: String? = null
+    @SerializedName("timestamp") val timestamp: String? = null,
+    @SerializedName("action_intent") val actionIntent: FinancialActionIntent? = null
 )
 
 data class FinancialActionIntent(

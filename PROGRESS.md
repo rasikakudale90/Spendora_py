@@ -833,6 +833,33 @@
 
 ---
 
+## Phase 47 — Spendora AI Advisor Fix & Multi-Turn RAG Polish ✅ Done
+
+**Goal:** Resolve conversational failures in the Spendora AI Advisor, eliminate false 0-match merchant searches on greetings and help queries, enforce strict Gemini multi-turn role alternation, eliminate history duplication in Android, and upgrade the chat screen to dynamic `SpendoraTheme.colors` with interactive action intent chips.
+
+### Completed Tasks
+- [x] **Backend In-Database RAG Intent Detection & Word Boundaries (`routers/ai.py`):**
+  - Added token-based intent detection for `is_greeting`, `is_help`, `is_summary`, and `is_tips`.
+  - Added strict word boundaries (`\b(?:on|at|to|for|from|search|find)\s+...`) for merchant queries.
+  - Ensured merchant search is only activated for actual merchant queries and never for greetings or general financial questions.
+- [x] **Gemini Multi-Turn Role Alternation & System Instruction (`ai_service.py`):**
+  - Implemented automatic sanitization loop ensuring `contents` strictly alternates between `user` and `model` roles.
+  - Used native `system_instruction` in the Gemini API payload for clean instruction adherence.
+  - Enhanced `deterministic_chat_response` so greetings output a personalized live snapshot (Inflows, Spent, Net Cash Flow, Daily Safe Limit, Top Outflow, Largest Purchase).
+- [x] **Android History Deduplication & Action Intent Preservation (`AiModels.kt`, `AiViewModel.kt`):**
+  - Added `val actionIntent: FinancialActionIntent? = null` to `ChatMessage`.
+  - Updated `sendChatMessage()` in `AiViewModel.kt` to pass prior history only, eliminating duplication.
+  - Stored `actionIntent` in the assistant response message.
+- [x] **Android UI Upgrade to SpendoraTheme Design Tokens (`FinancialAssistantScreen.kt`):**
+  - Replaced legacy hardcoded dark colors with `SpendoraTheme.colors` (`background`, `surface`, `surfaceElevated`, `primary`, `primaryLight`, `emerald`, `border`, `textPrimary`, `textSecondary`, `textMuted`).
+  - Added interactive action chips inside `ChatMessageBubble` allowing users to tap one-click actions (e.g. *"Simulate ₹2,500 Purchase"*, *"View Expenses"*, etc.).
+  - Expanded message bubble width (`fillMaxWidth(0.90f)`) with clean typography and spacing.
+- [x] **Backend & Android Verification:**
+  - `pytest backend/tests/test_api_ai.py -v` passed with 8/8 tests (100%).
+  - `./gradlew assembleDebug` passed with `BUILD SUCCESSFUL in 1m 41s` (0 errors).
+
+---
+
 ## Open Items & Design Decisions
 
 
@@ -856,5 +883,7 @@
 | 16 | Google OAuth Android Architecture | ✅ Resolved | Credential Manager with `googleid` library, Web Client ID defined via `buildConfigField`, and debug SHA-1 registered in Google Cloud Console |
 | 17 | Android UI/UX & Canvas Responsiveness | ✅ Resolved | Midnight Obsidian theme `#070B12`, `BoxWithConstraints` scaling for AI gauges, `imePadding` on all form sheets, and clean INR formatting |
 | 18 | Zero-Hardcoded Light & Dark Theme Token Architecture | ✅ Resolved | `LocalSpendoraColors` + `SpendoraTheme.colors` dynamic composition local tokens persisted via `SessionManager.kt` with live header toggle |
+| 19 | AI Chat Assistant Multi-Turn & Intent Guarding | ✅ Resolved | Token-based greeting/summary intent detection + strictly alternating Gemini multi-turn role history + Android prior-turn deduplication & action intent chips |
+
 
 

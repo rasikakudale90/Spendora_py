@@ -269,6 +269,30 @@ async def test_rag_chat_category_and_goals(client: AsyncClient):
     assert "budget" in budget_chat_data["reply"].lower()
 
 
+@pytest.mark.asyncio
+async def test_rag_chat_greetings_and_help(client: AsyncClient):
+    # 1. Test greeting "Hello Spendora"
+    greet_resp = await client.post(
+        "/api/v1/ai/chat",
+        json={"message": "Hello Spendora! How are my finances?", "history": []},
+    )
+    assert greet_resp.status_code == 200
+    greet_data = greet_resp.json()
+    assert "no recorded expenses" not in greet_data["reply"].lower()
+    assert "financial snapshot" in greet_data["reply"].lower() or "monthly" in greet_data["reply"].lower()
+    assert len(greet_data["suggested_prompts"]) >= 1
+
+    # 2. Test general help "Help me"
+    help_resp = await client.post(
+        "/api/v1/ai/chat",
+        json={"message": "Help me understand my spending", "history": []},
+    )
+    assert help_resp.status_code == 200
+    help_data = help_resp.json()
+    assert "no recorded expenses for 'help'" not in help_data["reply"].lower()
+
+
+
 
 
 

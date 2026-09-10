@@ -687,11 +687,40 @@ class AIService:
                 "What are my active savings goals?",
             ]
 
-            # 1. Affordability / Buying simulation intent
             afford_match = re.search(r"(?:can\s+i\s+afford|buy|purchase|getting|afford)\s+(?:a\s+|an\s+)?([a-zA-Z\s]+?)(?:\s+for|\s+at|\s+worth)?\s*(?:₹|rs\.?|inr)?\s*(\d+(?:,\d+)*(?:\.\d+)?|\d+)", msg_lower)
             number_only_match = re.search(r"(?:₹|rs\.?|inr)?\s*(\d+(?:,\d+)*(?:\.\d+)?|\d+)\s*(?:for|on)?\s*([a-zA-Z\s]+)", msg_lower) if not afford_match else None
 
-            if "afford" in msg_lower or "should i buy" in msg_lower or afford_match:
+            # 0. Greetings, Overview & General Financial Snapshot Intent
+            tokens = set(re.findall(r"\b[a-zA-Z0-9_-]+\b", msg_lower))
+            if (
+                intents.get("is_greeting")
+                or intents.get("is_summary")
+                or intents.get("is_help")
+                or bool(tokens & {"hi", "hello", "hey", "hola", "namaste", "sup", "yo"})
+                or any(k in msg_lower for k in ["good morning", "good evening", "how are you", "what can you do", "help me", "financial summary", "my status"])
+            ):
+                top_line = f"- **Top Outflow Category:** {top_categories[0].get('name')} (₹{Decimal(str(top_categories[0].get('spent', 0))):,.2f})\n" if top_categories else ""
+                goal_line = f"- **Active Goal:** {goals[0].get('name')} is at {goals[0].get('progress_pct', 0):.1f}% progress\n" if goals else ""
+                high_line = f"- **Largest Single Purchase:** {highest_expense.get('title')} (₹{Decimal(str(highest_expense.get('amount', 0))):,.2f})\n" if highest_expense else ""
+
+                reply = (
+                    f"👋 **Hello! Here is your live financial snapshot:**\n\n"
+                    f"- **Monthly Inflow:** **₹{total_income:,.2f}** | **Spent:** ₹{total_spent:,.2f}\n"
+                    f"- **Net Cash Flow (Savings):** **₹{net_savings:,.2f}** ({savings_rate:.1f}% savings rate)\n"
+                    f"- **Daily Safe Spending Limit:** **₹{daily_safe_spend:,.2f}/day** ({days_remaining} days left)\n"
+                    f"{top_line}"
+                    f"{goal_line}"
+                    f"{high_line}\n"
+                    f"💡 *You can ask me about:* merchant spending (e.g. *'How much did I spend on Starbucks?'*), category budgets (*'Did I exceed food budget?'*), or purchase feasibility (*'Can I afford shoes for ₹2,500?'*)!"
+                )
+                suggested = [
+                    "What is my daily safe spending limit?",
+                    "Which category is my biggest expense?",
+                    "Can I afford dinner for ₹1,200?",
+                ]
+
+            # 1. Affordability / Buying simulation intent
+            elif "afford" in msg_lower or "should i buy" in msg_lower or afford_match:
                 extracted_item = "this item"
                 extracted_amount = Decimal("1000.00")
                 if afford_match:
@@ -1205,7 +1234,9 @@ class AIService:
         conversation_history = []
         for h in history[-6:]:  # last 6 turns for prompt efficiency
             role = "user" if h.get("role") == "user" else "assistant"
-            conversation_history.append({"role": role, "content": h.get("content", "")})
+            content = (h.get("content") or "").strip()
+            if content:
+                conversation_history.append({"role": role, "content": content})
 
         full_user_content = f"User Financial Telemetry & Retrieved Knowledge (RAG):\n{user_context_str}\n\nUser Question: {message}"
 
@@ -1213,13 +1244,25 @@ class AIService:
             async with httpx.AsyncClient(timeout=10.0) as client:
                 if self.provider == "gemini":
                     url = f"https://generativelanguage.googleapis.com/v1beta/models/{self.model}:generateContent?key={self.api_key}"
+                    
+                    # Gemini requires strictly alternating roles (user <-> model) and cannot end with a user turn before the new user prompt
                     contents = []
+                    last_role = None
                     for h in conversation_history:
-                        contents.append({"role": "user" if h["role"] == "user" else "model", "parts": [{"text": h["content"]}]})
-                    contents.append({"role": "user", "parts": [{"text": f"{system_prompt}\n\n{full_user_content}"}]})
+                        g_role = "user" if h["role"] == "user" else "model"
+                        if g_role != last_role and h["content"]:
+                            contents.append({"role": g_role, "parts": [{"text": h["content"]}]})
+                            last_role = g_role
+
+                    # If previous history ended with a user turn, pop it to avoid consecutive user turns
+                    if contents and contents[-1]["role"] == "user":
+                        contents.pop()
+
+                    contents.append({"role": "user", "parts": [{"text": full_user_content}]})
 
                     payload = {
                         "contents": contents,
+                        "system_instruction": {"parts": [{"text": system_prompt}]},
                         "generationConfig": {"response_mime_type": "application/json"},
                     }
                     resp = await client.post(url, json=payload)
