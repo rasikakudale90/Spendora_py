@@ -55,9 +55,11 @@
 | 42 | Stitch Screen-by-Screen Visual Parity & Full Android App Assembly | ✅ Done | 2026-09-09 |
 | 43 | Live Notifications Drawer, AI Header Decoupling & Functional Account Rail | ✅ Done | 2026-09-09 |
 | 44 | Native Biometric Vault Security & Financial Statement CSV Export System | ✅ Done | 2026-09-09 |
+| 45 | Expense Category Resolution & Data Binding Fix | ✅ Done | 2026-09-09 |
 | 46 | Overview Dashboard UI/UX De-Clutter, Spacing & 3-Dots Menu Overhaul | ✅ Done | 2026-09-09 |
 | 47 | Spendora AI Advisor Fix & Multi-Turn RAG Polish | ✅ Done | 2026-09-10 |
 | 48 | AI Advisor HTTP 500 Fix & Interactive Spending Clusters Navigation | ✅ Done | 2026-09-10 |
+| 49 | Stitch MCP Mobile Native Generation, Clean Logo Header & Consolidated Liquidity Sparkline UI | ✅ Done | 2026-09-10 |
 
 ---
 
@@ -878,11 +880,46 @@
   - Verified test suite: all 9/9 AI tests passed (100%).
 - [x] **Interactive Spending Clusters Navigation (`DashboardScreen.kt`):**
   - Transformed the static visual Spending Clusters card into a clickable surface (`clickable { onNavigateToExpenses() }`).
-  - Added interactive category badge pods that route straight to the Expenses ledger.
-  - Added a prominent `"View Breakdown →"` header badge button.
-- [x] **Build & Deployment:**
-  - Pushed backend fix to GitHub `main` (`e5c4603`) for automated Render deployment.
-  - Android build `./gradlew assembleDebug` compiled with `BUILD SUCCESSFUL in 1m 30s` (0 errors) and pushed commit `2b511b9` to GitHub `main`.
+ ---
+
+## Phase 49 — Stitch MCP Mobile Native Generation, Clean Logo Header & Consolidated Liquidity Sparkline UI ✅ Done
+
+**Goal:** Generate native mobile screen specifications with Stitch MCP, integrate dynamic multi-account balances across the top rail, upgrade the hero card to a cybernetic Consolidated Liquidity telemetry display with privacy mask toggling, refine quick action pods, and position the Spendora logo and title cleanly on the top-left corner.
+
+### Completed Tasks
+- [x] **Stitch MCP Mobile Native Project Generation:**
+  - Created dedicated Stitch project `projects/17150429276599787818` (*Spendora Mobile Native*).
+  - Generated full mobile UI/UX specs for the 5 core mobile screens:
+    1. `Overview Dashboard` (`fa77839fc85040f7b5a88c74005b6422`)
+    2. `Analytics & Insights` (`0908862cbddc4b0790d97b0a79ca1288`)
+    3. `Ledger & Search` (`ea05e26ecb054238b6d859b56dd1bfd8`)
+    4. `Budgets & Limits` (`a4faad37f9024c0eaae334dd1639d675`)
+    5. `Vault & Biometric Security` (`0a298be548ea4d15ba4098ea4373400b`)
+- [x] **Dynamic Account Balances & Horizontal Rail (`DashboardScreen.kt`):**
+  - Updated the account ledger filter rail to calculate dynamic live sub-balances for each filter chip:
+    - `All Ledgers (₹...)`
+    - `UPI & Online (₹...)`
+    - `Cards & Bank (₹...)`
+    - `Cash Reserve (₹...)`
+  - Enabled one-tap ledger filtering that dynamically updates recent transactions and category allocations.
+- [x] **`[SYS.01] CONSOLIDATED LIQUIDITY` Hero Telemetry Card (`DashboardScreen.kt`):**
+  - Implemented a cybernetic consolidated liquidity card with high-contrast electric borders and status indicators.
+  - Added a privacy eye toggle button allowing users to mask or reveal their live liquidity balance (`••••••••` vs `₹...`).
+  - Added dual Inflow / Outflow telemetry comparison bars with dynamic proportional width metrics.
+- [x] **Tactical Quick Action Pods Upgrade (`DashboardScreen.kt`):**
+  - Replaced standard buttons with 18dp rounded cybernetic containers for the 4 primary actions:
+    - `+ Expense` (Electric Rose accent)
+    - `+ Income` (Emerald Green accent)
+    - `Scan Bill` (Quantum Violet accent)
+    - `Simulate` (Electric Cyan accent)
+- [x] **Top-Left Header Polish (`DashboardScreen.kt`):**
+  - Removed the auxiliary `LIVE 99ms` badge to eliminate visual clutter.
+  - Positioned the `Spendora` brand title and `OVERVIEW` sub-label directly adjacent to `SpendoraLogo(size = 36.dp)` on the top-left corner with single-line typography.
+- [x] **Typography & Font Family Aliases (`Type.kt`):**
+  - Added `SpaceGroteskFontFamily` and `JetBrainsMonoFontFamily` aliases matching existing definitions to prevent any compilation or unresolved reference issues.
+- [x] **Build & Verification:**
+  - `./gradlew assembleDebug` passed with `BUILD SUCCESSFUL in 47s` (0 errors), generating `android/app/build/outputs/apk/debug/app-debug.apk`.
+  - Pushed all updates to GitHub `main` (`498e7c7`).
 
 ---
 
@@ -907,9 +944,11 @@
 | 15 | Android Model IDs & PostgreSQL UUID Compatibility | ✅ Resolved | All model entity IDs (`id`, `user_id`, `category_id`) typed strictly as `String` across DTOs and database calls to support standard UUIDs without `NumberFormatException` |
 | 16 | Google OAuth Android Architecture | ✅ Resolved | Credential Manager with `googleid` library, Web Client ID defined via `buildConfigField`, and debug SHA-1 registered in Google Cloud Console |
 | 17 | Android UI/UX & Canvas Responsiveness | ✅ Resolved | Midnight Obsidian theme `#070B12`, `BoxWithConstraints` scaling for AI gauges, `imePadding` on all form sheets, and clean INR formatting |
-| 18 | Zero-Hardcoded Light & Dark Theme Token Architecture | ✅ Resolved | `LocalSpendoraColors` + `SpendoraTheme.colors` dynamic composition local tokens persisted via `SessionManager.kt` with live header toggle |
+| 18 | Zero-Hardcoding Light & Dark Theme Token Architecture | ✅ Resolved | `LocalSpendoraColors` + `SpendoraTheme.colors` dynamic composition local tokens persisted via `SessionManager.kt` with live header toggle |
 | 19 | AI Chat Assistant Multi-Turn & Intent Guarding | ✅ Resolved | Token-based greeting/summary intent detection + strictly alternating Gemini multi-turn role history + Android prior-turn deduplication & action intent chips |
 | 20 | Dynamic Budget Resolution & Spending Clusters Interaction | ✅ Resolved | Dynamic calculation of `spent` and `status` via `BudgetRepository.get_spent_for_period()`, flexible action intent schemas, and direct navigation routing on Spending Clusters card |
+| 21 | Stitch MCP Native Screen Specs & Clean Header Telemetry | ✅ Resolved | Generated dedicated 5-screen Stitch mobile project `17150429276599787818`; removed `LIVE 99ms` badge, placed Spendora logo & title adjacent on top-left, and added dynamic account balances with masked Consolidated Liquidity hero card |
+
 
 
 
